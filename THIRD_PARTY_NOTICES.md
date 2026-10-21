@@ -2,6 +2,10 @@
 
 Phone MCP original code is MIT licensed. Dependencies retain their own licenses. No font files, signing keys, Android SDK, Shizuku application binary, cloudflared binary or third-party decompiled Java implementations are redistributed as source.
 
+## Launch-film build dependencies
+
+The editable launch-film project under `docs/media/remotion/` has a separate pinned npm lock. It uses Remotion 4.0.537, React 19.2.3, Inter Tight and IBM Plex Mono. These packages retain their own licenses; the film source's MIT license does not replace Remotion's package terms. Font OFL texts and the motion-skill MIT notice are included in that project's `licenses/` folder. The GitHub mark remains GitHub's trademark; no endorsement is implied.
+
 ## Android runtime dependencies
 
 - Shizuku API/provider 13.1.5 — MIT; see `licenses/Shizuku-API-MIT.txt` and https://github.com/RikkaApps/Shizuku-API.

@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/images/launch-cover.png" alt="Phone MCP — Your AI. Your Android. In motion." width="100%" />
+<img src="docs/images/launch-cover.png" alt="Phone MCP — Your agent. Your Android." width="100%" />
 
 # Phone MCP
 
@@ -22,7 +22,7 @@ Transfer files. Install an APK. Keep the controls on your phone.
 
 https://github.com/user-attachments/assets/de3d1839-5248-43de-b7b7-1af721cd27d4
 
-*32 seconds · sound on. Actual Android captures and animated workflow illustrations. [Download the MP4 for reuse](https://github.com/Mirochill/Phone-MCP/releases/download/v0.8.2/phone-mcp-launch.mp4).*
+*22 seconds · sound on. Remotion camera choreography, actual Android captures and illustrated tool routes. [Download the MP4 for reuse](https://github.com/Mirochill/Phone-MCP/releases/download/v0.8.2/phone-mcp-launch.mp4) · [Editable Remotion source](docs/media/remotion/README.md).*
 
 <details><summary>Animated preview if the video player is unavailable</summary>
 
@@ -42,7 +42,7 @@ This repository contains the **original editable Android source files**, AIDL in
 <img src="docs/images/live-calculator.jpg" alt="Verified calculator result on the real S24 Ultra through Phone MCP" width="30%" />
 </p>
 
-*The first two images are real captures in an isolated test emulator; the third is a real S24 Ultra calculator result obtained through Phone MCP in Codex. The current Android app interface is in French; the documentation is in English. Example conversation graphics in the launch film are illustrative.*
+*The first two images are real captures in an isolated test emulator; the third is a real S24 Ultra calculator result obtained through Phone MCP in Codex. The current Android app interface is in French; the documentation is in English. Display diagrams and API routes in the launch film are illustrative; they do not turn the paused session/files captures into proof of a new transfer or installation.*
 
 ## What the AI can do
 

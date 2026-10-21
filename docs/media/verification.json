@@ -1,15 +1,38 @@
 {
-  "durationSeconds": 32.0,
-  "fps": 30.0,
+  "renderEngine": "Remotion 4.0.537",
   "width": 1920,
   "height": 1080,
+  "fps": 30,
+  "durationSeconds": 22,
+  "containerDurationSeconds": 22.016,
   "videoCodec": "H.264",
+  "pixelFormat": "yuvj420p",
+  "colorRange": "pc",
   "audioCodec": "AAC",
-  "audioPeakDbfs": -1.1,
+  "audioPeakDbfs": -1.5,
   "fastStart": true,
-  "bytes": 1603137,
-  "sha256": "e63ef5ca50e44e0f2f0a60abcfce8f83a2d8d63ac57ad8e50152468993a79603",
   "fullDecodePassed": true,
-  "previewGifFrames": 54,
-  "audioListeningReview": "Not available to this agent; technical checks only"
+  "bytes": 6951138,
+  "sha256": "6eec0288a5d727ac8600e9828bce20f0c799f5ea456a57f3fd73c0c0acf10cef",
+  "audioListeningReview": "Technical checks only; no perceptual audio review by the agent",
+  "chapters": 3,
+  "visualReview": {
+    "method": "Decoded full-film contact sheet, authentic asset comparison and targeted transition frames; no real-time playback claim",
+    "inspectedTransitionsSeconds": [
+      7.5,
+      11.6,
+      17.6,
+      18.9,
+      19.2,
+      20.5
+    ],
+    "reviewedMasterSha256": "6eec0288a5d727ac8600e9828bce20f0c799f5ea456a57f3fd73c0c0acf10cef",
+    "unresolved": [],
+    "notes": [
+      "Examined the control-mode close-up and the explicitly labeled screen schematic.",
+      "Checked request convergence, packet-follow camera and actual Android destination.",
+      "Checked separation of destination copy and final brand hold.",
+      "Independent critic decisions are tracked separately."
+    ]
+  }
 }
