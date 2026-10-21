@@ -18,7 +18,17 @@ Transfer files. Install an APK. Keep the controls on your phone.
 
 </div>
 
-<p align="center"><a href="https://github.com/Mirochill/Phone-MCP/releases/download/v0.8.2/phone-mcp-launch.mp4"><img src="docs/media/launch-preview.gif" alt="Play the Phone MCP launch video with music" width="100%"></a><br><sub>Click to watch with sound. The film combines actual Android screenshots with animated explanations of the tool workflows.</sub></p>
+## Watch it in motion
+
+https://github.com/user-attachments/assets/f026b206-d1f1-4301-83fe-ad8967ea994d
+
+*32 seconds · sound on. Actual Android captures and animated workflow illustrations. [Download the MP4 for reuse](https://github.com/Mirochill/Phone-MCP/releases/download/v0.8.2/phone-mcp-launch.mp4).*
+
+<details><summary>Animated preview if the video player is unavailable</summary>
+
+![Phone MCP animated launch preview](docs/media/launch-preview.gif)
+
+</details>
 
 Phone MCP connects an Android companion app to an AI client through the [Model Context Protocol](https://modelcontextprotocol.io/). A personal relay exposes authenticated tools over HTTPS; the phone makes an outbound WebSocket connection. With the Cloudflare deployment, the relay keeps running when your computer is off. **The AI still runs in your chosen client**: this project does not host a model or create an autonomous agent that keeps working after your conversation ends.
 
