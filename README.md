@@ -20,7 +20,7 @@ Transfer files. Install an APK. Keep the controls on your phone.
 
 ## Watch it in motion
 
-https://github.com/user-attachments/assets/f026b206-d1f1-4301-83fe-ad8967ea994d
+https://github.com/user-attachments/assets/de3d1839-5248-43de-b7b7-1af721cd27d4
 
 *32 seconds · sound on. Actual Android captures and animated workflow illustrations. [Download the MP4 for reuse](https://github.com/Mirochill/Phone-MCP/releases/download/v0.8.2/phone-mcp-launch.mp4).*
 
