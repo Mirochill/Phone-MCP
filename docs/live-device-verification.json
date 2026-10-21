@@ -1,0 +1,17 @@
+{
+  "date": "2026-10-21",
+  "device": "Samsung Galaxy S24 Ultra / Android 16",
+  "androidVersion": "0.8.2",
+  "mode": "parallel",
+  "displayId": 36,
+  "expression": "137 × 24",
+  "expected": 3288,
+  "observed": "3.288 Résultat du calcul",
+  "actionTimingMs": {
+    "actionMs": 85,
+    "observationMs": 224,
+    "totalMs": 309
+  },
+  "via": "Phone MCP plugin in Codex",
+  "screenshot": "docs/images/live-calculator.jpg"
+}

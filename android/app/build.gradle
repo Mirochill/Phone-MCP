@@ -1,0 +1,29 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'fr.phonemcp'
+    compileSdk 36
+    buildToolsVersion '36.0.0'
+    defaultConfig {
+        applicationId 'fr.phonemcp'
+        minSdk 30
+        targetSdk 36
+        versionCode 18
+        versionName '0.8.2'
+    }
+    buildFeatures { aidl true; buildConfig true }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    buildTypes {
+        release {
+            minifyEnabled false
+            // Prototype installable. Replace with your private release signing configuration for distribution.
+            signingConfig signingConfigs.debug
+        }
+    }
+    lint { abortOnError true }
+}
+dependencies {
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'dev.rikka.shizuku:api:13.1.5'
+    implementation 'dev.rikka.shizuku:provider:13.1.5'
+}

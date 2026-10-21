@@ -1,0 +1,15 @@
+{
+  "durationSeconds": 32.0,
+  "fps": 30.0,
+  "width": 1920,
+  "height": 1080,
+  "videoCodec": "H.264",
+  "audioCodec": "AAC",
+  "audioPeakDbfs": -1.1,
+  "fastStart": true,
+  "bytes": 1603137,
+  "sha256": "e63ef5ca50e44e0f2f0a60abcfce8f83a2d8d63ac57ad8e50152468993a79603",
+  "fullDecodePassed": true,
+  "previewGifFrames": 54,
+  "audioListeningReview": "Not available to this agent; technical checks only"
+}

@@ -1,0 +1,12 @@
+{
+  "name": "phone-mcp-cloud",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "dev": "wrangler dev --local",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {"wrangler": "4.131.1"}
+}

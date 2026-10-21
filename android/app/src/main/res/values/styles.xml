@@ -1,0 +1,16 @@
+<resources>
+    <string name="all_apps_default">Autoriser toutes les apps et capacités par défaut</string>
+    <style name="AppTheme" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:colorAccent">#84E5CE</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowBackground">#0B111B</item>
+        <item name="android:colorBackground">#0B111B</item>
+        <item name="android:textColorPrimary">#EDF3FA</item>
+        <item name="android:textColorSecondary">#A4B3C5</item>
+        <item name="android:statusBarColor">#0B111B</item>
+        <item name="android:navigationBarColor">#0B111B</item>
+    </style>
+    <string name="accessibility_description">Autorise Phone MCP à lire et contrôler toutes les applications par défaut, avec des accès révocables par application, pendant une session démarrée manuellement. Le contenu autorisé est transmis à votre serveur MCP et peut être lu par ChatGPT. Les mots de passe sont masqués. Arrêtez la session à tout moment depuis la notification.</string>
+</resources>

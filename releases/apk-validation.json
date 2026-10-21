@@ -1,0 +1,15 @@
+{
+  "package": "fr.phonemcp",
+  "version": "0.8.2",
+  "versionCode": 18,
+  "apkBytes": 3242914,
+  "sha256": "21c35404d8ba9fcbff71380f0683f47e0cec9fc43cf5445959087842450a19d0",
+  "rebuiltSha256": "785f400431c50ecc08075d21c557c44c07f5af1e43196ac537277d7a4057044b",
+  "certificateSha256": "a819c6ef90efe5809d48d41e02c741168b744d1705fa7ab53313e02e5295babe",
+  "signatureV2Verified": true,
+  "zipAlignmentVerified": true,
+  "identicalUnsignedEntries": 15,
+  "allUnsignedEntriesMatch": true,
+  "lintErrors": 0,
+  "lintWarnings": 5
+}

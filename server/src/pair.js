@@ -1,0 +1,15 @@
+import { readFileSync,writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { parse } from 'dotenv';
+import QRCode from 'qrcode';
+const config=parse(readFileSync('.env.tunnel'));
+const endpoint=JSON.parse(readFileSync('runtime/endpoint.json'));
+const response=await fetch(`http://127.0.0.1:${endpoint.port}/admin/pairing`,{method:'POST',headers:{Authorization:`Bearer ${config.ADMIN_PASSWORD}`}});
+if(!response.ok)throw new Error('Le serveur local ne répond pas à l’appairage.');
+const pairing=await response.json();
+const link=`phonemcp://pair?${new URLSearchParams({server:pairing.endpoint,code:pairing.code})}`;
+const webLink=pairing.endpoint+'/pairing/'+pairing.code;
+const qr=await QRCode.toDataURL(webLink,{width:320,errorCorrectionLevel:'M'});
+writeFileSync('runtime/pairing.private.json',JSON.stringify({...pairing,link,webLink},null,2),{mode:0o600});
+writeFileSync('runtime/Appairer-Phone-MCP.private.html',`<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Appairer Phone MCP</title><style>body{font:18px system-ui;max-width:650px;margin:50px auto;padding:24px;color:#18332d;background:#f3f7f6}img{display:block}a{color:#136f63}</style><h1>Appairer ton téléphone</h1><p>Installe l’APK Phone MCP depuis la dernière release, puis scanne ce QR avec ton téléphone.</p><img alt="Appairage Phone MCP" src="${qr}"><p>Le lien expire dans 15 minutes et fonctionne une seule fois.</p><p><a href="${webLink}">Ouvrir le lien d’appairage</a></p><p>Serveur : ${pairing.endpoint}</p><p>Après l’appairage, choisis les apps autorisées, active l’accès aux notifications et démarre une session. Choisissez explicitement le mode écran du téléphone, écran séparé avec Shizuku ou notifications.</p></html>`,{mode:0o600});
+console.log('Appairage prêt : '+resolve('runtime/Appairer-Phone-MCP.private.html'));

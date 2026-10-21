@@ -1,0 +1,14 @@
+* text=auto eol=lf
+*.sh text eol=lf
+gradlew text eol=lf
+*.bat text eol=crlf
+*.png binary
+*.jpg binary
+*.gif binary
+*.mp4 binary
+*.m4a binary
+*.apk binary
+*.jar binary
+*.zip binary
+licenses/** -whitespace
+releases/phone-mcp-worker.mjs -whitespace

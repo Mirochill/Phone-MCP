@@ -1,0 +1,17 @@
+import fs from 'node:fs';
+import {createRequire} from 'node:module';
+import {fileURLToPath} from 'node:url';
+const require=createRequire(new URL('../server/package.json',import.meta.url));
+const QRCode=require('qrcode');
+const config=JSON.parse(fs.readFileSync(new URL('./wrangler.jsonc',import.meta.url)));
+const credentials=JSON.parse(fs.readFileSync(0,'utf8').replace(/^\uFEFF/,''));
+if(!credentials.ADMIN_PASSWORD)throw Error('Fournir le secret administrateur par entrée standard.');
+const endpoint=config.vars.PUBLIC_URL;
+const response=await fetch(endpoint+'/admin/pairing',{method:'POST',headers:{Authorization:'Bearer '+credentials.ADMIN_PASSWORD}});
+if(!response.ok)throw Error('Appairage refusé : HTTP '+response.status);
+const pairing=await response.json();const link=endpoint+'/pairing/'+pairing.code;
+const data={endpoint,link,expiresAt:pairing.expiresAt};
+fs.writeFileSync(new URL('./appairage.private.json',import.meta.url),JSON.stringify(data,null,2),{mode:0o600});
+await QRCode.toFile(fileURLToPath(new URL('./Phone-MCP-appairage.private.png',import.meta.url)),link,{width:420,errorCorrectionLevel:'M'});
+fs.writeFileSync(new URL('./Appairer-Phone-MCP.private.html',import.meta.url),`<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Appairer Phone MCP</title><h1>Appairer Phone MCP</h1><p>Sur le téléphone avec l’APK installée, ouvrez ce lien ou scannez le QR affiché sur le PC.</p><p><a href="${link}">Connecter mon téléphone au serveur cloud</a></p><img width="320" alt="QR d’appairage" src="${await QRCode.toDataURL(link,{width:320})}"><p>Valable 15 minutes, une seule fois. L’adresse et le token sont importés automatiquement dans l’app.</p><p>Confirmez l’appairage, activez l’accès aux notifications, choisissez les apps puis démarrez une session.</p></html>`,{mode:0o600});
+console.log(JSON.stringify(data));

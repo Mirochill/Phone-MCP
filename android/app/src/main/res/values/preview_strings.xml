@@ -1,0 +1,8 @@
+<resources>
+    <string name="preview_description">Aperçu de l’app contrôlée par l’IA</string>
+    <string name="preview_close">Fermer l’aperçu</string>
+    <string name="preview_active">Contrôlée par l’IA · Lecture seule</string>
+    <string name="preview_stopped">Aperçu arrêté</string>
+    <string name="preview_unavailable">Aperçu indisponible</string>
+    <string name="preview_notification_action">Voir l’app</string>
+</resources>
