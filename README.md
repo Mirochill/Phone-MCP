@@ -1,8 +1,6 @@
 <div align="center">
 
-<img src="docs/images/launch-cover.png" alt="Phone MCP — Your agent. Your Android." width="100%" />
-
-# Phone MCP
+<h1><img src="docs/images/readme-banner.png" alt="Phone MCP — Your agent. Your Android." width="100%" /></h1>
 
 **Give your AI a real Android phone to work with.**
 
