@@ -21,7 +21,7 @@ try {
   if(!ready)throw Error(`Test Worker did not start: ${log}`);
   const tests=spawn(process.execPath,['--test',path.join('test',file)],{cwd:path.join(root,'cloudflare'),env:{...process.env,PHONE_MCP_CLOUD_TEST_URL:base},stdio:'inherit',windowsHide:true});
   const code=await new Promise(resolve=>tests.on('exit',resolve));
-  if(code!==0)throw Error(`Cloud tests exited ${code}`);
+  if(code!==0)throw Error(`Cloud tests exited ${code}. Isolated Worker log:\n${log}`);
 }finally{
   if(worker.exitCode===null){
     if(process.platform==='win32')spawnSync('taskkill',['/PID',String(worker.pid),'/T','/F'],{stdio:'ignore',windowsHide:true});
