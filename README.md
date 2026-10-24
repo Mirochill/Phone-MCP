@@ -38,6 +38,8 @@ This repository contains the current **editable Android source**, both relay imp
 4. **Enable the capabilities you need:** Shizuku for separate-display control and transfer/install features, Accessibility for physical-screen control, notification access for notifications, and explicit folder grants for selected-folder tools. This preview defaults to making installed apps eligible: review and revoke apps/capabilities before starting.
 5. **Start a session locally**, initially unlocked. Connect the client using OAuth, call `phone_connection` and `phone_status`, then create one app session per agent and keep its `sessionId` on every request. End finished app sessions with `phone_session_end`.
 
+**Already installed?** [Update all layers and fix missing/stale ChatGPT tools](docs/updating.md) · [Copy-ready update instructions for your agent](docs/agent-update-prompt.md). Updating the APK or this repository does not deploy your relay or refresh an existing chat.
+
 [Detailed Android/server setup](docs/installation.md) · [ChatGPT, Work, Codex and other clients](docs/clients.md) · [Copy-ready agent instructions](docs/agent-setup-prompt.md).
 
 ## Modes and control

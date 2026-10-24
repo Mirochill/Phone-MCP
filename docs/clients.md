@@ -19,6 +19,10 @@ The current registry exposes **59 tools**. After server metadata changes, deploy
 
 Legacy `phone_click` argument templates support explicit long presses and coordinate actions where the existing client schema permits them; never invent a call to a missing tool.
 
+## Updating an existing connection
+
+**An APK update, server deployment and ChatGPT metadata refresh are separate.** A matching count of 59 does not prove the cached argument schemas match: check `captureSource` on the screenshot schema too. Follow the [complete update/check procedure](updating.md), including the owner/workspace-specific refresh and a fresh conversation. [Copy-ready update prompt for an agent](agent-update-prompt.md).
+
 ## Direct Codex connection
 
 The public server source includes the loopback callback support required by native desktop OAuth. Deploy this source before using a direct client against an older relay.

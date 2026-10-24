@@ -1,0 +1,40 @@
+{
+  "checkedDate": "2026-10-24",
+  "serverVersion": "0.16.2-cloud",
+  "apiVersion": 1,
+  "catalogVersion": "d86af3e18e51f9a6",
+  "counts": {
+    "serverAdvertised": 59,
+    "hostAvailable": 59,
+    "liveOperations": 55,
+    "chatgptUi": {
+      "write": 39,
+      "read": 20
+    }
+  },
+  "nameComparison": {
+    "missingFromHost": [],
+    "unexpectedInHost": []
+  },
+  "schemaCache": {
+    "liveScreenshotHasCaptureSource": true,
+    "existingChatNamedScreenshotHasCaptureSource": false,
+    "uiAfterRefreshScreenshotDescriptionMentionsSurface": true,
+    "currentChatDefinitionsMayStayCached": true,
+    "freshConversationSchemaExecutionVerified": false
+  },
+  "refresh": {
+    "interface": "ChatGPT > Phone MCP > Manage > Refresh tools",
+    "completed": true,
+    "importedInventoryReadBack": true,
+    "permissionsChanged": false,
+    "connectionRemoved": false
+  },
+  "scope": {
+    "metadataOnly": true,
+    "allDeviceToolsExecuted": false,
+    "apkInstalled": false,
+    "phoneSessionInterrupted": false
+  },
+  "note": "Dated observations from the maintainer's connection; not a guarantee about other users, future conversations, or every operation's device execution."
+}

@@ -1,5 +1,7 @@
 # Copy-paste setup prompt for a browser-capable agent
 
+For an already installed project, use the [agent update prompt](agent-update-prompt.md) and [layer-by-layer checklist](updating.md) instead.
+
 Use the full prompt below in an agent that has a real browser-control tool and, preferably, a local terminal. Replace the bracketed choices. This prompt is a setup workflow, not permission to bypass your host's approval, authentication or payment policies.
 
 ```text

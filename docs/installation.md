@@ -88,6 +88,8 @@ Your AI client's URL is the relay origin **plus `/mcp`**. Authenticate through O
 
 ### Updates and maintenance
 
+**Follow [the full upgrade checklist](updating.md).** Updating the APK does not deploy the server, and deploying the server does not force ChatGPT to replace cached tools. See [agent update instructions](agent-update-prompt.md).
+
 Keep your private secrets and signing key. Pull/review source updates, install locked dependencies with `npm ci`, run the relevant tests, and deploy the updated Worker. Update the APK separately when required. Server metadata changes may require a client refresh. A full Phone MCP APK update ends all active Android app sessions; reopen and start the phone service locally. Server-only changes do not install an APK.
 
 Do not change the existing Durable Object migration tag/class arbitrarily on an established deployment. Rotate credentials deliberately; replacing the phone token requires re-pairing the phone. To revoke an AI client, use its disconnect/revoke flow in addition to stopping the phone session.
