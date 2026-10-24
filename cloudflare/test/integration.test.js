@@ -78,7 +78,7 @@ test('cloud OAuth binds PKCE, callback and resource, then consumes the code',asy
 });
 
 test('cloud official MCP client discovers tools and reports the actual offline phone',async t=>{
- const tokens=await grant(),client=await clientFor(t,tokens.access_token);const {tools}=await client.listTools();assert.equal(tools.length,59);
+ const tokens=await grant(),client=await clientFor(t,tokens.access_token);const {tools}=await client.listTools();assert.equal(tools.length,62);
  const r=await client.callTool({name:'phone_connection',arguments:{}});assert.equal(JSON.parse(r.content[0].text).connected,false);assert.equal(r.structuredContent.connected,false);assert.deepEqual(r.structuredContent,JSON.parse(r.content[0].text));
  assert.deepEqual(r.structuredContent.tooling.tools,tools.map(tool=>tool.name));
  assert.equal(r.structuredContent.tooling.serverVersion,r.structuredContent.serverVersion);
@@ -186,3 +186,15 @@ test('cloud binary route handles data beyond the MCP JSON limit without storing 
 });
 
 
+
+test('cloud fast workflow and final ad evidence retain HTTP/WebSocket scope',async t=>{
+ const packageName='com.example.fixture',sessionId='c97426cd-4104-4980-b348-cc3fc01fb9d4',snapshotId='e8621c58-d4ec-45d7-92dc-c8a1bb7fcf2f',seen=[];
+ await phoneFor(t,(m,socket)=>{seen.push(m);const frame={packageName,sessionId,snapshotId,nodes:[{nodeId:'0',text:'Returned'}]};const result=m.op==='wait_and_click'?{packageName,sessionId,found:true,performed:true}:m.op==='ad_status'?{packageName,sessionId,jobId:snapshotId,active:false,state:'completed',returnMatched:true}:m.op==='screenshot'?{...frame,mimeType:'image/jpeg',data:'aW1hZ2U='}:frame;socket.send(JSON.stringify({id:m.id,ok:true,result}));});
+ const tokens=transportTokens??await grant(),client=await clientFor(t,tokens.access_token);
+ const flow=await client.callTool({name:'phone_ui_flow',arguments:{packageName,sessionId,steps:[{op:'wait_and_click',query:'Next'},{op:'wait_and_click',query:'Done'}],includeScreenshot:true,maxDimension:1920,quality:95}});
+ const flowBody=JSON.parse(flow.content.find(c=>c.type==='text').text);assert.equal(flow.isError,undefined);assert.equal(flowBody.completed,true);assert.equal(flowBody.performedActions,2);assert.equal(flowBody.relayTiming.deviceCommands,4);assert.equal(flow.content[0].type,'image');assert.deepEqual(seen.map(m=>m.op),['wait_and_click','wait_and_click','snapshot','screenshot']);assert.equal(seen.at(-1).args.quality,95);
+ seen.length=0;
+ const ad=await client.callTool({name:'phone_read',arguments:{operation:'ad_status',arguments:{packageName,sessionId,jobId:snapshotId,waitMs:20000,observe:true,includeScreenshot:true}}});
+ const adBody=JSON.parse(ad.content.find(c=>c.type==='text').text);assert.equal(ad.isError,undefined);assert.equal(adBody.state,'completed');assert.equal(ad.content[0].type,'image');assert.deepEqual(seen.map(m=>m.op),['ad_status','snapshot','screenshot']);assert.equal(seen[0].args.waitMs,8000);assert.equal(adBody.relayTiming.modelTimeIncluded,false);
+ const recent=(await client.callTool({name:'phone_connection',arguments:{}})).structuredContent.recentToolCalls;assert.equal(recent.at(-2).operation,'ui_flow');assert.equal(recent.at(-1).operation,'ad_status');assert.equal(recent.at(-1).success,true);assert.equal(recent.at(-1).packageName,undefined);
+});

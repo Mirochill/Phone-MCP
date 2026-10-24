@@ -15,8 +15,8 @@ try{
  const {tools}=await client.listTools();
  const result=await client.callTool({name:'phone_catalog',arguments:{}});
  const catalog=JSON.parse(result.content.find(c=>c.type==='text').text);
- assert.equal(tools.length,59);assert.equal(catalog.operations.length,55);
- assert.equal(new Set(tools.map(t=>t.name)).size,59);
+ assert.equal(tools.length,catalog.operations.length+4);
+ assert.equal(new Set(tools.map(t=>t.name)).size,tools.length);
  const schemas={version:VERSION,apiVersion:API_VERSION,catalogVersion:catalog.catalogVersion,tools};
  const targets=new Map();
  targets.set('docs/tools.json',JSON.stringify(schemas,null,2)+'\n');

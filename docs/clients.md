@@ -15,13 +15,13 @@ Account and workspace policies control custom MCP access. The current official f
 
 Official references: [Connect and test a plugin](https://developers.openai.com/plugins/deploy/connect-chatgpt/) and [MCP connections](https://developers.openai.com/codex/mcp/). Product labels and account eligibility can change.
 
-The current registry exposes **59 tools**. After server metadata changes, deploy the server, open its connection in ChatGPT Plugins, select **Refresh**, check the new metadata, then start a new conversation. Published plugins use their review/update flow instead. Use `phone_catalog` plus `phone_read` / `phone_action` for current operations when named-tool schemas are cached. Operation responses also include current `tooling` guidance and compatibility guidance, but **a catalog field cannot add a callable tool to a client's stale cache**. Use the client's supported rediscovery flow. Host-native `phone_send_file` attachment binding requires importing its file-parameter metadata; an opaque file ID alone is not readable bytes. Preview PNG/video Capture remains a local Android menu, not a remote tool. [All current tools](tools-reference.md).
+The current registry exposes **62 tools**. After server metadata changes, deploy the server, open its connection in ChatGPT Plugins, select **Refresh**, check the new metadata, then start a new conversation. Published plugins use their review/update flow instead. Use `phone_catalog` plus `phone_read` / `phone_action` for current operations when named-tool schemas are cached. Operation responses also include current `tooling` guidance and compatibility guidance, but **a catalog field cannot add a callable tool to a client's stale cache**. Use the client's supported rediscovery flow. Host-native `phone_send_file` attachment binding requires importing its file-parameter metadata; an opaque file ID alone is not readable bytes. Preview PNG/video Capture remains a local Android menu, not a remote tool. [All current tools](tools-reference.md).
 
 Legacy `phone_click` argument templates support explicit long presses and coordinate actions where the existing client schema permits them; never invent a call to a missing tool.
 
 ## Updating an existing connection
 
-**An APK update, server deployment and ChatGPT metadata refresh are separate.** A matching count of 59 does not prove the cached argument schemas match: check `captureSource` on the screenshot schema too. Follow the [complete update/check procedure](updating.md), including the owner/workspace-specific refresh and a fresh conversation. [Copy-ready update prompt for an agent](agent-update-prompt.md).
+**An APK update, server deployment and ChatGPT metadata refresh are separate.** A matching count of 62 does not prove the cached argument schemas match: check `captureSource` on the screenshot schema too. Follow the [complete update/check procedure](updating.md), including the owner/workspace-specific refresh and a fresh conversation. [Copy-ready update prompt for an agent](agent-update-prompt.md).
 
 ## Direct Codex connection
 

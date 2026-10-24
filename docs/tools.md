@@ -1,6 +1,6 @@
 # Tool workflows and execution contract
 
-The source of truth is `server/src/operations.js` plus the four discovery/gateway registrations in `server/src/mcp.js`. The server exposes **59 tools**: four discovery/gateway tools and 55 operations. [Complete names and parameters](tools-reference.md) · [MCP JSON schemas](tools.json). Regenerate with `npm run docs:tools`; `npm run check:docs` detects drift.
+The source of truth is `server/src/operations.js` plus the four discovery/gateway registrations in `server/src/mcp.js`. The server exposes **62 tools**: four discovery/gateway tools and 58 operations. [Complete names and parameters](tools-reference.md) · [MCP JSON schemas](tools.json). Regenerate with `npm run docs:tools`; `npm run check:docs` detects drift.
 
 ## Discovery and cached clients
 
@@ -10,7 +10,7 @@ Call `phone_connection` and `phone_status`. Use `phone_catalog` without argument
 {"operation":"session_list","arguments":{}}
 ```
 
-Pass that object to `phone_read`. Use `phone_action` for writes; `phone_read` rejects modifying operations. These gateways expose current operations even when a host caches older named schemas. New host-native file inputs still require host rediscovery. Catalog version `d86af3e18e51f9a6` was observed live with 0.16.2-cloud; inspect discovery rather than hard-coding future versions.
+Pass that object to `phone_read`. Use `phone_action` for writes; `phone_read` rejects modifying operations. These gateways expose current operations even when a host caches older named schemas. New host-native file inputs still require host rediscovery. Catalog version `c1b6e733309e4029` was observed live with 0.17.0-cloud; inspect discovery rather than hard-coding future versions.
 
 ## One session per agent and application
 
@@ -28,6 +28,10 @@ For Canvas/game coordinate actions, capture the same snapshot first. Read `coord
 
 For speed use `phone_action_sequence`: at most eight already observed taps/swipes in one local bounded call, one final observation, optional `includeScreenshot`. Inspect `executedCount` and `failedStep`. Never replay a partial/uncertain sequence. `phone_wait_and_click` waits up to eight seconds for one exact accessible target and clicks once; a timeout reports no performed click.
 
+## Reduce model turns
+
+Prefer `phone_start_app` for the combined owned-session launch and `phone_ui_flow` for a short plan of exact semantic steps. Use the returned observation and optional `clickNodeId` parent evidence instead of extra reads or repeatedly clicking a non-clickable text label. [Complete fast workflow instructions and measurements](performance.md).
+
 ## Black or incomplete images
 
 A frame marked `black_or_empty` is not usable visual evidence. Try `phone_read` with operation `screenshot` and arguments including `captureSource:"surface"`, keeping the exact app/session. Surface capture reads the owned non-secure source buffer; it does not choose the physical display. Diagnostics and `phone_session_wake` may recover the existing AI display under local screen policy; they do not bypass keyguard or source restrictions. If recovery fails, report it instead of clicking blindly or repeatedly restarting the app.
@@ -36,7 +40,7 @@ A frame marked `black_or_empty` is not usable visual evidence. Try `phone_read` 
 
 1. Observe a trustworthy return target in the host app before starting an ad. For a graphical game, record its host window ID and wait until a different ad window exists before using that ID as an exact return target.
 2. Call `phone_ad_start` with the existing app/session, a fresh UUID `requestId`, observed `returnTargets`, and a bounded `timeoutMs` (1–180 seconds, default 90 seconds). The phone handles available controls locally; no model call is needed for each countdown frame.
-3. Follow `phone_ad_status` with the exact app/session/job and optional `waitMs` up to 8000. It is read-only. `phone_ad_cancel` stops only the job; already delivered actions may have taken effect.
+3. Follow `phone_ad_status` with the exact app/session/job and optional `waitMs` up to 20000 (at most three APK-compatible reads of 8000 ms or less). Use `observe:true, includeScreenshot:true` to receive the final UI/image in the same call when terminal; while active, `observationDeferred:true` avoids unnecessary captures. It is read-only. `phone_ad_cancel` stops only the job; already delivered actions may have taken effect.
 4. `completed` confirms an observed app return target. Check the host app separately for reward/credit. A timeout, cancellation or return alone cannot prove a reward.
 
 Supported paths include accessible Skip/Close controls, multiple successive ad windows, bounded neutral taps that reveal hidden controls, and supported positive visual skip/close evidence. Timer waits remain enforced; no instant completion, reward fabrication or universal ad-network support is promised. Do not interleave manual writes with a running ad job.

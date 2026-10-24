@@ -1,20 +1,12 @@
+import {boardMove,chessBoard} from './chess-board.js';
+import {startApp,uiFlow,adResult} from './fast-workflows.js';
 import {recoverRead} from './read-recovery.js';
 import {commandWithObservation,compactSnapshot} from './screen-output.js';
 import {withLegacyLongPress} from './legacy-interactions.js';
 
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 export async function runOperation(command,op,args){
-  if(['ad_start','ad_status','ad_cancel'].includes(op)){
-    // Each API call is one device command. A job runs locally after ad_start has returned;
-    // never retry its start/cancel or turn a status read into more phone actions.
-    const result=await command(op,args);
-    if(!result||typeof result!=='object'||Array.isArray(result))throw Error('Invalid ad job response.');
-    if(result.packageName!==args.packageName)throw Error('Ad job belongs to a different application.');
-    if(result.sessionId!==args.sessionId)throw Error('Ad job belongs to a different session.');
-    const expected=op==='ad_start'?args.requestId:args.jobId;
-    if(result.jobId!==expected)throw Error('Ad job response belongs to a different job.');
-    return {...result,instruction:'Local job: completed confirms a matching return target, never a reward. Read ad_status with this exact packageName/sessionId/jobId. Do not restart or repeat uncertain ad actions.'};
-  }
+  if(['ad_start','ad_status','ad_cancel'].includes(op))return adResult(command,op,args);
   if(op==='send_file'){
     const extensions={'video/mp4':'.mp4','image/png':'.png','image/jpeg':'.jpg','application/pdf':'.pdf','text/plain':'.txt','application/zip':'.zip'};
     const fileName=args.fileName??args.file.file_name??('fichier-'+args.requestId.slice(0,8)+(extensions[args.file.mime_type]??''));
@@ -45,7 +37,10 @@ export async function runOperation(command,op,args){
       await pause(Math.min(250,Math.max(0,deadline-Date.now())));
     }while(true);
   }
+  const deviceCommand=command;
+  if(op==='start_app'||op==='ui_flow'||op==='board_move')command=(operation,selection)=>operation==='start_app'?startApp(deviceCommand,selection):operation==='ui_flow'?uiFlow(deviceCommand,selection):operation==='board_move'?boardMove(deviceCommand,selection):deviceCommand(operation,selection);
   const result=await commandWithObservation(command,op,args);
+  if(op==='board_move'){const final=chessBoard(result.observation);result.moveVerified=!!final&&final.squares.get(args.uci.slice(0,2))?.piece==='.'&&final.squares.get(args.uci.slice(2,4))?.piece===result.sourcePiece;if(final){result.boardChanged=final.boardId!==result.priorBoardId;result.finalPiecePlacementFen=final.piecePlacementFen;}}
   if(op==='snapshot'&&args.includeScreenshot){
     try{result.screenshot=await command('screenshot',{packageName:args.packageName,sessionId:args.sessionId??result.sessionId,_ownerKey:args._ownerKey,snapshotId:result.snapshotId,maxDimension:args.maxDimension,quality:args.quality,annotate:args.annotate});}
     catch(error){result.screenshotError=error.message;}

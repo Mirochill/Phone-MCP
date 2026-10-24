@@ -1,12 +1,12 @@
 {
-  "version": "0.16.2",
+  "version": "0.17.0",
   "apiVersion": 1,
-  "catalogVersion": "d86af3e18e51f9a6",
+  "catalogVersion": "c1b6e733309e4029",
   "tools": [
     {
       "name": "phone_connection",
       "title": "Phone connection",
-      "description": "Check the actual connection and current server/catalog version, including when the phone is offline.",
+      "description": "Check the actual connection and current server/catalog version, including when the phone is offline. Includes recent content-free owner-scoped relay timings for end-to-end speed diagnosis; host/model time is not directly measured.",
       "inputSchema": {
         "type": "object",
         "properties": {},
@@ -32,6 +32,49 @@
           },
           "requiresPC": {
             "type": "boolean"
+          },
+          "recentToolCalls": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "operation": {
+                  "type": "string"
+                },
+                "startedAt": {
+                  "type": "number"
+                },
+                "completedAt": {
+                  "type": "number"
+                },
+                "totalMs": {
+                  "type": "number"
+                },
+                "deviceMs": {
+                  "type": "number"
+                },
+                "deviceCommands": {
+                  "type": "number"
+                },
+                "queueMs": {
+                  "type": "number"
+                },
+                "success": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "operation",
+                "startedAt",
+                "completedAt",
+                "totalMs",
+                "deviceMs",
+                "deviceCommands",
+                "queueMs",
+                "success"
+              ],
+              "additionalProperties": false
+            }
           },
           "tooling": {
             "type": "object",
@@ -314,6 +357,293 @@
         "required": [
           "requestId",
           "packageName"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_start_app",
+      "description": "Fast path: create one owned app session, open the app once and return its first observation plus screenshot in ONE tool call. Prefer this over separate create/open/snapshot/capture calls. A repeated requestId retains the existing session without reopening its app. Inspect launchUncertain and observationError; never replay an uncertain launch. Returns observation with a fresh snapshot after the action.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "leaseSeconds": {
+            "type": "integer",
+            "minimum": 30,
+            "maximum": 900,
+            "default": 300
+          },
+          "keepRendering": {
+            "type": "boolean",
+            "default": false
+          },
+          "observe": {
+            "type": "boolean",
+            "default": true
+          },
+          "settleMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 800
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "compact",
+              "full"
+            ],
+            "default": "compact"
+          },
+          "includeScreenshot": {
+            "type": "boolean",
+            "default": true
+          },
+          "maxDimension": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 1920,
+            "default": 1000
+          },
+          "quality": {
+            "type": "integer",
+            "minimum": 35,
+            "maximum": 95,
+            "default": 75
+          },
+          "annotate": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "requestId",
+          "packageName"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_ui_flow",
+      "description": "Execute 1-8 planned exact semantic clicks/waits with fresh native target guards and ONE final observation/screenshot. Use for already understood navigation; no model round trip between steps. Stops at the first missing/ambiguous/protected target, error or deadline. Inspect completedSteps/failedStep/uncertain; never replay a partial flow. App/session and local stop guards remain enforced. Use action_sequence for already observed Canvas/game gestures. Returns observation with a fresh snapshot after the action.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "op": {
+                  "type": "string",
+                  "enum": [
+                    "wait_and_click",
+                    "wait_for"
+                  ]
+                },
+                "query": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 250
+                },
+                "by": {
+                  "type": "string",
+                  "enum": [
+                    "text",
+                    "description",
+                    "viewId"
+                  ],
+                  "default": "text"
+                },
+                "timeoutMs": {
+                  "type": "integer",
+                  "minimum": 100,
+                  "maximum": 8000,
+                  "default": 3000
+                }
+              },
+              "required": [
+                "op",
+                "query"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 8
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 100,
+            "maximum": 8000,
+            "default": 8000
+          },
+          "observe": {
+            "type": "boolean",
+            "default": true
+          },
+          "settleMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 800
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "compact",
+              "full"
+            ],
+            "default": "compact"
+          },
+          "includeScreenshot": {
+            "type": "boolean",
+            "default": true
+          },
+          "maxDimension": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 1920,
+            "default": 1000
+          },
+          "quality": {
+            "type": "integer",
+            "minimum": 35,
+            "maximum": 95,
+            "default": 75
+          },
+          "annotate": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "packageName",
+          "sessionId",
+          "steps"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_board_move",
+      "description": "Play one already-decided chess move such as e2e4 using the boardId from observation.board. Prefer the observed board.piecePlacementFen over manually decoding coordinates. Freshly rechecks all 64 accessible squares and app/session/window geometry, captures the current source, then sends one two-tap sequence with a final observation/image. Refuses changed/incomplete boards before any input. No engine or move selection; no full legality or turn inference. Promotion choices remain separate. Never replay partial/uncertain inputs. Returns observation with a fresh snapshot after the action.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "boardId": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$"
+          },
+          "uci": {
+            "type": "string",
+            "pattern": "^[a-h][1-8][a-h][1-8]$"
+          },
+          "observe": {
+            "type": "boolean",
+            "default": true
+          },
+          "settleMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 800
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "compact",
+              "full"
+            ],
+            "default": "compact"
+          },
+          "includeScreenshot": {
+            "type": "boolean",
+            "default": true
+          },
+          "maxDimension": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 1920,
+            "default": 1000
+          },
+          "quality": {
+            "type": "integer",
+            "minimum": 35,
+            "maximum": 95,
+            "default": 75
+          },
+          "annotate": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "packageName",
+          "sessionId",
+          "boardId",
+          "uci"
         ],
         "additionalProperties": false,
         "$schema": "http://json-schema.org/draft-07/schema#"
@@ -1707,7 +2037,7 @@
     },
     {
       "name": "phone_ad_status",
-      "description": "Read a local ad job with a bounded long poll. completed confirms an observed returnTarget, not a reward. Keep the exact packageName, sessionId and jobId. Read-only: never clicks or starts another job.",
+      "description": "Read a local ad job with up to 20 seconds of server-side waiting, split into APK-compatible reads. Prefer waitMs=20000; observe=true and includeScreenshot=true return final UI evidence when terminal, avoiding extra model turns. completed confirms an observed returnTarget, not a reward. Keep the exact packageName, sessionId and jobId. Read-only: never clicks or starts another job.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1727,8 +2057,32 @@
           "waitMs": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 8000,
+            "maximum": 20000,
             "default": 0
+          },
+          "observe": {
+            "type": "boolean",
+            "default": false
+          },
+          "includeScreenshot": {
+            "type": "boolean",
+            "default": false
+          },
+          "maxDimension": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 1920,
+            "default": 1000
+          },
+          "quality": {
+            "type": "integer",
+            "minimum": 35,
+            "maximum": 95,
+            "default": 75
+          },
+          "annotate": {
+            "type": "boolean",
+            "default": false
           }
         },
         "required": [

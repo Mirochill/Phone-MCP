@@ -61,10 +61,17 @@ Do not pretend that you can operate a browser if your tools cannot.
    and codex mcp login with DCR. Preserve unrelated client configuration.
    Complete the server consent using my local admin secret without exposing it.
 
-8. Discover all 59 current tools using phone_catalog and call phone_connection and phone_status. Use phone_read/phone_action for operations absent from a cached host schema.
+8. Discover all 62 current tools using phone_catalog and call phone_connection and phone_status. Use phone_read/phone_action for operations absent from a cached host schema.
    Verify the Android version, active mode, permissions and actual display
    readiness. If I authorize a demonstration, use a harmless calculator task
    on the chosen display, creating one owned app session per agent, retaining sessionId and reusing action observations. Check visible effects and end finished sessions. Never change physical-screen-on policy remotely; it belongs only to Android settings. For requested ad jobs use observed return targets, bounded ad_start/status/cancel and respect timers; completion is not reward confirmation.
+   For later execution, prefer phone_start_app, short exact phone_ui_flow plans,
+   observation.board.piecePlacementFen plus phone_board_move(boardId,uci) for
+   supported chess boards, otherwise one action_sequence per observed move, and ad_status(waitMs=20000,
+   observe=true,includeScreenshot=true). Start independent local jobs before
+   waiting. Reuse final observations and clickNodeId parent hints. Measure
+   full client turns separately from relayTiming; do not promise control over
+   internal model reasoning or faster moves without a full-path measurement.
    Send no messages, make no purchases and delete nothing during setup.
 
 9. Give me the endpoint, installed version/checksum, where my private setup

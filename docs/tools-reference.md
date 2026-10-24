@@ -2,11 +2,11 @@
 
 Generated from the real MCP `tools/list` response by `npm run docs:tools`; do not hand-edit. See [tool workflows](tools.md) for sessions, gestures, ad jobs and file transfers.
 
-Release **0.16.2** · **59 tools** · API **1** · catalog **d86af3e18e51f9a6**.
+Release **0.17.0** · **62 tools** · API **1** · catalog **c1b6e733309e4029**.
 
 | Tool | Access | Purpose |
 |---|---|---|
-| [`phone_connection`](#phone-connection) | Read | Check the actual connection and current server/catalog version, including when the phone is offline. |
+| [`phone_connection`](#phone-connection) | Read | Check the actual connection and current server/catalog version, including when the phone is offline. Includes recent content-free owner-scoped relay timings for end-to-end speed diagnosis; host/model time is not directly measured. |
 | [`phone_catalog`](#phone-catalog) | Read | Live operation catalog. Request an operation for its current arguments schema. The stable gateways automatically use this catalog after server updates. |
 | [`phone_read`](#phone-read) | Read | Read through the stable API. Discover operation and arguments with phone_catalog. New read operations are available automatically. |
 | [`phone_action`](#phone-action) | Action | Execute an authorized write through the stable API. Discover its current arguments with phone_catalog. New actions are available automatically. |
@@ -14,6 +14,9 @@ Release **0.16.2** · **59 tools** · API **1** · catalog **d86af3e18e51f9a6**.
 | [`phone_diagnostics`](#phone-diagnostics) | Read | On-demand battery, CPU, memory and Phone MCP wakelock counters. Does not read app contents. |
 | [`phone_diagnostic_probe`](#phone-diagnostic-probe) | Action | Run or retrieve a bounded two-sample battery observation without a wakelock. It can outlive a stopped Phone MCP service. |
 | [`phone_session_create`](#phone-session-create) | Action | Create a separately routed app session. requestId is an idempotent UUID; keep the returned sessionId. Does not launch the app. The physical-screen policy is selected only in local Phone MCP settings. keepRendering=true preserves visual background work during pauses at a higher idle cost. After a successful user handoff, create a new requestId/session; the former session stays terminated. Explicit local Stop still requires local resumption. |
+| [`phone_start_app`](#phone-start-app) | Action | Fast path: create one owned app session, open the app once and return its first observation plus screenshot in ONE tool call. Prefer this over separate create/open/snapshot/capture calls. A repeated requestId retains the existing session without reopening its app. Inspect launchUncertain and observationError; never replay an uncertain launch. Returns observation with a fresh snapshot after the action. |
+| [`phone_ui_flow`](#phone-ui-flow) | Action | Execute 1-8 planned exact semantic clicks/waits with fresh native target guards and ONE final observation/screenshot. Use for already understood navigation; no model round trip between steps. Stops at the first missing/ambiguous/protected target, error or deadline. Inspect completedSteps/failedStep/uncertain; never replay a partial flow. App/session and local stop guards remain enforced. Use action_sequence for already observed Canvas/game gestures. Returns observation with a fresh snapshot after the action. |
+| [`phone_board_move`](#phone-board-move) | Action | Play one already-decided chess move such as e2e4 using the boardId from observation.board. Prefer the observed board.piecePlacementFen over manually decoding coordinates. Freshly rechecks all 64 accessible squares and app/session/window geometry, captures the current source, then sends one two-tap sequence with a final observation/image. Refuses changed/incomplete boards before any input. No engine or move selection; no full legality or turn inference. Promotion choices remain separate. Never replay partial/uncertain inputs. Returns observation with a fresh snapshot after the action. |
 | [`phone_session_wake`](#phone-session-wake) | Action | Recover only the existing AI display under the screen policy selected locally in Phone MCP settings. This tool cannot enable the physical-screen-on mode or change the local setting. It does not relaunch the app or bypass keyguard. If off-screen recovery fails, report it instead of choosing a lit-screen fallback. |
 | [`phone_session_cleanup`](#phone-session-cleanup) | Action | Remove empty abandoned task records for an authorized app. Active and physical tasks are always preserved. Optional taskIds migrate identified legacy AI tasks; no live app is closed. |
 | [`phone_session_list`](#phone-session-list) | Read | List this authorization’s active and ended app sessions, their displays, isolation and lease state. |
@@ -35,7 +38,7 @@ Release **0.16.2** · **59 tools** · API **1** · catalog **d86af3e18e51f9a6**.
 | [`phone_swipe`](#phone-swipe) | Action | Swipe within the freshly observed window and stable geometry. For canvas/game areas, first capture the same snapshot. Returns observation with a fresh snapshot after the action. |
 | [`phone_action_sequence`](#phone-action-sequence) | Action | Execute up to 8 already observed taps/swipes locally in one bounded command, with one final observation. Prefer one swipe for a drag or two taps for source/destination. Every step keeps the original session, app, window and target guards. Stops at the first failure; inspect executedCount and failedStep, never replay the whole sequence. Does not bypass app timers, protected content or reward conditions. Returns observation with a fresh snapshot after the action. |
 | [`phone_ad_start`](#phone-ad-start) | Action | Start one bounded local ad-closing job on an existing app session. The phone waits and closes available controls across successive ad windows without model round trips. Supply observed app returnTargets; for a graphical game, save its host windowId before the ad, then use by=windowId/exact only after another ad window opens. Available close/skip controls are preferred. Hidden ad controls can be revealed with bounded neutral taps; visual skip icons need positive pixel evidence beside an observed badge. It never skips observed timers or claims rewards; follow ad_status, or ad_cancel. Reuse requestId only for the same job. |
-| [`phone_ad_status`](#phone-ad-status) | Read | Read a local ad job with a bounded long poll. completed confirms an observed returnTarget, not a reward. Keep the exact packageName, sessionId and jobId. Read-only: never clicks or starts another job. |
+| [`phone_ad_status`](#phone-ad-status) | Read | Read a local ad job with up to 20 seconds of server-side waiting, split into APK-compatible reads. Prefer waitMs=20000; observe=true and includeScreenshot=true return final UI evidence when terminal, avoiding extra model turns. completed confirms an observed returnTarget, not a reward. Keep the exact packageName, sessionId and jobId. Read-only: never clicks or starts another job. |
 | [`phone_ad_cancel`](#phone-ad-cancel) | Action | Cancel only this local ad job immediately. It does not end or resume its app session. Actions already delivered may have taken effect; inspect the returned state before continuing. |
 | [`phone_set_control_mode`](#phone-set-control-mode) | Action | Explicitly select foreground or parallel, preserving the existing session and permissions. |
 | [`phone_files_list`](#phone-files-list) | Read | List Phone MCP transfers and recent installation jobs. Requires Shizuku. |
@@ -70,7 +73,7 @@ Release **0.16.2** · **59 tools** · API **1** · catalog **d86af3e18e51f9a6**.
 
 `phone_connection`
 
-Check the actual connection and current server/catalog version, including when the phone is offline.
+Check the actual connection and current server/catalog version, including when the phone is offline. Includes recent content-free owner-scoped relay timings for end-to-end speed diagnosis; host/model time is not directly measured.
 
 | Parameter | Required | Schema |
 |---|---|---|
@@ -156,6 +159,67 @@ Create a separately routed app session. requestId is an idempotent UUID; keep th
 | `leaseSeconds` | No | `{"type":"integer","minimum":30,"maximum":900,"default":300}` |
 | `keepRendering` | No | `{"type":"boolean","default":false}` |
 | `sessionId` | No | `{"$ref":"#/properties/requestId"}` |
+
+## phone-start-app
+
+`phone_start_app`
+
+Fast path: create one owned app session, open the app once and return its first observation plus screenshot in ONE tool call. Prefer this over separate create/open/snapshot/capture calls. A repeated requestId retains the existing session without reopening its app. Inspect launchUncertain and observationError; never replay an uncertain launch. Returns observation with a fresh snapshot after the action.
+
+| Parameter | Required | Schema |
+|---|---|---|
+| `requestId` | Yes | `{"type":"string","format":"uuid"}` |
+| `packageName` | Yes | `{"type":"string","minLength":3,"maxLength":240,"pattern":"^(?:android\|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"}` |
+| `label` | No | `{"type":"string","minLength":1,"maxLength":80}` |
+| `leaseSeconds` | No | `{"type":"integer","minimum":30,"maximum":900,"default":300}` |
+| `keepRendering` | No | `{"type":"boolean","default":false}` |
+| `observe` | No | `{"type":"boolean","default":true}` |
+| `settleMs` | No | `{"type":"integer","minimum":0,"maximum":800}` |
+| `detail` | No | `{"type":"string","enum":["compact","full"],"default":"compact"}` |
+| `includeScreenshot` | No | `{"type":"boolean","default":true}` |
+| `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
+| `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |
+| `annotate` | No | `{"type":"boolean","default":false}` |
+
+## phone-ui-flow
+
+`phone_ui_flow`
+
+Execute 1-8 planned exact semantic clicks/waits with fresh native target guards and ONE final observation/screenshot. Use for already understood navigation; no model round trip between steps. Stops at the first missing/ambiguous/protected target, error or deadline. Inspect completedSteps/failedStep/uncertain; never replay a partial flow. App/session and local stop guards remain enforced. Use action_sequence for already observed Canvas/game gestures. Returns observation with a fresh snapshot after the action.
+
+| Parameter | Required | Schema |
+|---|---|---|
+| `packageName` | Yes | `{"type":"string","minLength":3,"maxLength":240,"pattern":"^(?:android\|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"}` |
+| `sessionId` | Yes | `{"type":"string","format":"uuid"}` |
+| `steps` | Yes | `{"type":"array","items":{"type":"object","properties":{"op":{"type":"string","enum":["wait_and_click","wait_for"]},"query":{"type":"string","minLength":1,"maxLength":250},"by":{"type":"string","enum":["text","description","viewId"],"default":"text"},"timeoutMs":{"type":"integer","minimum":100,"maximum":8000,"default":3000}},"required":["op","query"],"additionalProperties":false},"minItems":1,"maxItems":8}` |
+| `timeoutMs` | No | `{"type":"integer","minimum":100,"maximum":8000,"default":8000}` |
+| `observe` | No | `{"type":"boolean","default":true}` |
+| `settleMs` | No | `{"type":"integer","minimum":0,"maximum":800}` |
+| `detail` | No | `{"type":"string","enum":["compact","full"],"default":"compact"}` |
+| `includeScreenshot` | No | `{"type":"boolean","default":true}` |
+| `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
+| `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |
+| `annotate` | No | `{"type":"boolean","default":false}` |
+
+## phone-board-move
+
+`phone_board_move`
+
+Play one already-decided chess move such as e2e4 using the boardId from observation.board. Prefer the observed board.piecePlacementFen over manually decoding coordinates. Freshly rechecks all 64 accessible squares and app/session/window geometry, captures the current source, then sends one two-tap sequence with a final observation/image. Refuses changed/incomplete boards before any input. No engine or move selection; no full legality or turn inference. Promotion choices remain separate. Never replay partial/uncertain inputs. Returns observation with a fresh snapshot after the action.
+
+| Parameter | Required | Schema |
+|---|---|---|
+| `packageName` | Yes | `{"type":"string","minLength":3,"maxLength":240,"pattern":"^(?:android\|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"}` |
+| `sessionId` | Yes | `{"type":"string","format":"uuid"}` |
+| `boardId` | Yes | `{"type":"string","pattern":"^[a-fA-F0-9]{64}$"}` |
+| `uci` | Yes | `{"type":"string","pattern":"^[a-h][1-8][a-h][1-8]$"}` |
+| `observe` | No | `{"type":"boolean","default":true}` |
+| `settleMs` | No | `{"type":"integer","minimum":0,"maximum":800}` |
+| `detail` | No | `{"type":"string","enum":["compact","full"],"default":"compact"}` |
+| `includeScreenshot` | No | `{"type":"boolean","default":true}` |
+| `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
+| `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |
+| `annotate` | No | `{"type":"boolean","default":false}` |
 
 ## phone-session-wake
 
@@ -504,14 +568,19 @@ Start one bounded local ad-closing job on an existing app session. The phone wai
 
 `phone_ad_status`
 
-Read a local ad job with a bounded long poll. completed confirms an observed returnTarget, not a reward. Keep the exact packageName, sessionId and jobId. Read-only: never clicks or starts another job.
+Read a local ad job with up to 20 seconds of server-side waiting, split into APK-compatible reads. Prefer waitMs=20000; observe=true and includeScreenshot=true return final UI evidence when terminal, avoiding extra model turns. completed confirms an observed returnTarget, not a reward. Keep the exact packageName, sessionId and jobId. Read-only: never clicks or starts another job.
 
 | Parameter | Required | Schema |
 |---|---|---|
 | `packageName` | Yes | `{"type":"string","minLength":3,"maxLength":240,"pattern":"^(?:android\|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"}` |
 | `sessionId` | Yes | `{"type":"string","format":"uuid"}` |
 | `jobId` | Yes | `{"$ref":"#/properties/sessionId"}` |
-| `waitMs` | No | `{"type":"integer","minimum":0,"maximum":8000,"default":0}` |
+| `waitMs` | No | `{"type":"integer","minimum":0,"maximum":20000,"default":0}` |
+| `observe` | No | `{"type":"boolean","default":false}` |
+| `includeScreenshot` | No | `{"type":"boolean","default":false}` |
+| `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
+| `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |
+| `annotate` | No | `{"type":"boolean","default":false}` |
 
 ## phone-ad-cancel
 

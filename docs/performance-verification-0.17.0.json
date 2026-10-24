@@ -1,0 +1,249 @@
+{
+  "date": "2026-10-24",
+  "relayVersion": "0.17.0-cloud",
+  "androidVersion": "0.16.2",
+  "device": "Samsung Galaxy S24 Ultra (SM-S928B)",
+  "catalogVersion": "c1b6e733309e4029",
+  "toolCount": 62,
+  "apiVersion": 1,
+  "scope": "Real device; small neutral offline interaction sample and analysis-board move. Model latency measured separately, never included in relayTiming.",
+  "imageSettings": {
+    "maxDimension": 1920,
+    "quality": 95,
+    "observedWidth": 720,
+    "observedHeight": 1280
+  },
+  "pairedRuns": [
+    {
+      "index": 1,
+      "separateCalls": 3,
+      "separateHostMs": 4482,
+      "separateRelayMs": 2494,
+      "flowCalls": 1,
+      "flowHostMs": 1362,
+      "flowRelayMs": 713,
+      "flowNativeActionMs": 319,
+      "completed": true,
+      "performedActions": 3
+    },
+    {
+      "index": 2,
+      "separateCalls": 3,
+      "separateHostMs": 4890,
+      "separateRelayMs": 1449,
+      "flowCalls": 1,
+      "flowHostMs": 1347,
+      "flowRelayMs": 596,
+      "flowNativeActionMs": 201,
+      "completed": true,
+      "performedActions": 3
+    },
+    {
+      "index": 3,
+      "separateCalls": 3,
+      "separateHostMs": 3443,
+      "separateRelayMs": 1464,
+      "flowCalls": 1,
+      "flowHostMs": 5476,
+      "flowRelayMs": 4818,
+      "flowNativeActionMs": 4284,
+      "completed": true,
+      "performedActions": 3
+    }
+  ],
+  "fixtureCounter": {
+    "beforePairedTrials": 3,
+    "expectedAfter": 21,
+    "observedAfter": 21
+  },
+  "analysisBoard": {
+    "onlineHumanMatch": false,
+    "move": "e2-e4",
+    "sourceEmptyAndDestinationPawnVerified": true,
+    "hostMs": 2629,
+    "relayTiming": {
+      "totalMs": 1671,
+      "deviceMs": 1671,
+      "deviceCommands": 3,
+      "queueMs": 0,
+      "modelTimeIncluded": false
+    },
+    "actionSequenceSteps": 2
+  },
+  "checks": {
+    "repeatedStartDidNotReopen": true,
+    "missingFirstTargetStoppedLaterInput": true,
+    "counterAfterMissingTarget": 3,
+    "androidInstallNeeded": false
+  },
+  "limits": [
+    "Three pairs are not a sustained gaming benchmark. One flow took 5476 ms including a 4284 ms native action phase; the exact source of that outlier was not isolated.",
+    "No new reward-ad creative was completed as proof for this relay change; native ad-closing logic is unchanged, and timers remain app-controlled.",
+    "These paired trials were directly orchestrated without interposed model reasoning. Separate ChatGPT wall-clock trials are necessary for reasoning-inclusive results.",
+    "No full-game speed, model-quality equivalence, battery gain or universal off-screen compatibility is established."
+  ],
+  "chatgptTrials": {
+    "modelLabelObserved": "GPT-6",
+    "effortLabelObserved": "Moyen",
+    "exactSolVsLunaVariantExposed": false,
+    "modelSwitched": false,
+    "source": "Client turn startedAt/completedAt, independently read from the desktop ChatGPT thread; not self-reported durations.",
+    "pairs": [
+      {
+        "phase": "first use",
+        "separateTurnMs": 15796,
+        "flowTurnMs": 31320,
+        "beforeCounter": 21,
+        "afterSeparate": 24,
+        "afterFlow": 27
+      },
+      {
+        "phase": "repeat in same chat",
+        "separateTurnMs": 15944,
+        "flowTurnMs": 12459,
+        "beforeCounter": 0,
+        "afterSeparate": 3,
+        "afterFlow": 6
+      }
+    ],
+    "finalMessageRendering": "ChatGPT web showed 'Impossible de charger cette réponse' on these turns, also after reload. Device effects were independently verified. Treat these as executed-turn timings, not proof of a correctly rendered final answer.",
+    "conclusion": "First flow was slower; warmed flow was about 22% faster in this one pair. No reliable or order-of-magnitude model-speed gain is established."
+  },
+  "chessWithModel": {
+    "preopenedAnalysisBoard": true,
+    "noHumanMatch": true,
+    "modelLabels": "GPT-6 / Moyen",
+    "beforeCoordinates": {
+      "turnStartedAtMs": 1792872857666,
+      "turnCompletedAtMs": 1792872888705,
+      "fullTurnMs": 31039,
+      "timeToConfirmedMoveEstimateMs": 29626,
+      "relayMs": 4262,
+      "calls": [
+        {
+          "operation": "snapshot",
+          "startedAt": 1792872864515,
+          "completedAt": 1792872865566,
+          "totalMs": 1051,
+          "deviceMs": 1051,
+          "deviceCommands": 2,
+          "queueMs": 0,
+          "success": true
+        },
+        {
+          "operation": "snapshot",
+          "startedAt": 1792872876746,
+          "completedAt": 1792872878019,
+          "totalMs": 1273,
+          "deviceMs": 1273,
+          "deviceCommands": 2,
+          "queueMs": 0,
+          "success": true
+        },
+        {
+          "operation": "action_sequence",
+          "startedAt": 1792872885354,
+          "completedAt": 1792872887292,
+          "totalMs": 1938,
+          "deviceMs": 1938,
+          "deviceCommands": 3,
+          "queueMs": 0,
+          "success": true
+        }
+      ],
+      "clockNote": "Time-to-move estimates subtract ChatGPT and relay UTC timestamps; no independent cross-service clock calibration."
+    },
+    "afterStructured": {
+      "turnStartedAtMs": 1792873177618,
+      "turnCompletedAtMs": null,
+      "fullTurnMs": null,
+      "timeToConfirmedMoveEstimateMs": 18308,
+      "relayMs": 3444,
+      "calls": [
+        {
+          "operation": "snapshot",
+          "startedAt": 1792873182999,
+          "completedAt": 1792873184063,
+          "totalMs": 1064,
+          "deviceMs": 1064,
+          "deviceCommands": 1,
+          "queueMs": 0,
+          "success": true
+        },
+        {
+          "operation": "board_move",
+          "startedAt": 1792873193546,
+          "completedAt": 1792873195926,
+          "totalMs": 2380,
+          "deviceMs": 2380,
+          "deviceCommands": 5,
+          "queueMs": 0,
+          "success": true
+        }
+      ],
+      "clockNote": "Time-to-move estimates subtract ChatGPT and relay UTC timestamps; no independent cross-service clock calibration."
+    },
+    "replyReusingObservation": {
+      "turnStartedAtMs": 1792873260771,
+      "turnCompletedAtMs": 1792873274908,
+      "fullTurnMs": 14137,
+      "timeToConfirmedMoveEstimateMs": 10434,
+      "relayMs": 2231,
+      "calls": [
+        {
+          "operation": "board_move",
+          "startedAt": 1792873268974,
+          "completedAt": 1792873271205,
+          "totalMs": 2231,
+          "deviceMs": 2231,
+          "deviceCommands": 5,
+          "queueMs": 0,
+          "success": true
+        }
+      ],
+      "clockNote": "Time-to-move estimates subtract ChatGPT and relay UTC timestamps; no independent cross-service clock calibration."
+    },
+    "firstMoveVerified": "e2e4",
+    "replyVerified": "e7e5",
+    "afterStructuredUiDurationSeconds": 19,
+    "afterStructuredCompletionTimestampInvalid": true,
+    "limitations": "First-move comparison is one simple opening per path, with the board already open. No full-game speed or strategic-quality equivalence was measured. ChatGPT web did not render final messages correctly; executed phone effects were verified independently."
+  },
+  "chessBoardChecks": {
+    "staleBoardRejectedBeforeInput": true,
+    "observedScopeAndPositionPreserved": true,
+    "directMove": "g1f3",
+    "moveVerified": true,
+    "executedCount": 2,
+    "hostMs": 2308,
+    "relayTiming": {
+      "totalMs": 1563,
+      "deviceMs": 1563,
+      "deviceCommands": 5,
+      "queueMs": 0,
+      "modelTimeIncluded": false
+    },
+    "sourceImage": {
+      "width": 720,
+      "height": 1280,
+      "frameContent": "visible_pixels"
+    },
+    "preservedPiecePlacement": "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R"
+  },
+  "tests": {
+    "server": 113,
+    "cloudflare": 19,
+    "docs": "passed",
+    "androidChanged": false
+  },
+  "chatgptImport": {
+    "refreshed": true,
+    "write": 42,
+    "read": 20,
+    "total": 62,
+    "namedInventoryReadBack": true,
+    "freshNamedChessInvocation": false,
+    "stableGatewayChessInvocationVerified": true,
+    "note": "All 62 names and the updated board/ad/timing descriptions were read back from ChatGPT after refresh; 42 write + 20 read. Existing conversation gateways were exercised; a fresh named invocation was not tested."
+  }
+}

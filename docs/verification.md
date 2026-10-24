@@ -2,6 +2,10 @@
 
 Evidence is scoped to the version and scenario actually tested. Successful builds, accepted tool calls, visible app effects and battery improvements are distinct claims.
 
+## 0.17.0 relay performance update
+
+The companion remains Android 0.16.2; no installation or Android source change is part of this relay update. The new owned launch, semantic flow, partial failure and preserved state were exercised on the real S24. A real Chess.com analysis-board move used one two-tap sequence and final full-quality image. See [the measured results](performance.md) and [sanitized timing data](performance-verification-0.17.0.json). The later client trials include model/host time, including unsuccessful final-message rendering, and do not establish faster full games or universal ad completion. The final local suites passed 113 server and 19 Cloudflare checks; the imported ChatGPT inventory was read back as 42 write + 20 read tools.
+
 ## 0.16.2 capture release — S24 Ultra / Android 16
 
 | Check | Evidence |

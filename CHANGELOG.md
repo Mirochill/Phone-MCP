@@ -1,5 +1,14 @@
 # Release history
 
+## 0.17.0 relay — 2026-10-24 (Android remains 0.16.2)
+
+- Add `phone_start_app`: owned session creation, one app launch and first observation/image in a single call. Reusing the request retains the existing app; uncertain launches are never replayed.
+- Add `phone_board_move`: derive an exact complete accessible chess position, accept a chosen algebraic move, recheck the current position/window before fresh gestures and verify observed piece movement. No engine, guessed pieces or inferred full FEN.
+- Add `phone_ui_flow`: 1–8 exact semantic click/wait steps, fresh guards per step and one final observation/image. Missing/ambiguous targets, deadlines and cancellation stop subsequent inputs.
+- Extend read-only `phone_ad_status` to a bounded 20-second wait and optional final UI evidence, using existing APK-compatible native reads. Start independent local jobs before waiting; ad timers remain unchanged.
+- Add observed `clickNodeId` parent hints for non-clickable labels, per-call relay/device/queue timing, and a bounded content-free owner-scoped timing history. Relay durations explicitly exclude model time; compare them with full client-turn timestamps.
+- Expose 62 tools / 58 operations, API 1. Preserve image quality and existing Android screen policy; no APK replacement is needed. See [performance evidence and limits](docs/performance.md).
+
 ## 0.16.2 — 2026-10-24
 
 - Source-only PNG and silent MP4 capture from the local AI preview. Continue recording outside the viewer, use its notification to stop, and save to the PhoneMCP Gallery album.

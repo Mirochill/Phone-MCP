@@ -6,6 +6,8 @@ The repository contains the maintained original Android 0.16.2 Java/AIDL/resourc
 
 Android source correspondence is checked by hashes against the maintained release snapshot. The public relay retains its prior native-loopback OAuth adaptation, separate from the Android APK. Tests and complete MCP tool schemas are generated/run against the actual public source. Publishing this tree does not deploy a user's relay or change an installed client's cache.
 
+Relay 0.17.0 adds server-side fast workflows, structured board evidence and algebraic moves; Android source and the distributed APK remain 0.16.2. The [performance record](performance.md) separates relay, client-turn and hardware evidence.
+
 ## Distributed APK 0.16.2
 
 | Field | Value |

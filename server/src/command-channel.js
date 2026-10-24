@@ -34,7 +34,18 @@ export class CommandChannel {
 
 /** Serialize a complete action + observation only within its own session. */
 export class OperationScheduler {
-  lanes=new Map();ended=new Map();transportRevision=0;
+  lanes=new Map();ended=new Map();transportRevision=0;timingHistory=new Map();
+  // Content-free, owner-scoped diagnostics: bounded RAM only, no polling/storage.
+  recordTiming(owner,event){
+    const {operation,startedAt,completedAt,totalMs,deviceMs,deviceCommands,queueMs,success}=event;
+    const recent=this.recentTimings(owner,completedAt);
+    recent.push({operation,startedAt,completedAt,totalMs,deviceMs,deviceCommands,queueMs,success});
+    this.timingHistory.delete(owner);this.timingHistory.set(owner,recent.slice(-48));
+    while(this.timingHistory.size>32)this.timingHistory.delete(this.timingHistory.keys().next().value);
+  }
+  recentTimings(owner,now=Date.now()){
+    return (this.timingHistory.get(owner)??[]).filter(e=>e.completedAt>=now-300000).map(e=>({...e}));
+  }
   disconnect(){this.transportRevision++;}
   key(args){return args._ownerKey+'|'+(args.sessionId??('app:'+args.packageName));}
   run(op,args,work){

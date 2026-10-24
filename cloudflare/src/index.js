@@ -40,7 +40,9 @@ export default {
 };
 export class PhoneHub {
  constructor(ctx,env){this.ctx=ctx;this.env=env;this.oauth=new CloudOAuth(ctx.storage,env);this.channel=new CommandChannel(env.ALLOW_LOCAL_HTTP==='true'?240:12000);this.scheduler=new OperationScheduler();
-  ctx.blockConcurrencyWhile(async()=>{if(!await ctx.storage.getAlarm())await ctx.storage.setAlarm(Date.now()+86400000);});
+  const recordTiming=this.scheduler.recordTiming.bind(this.scheduler);
+  this.scheduler.recordTiming=(owner,event)=>{recordTiming(owner,event);return ctx.storage.put('relayTimingHistory',[...this.scheduler.timingHistory]);};
+  ctx.blockConcurrencyWhile(async()=>{const rows=await ctx.storage.get('relayTimingHistory');if(Array.isArray(rows)){const now=Date.now();for(const [owner,events] of rows.slice(-32))if(typeof owner==='string'&&Array.isArray(events)){const recent=events.filter(e=>e.completedAt>=now-300000).slice(-48);if(recent.length)this.scheduler.timingHistory.set(owner,recent);}}if(!await ctx.storage.getAlarm())await ctx.storage.setAlarm(Date.now()+86400000);});
  }
  sockets(){return this.ctx.getWebSockets('phone').filter(ws=>ws.readyState===1&&!ws.deserializeAttachment()?.superseded);}
  connection(){const ws=this.sockets()[0];return {connected:!!ws,connectedSince:ws?.deserializeAttachment()?.connectedSince??null,commandInProgress:this.channel.pending.size>0,serverVersion:VERSION,requiresPC:false};}
