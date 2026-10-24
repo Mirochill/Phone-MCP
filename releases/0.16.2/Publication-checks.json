@@ -1,0 +1,64 @@
+{
+  "version": "0.16.2",
+  "checkedDate": "2026-10-24",
+  "status": "passed",
+  "androidSource": {
+    "files": 143,
+    "matchesMaintainedSnapshot": true,
+    "lineEndingsNormalized": true
+  },
+  "apk": {
+    "sha256": "fe751fb2aba57c2e6ecd627a82c1674ea779935f674da2fe3ad314bf769d3233",
+    "sizeBytes": 3620683,
+    "package": "fr.phonemcp",
+    "versionCode": 65,
+    "signature": "pass",
+    "zipAlignment16K": "pass",
+    "publicRebuild": "assembleRelease and lintRelease pass",
+    "matchingNonSignatureZipEntries": 16,
+    "fullSignedRebuildIdentityClaimed": false
+  },
+  "tests": {
+    "server": 94,
+    "cloudRuntimeAndUpdate": 18,
+    "javaPolicyFamilies": 30,
+    "javaPolicyAssertions": 1082,
+    "androidDoubles": {
+      "previewFrames": 22,
+      "previewRouting": 16,
+      "screenChoice": 27,
+      "captureMirror": 26,
+      "pendingMedia": 16
+    }
+  },
+  "mcp": {
+    "tools": 59,
+    "operations": 55,
+    "catalogVersion": "d86af3e18e51f9a6",
+    "matchesLiveCatalog": true,
+    "schemasGeneratedFrom": "actual MCP tools/list through SDK in-memory transport"
+  },
+  "docs": {
+    "localLinks": "pass",
+    "generatedSchemasFreshness": "pass"
+  },
+  "privacy": {
+    "exactKnownSecrets": "pass",
+    "privatePathsAndDeploymentIdentifiers": "pass",
+    "nestedApkAndZipContents": "pass",
+    "scannedFilesAndArchiveEntries": 375,
+    "publicFiles": 278,
+    "note": "Exact known secret and credential/path checks; not a full security audit."
+  },
+  "publicationAdaptations": [
+    "Retain public native-loopback OAuth and consent CSP instead of reverting to HTTPS-only redirects.",
+    "Retain portable cloudflared lookup.",
+    "Local test runners use the public Worker example and fresh isolated test storage."
+  ],
+  "limits": [
+    "Hardware results in Verification-0.16.2.json are historical device tests; no phone interaction was needed for this GitHub synchronization.",
+    "No battery or sustained performance claim.",
+    "APK self-updates interrupt active sessions.",
+    "Existing pinned dependencies are retained; this update is not dependency advisory remediation."
+  ]
+}

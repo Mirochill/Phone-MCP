@@ -43,3 +43,31 @@ test('only verified independent displays stay usable behind the physical keyguar
   assert.equal(describeControlStatus(raw).nextControlAction,'use_parallel_tools');
   for(const extra of [{ready:false},{displayId:0},{independentKeyguard:false},{independentKeyguard:'true'}])assert.equal(describeControlStatus({...raw,parallel:{...raw.parallel,...extra}}).screenControlReady,false);
 });
+
+test('a verified lazy session manager is ready before allocating a display',()=>{
+ const result=describeControlStatus({controlMode:'parallel',parallel:{ready:true,displayId:-1,maxSessions:4,sessions:[],independentKeyguard:true}});assert.equal(result.screenControlReady,true);assert.equal(result.nextControlAction,'use_parallel_tools');
+});
+
+test('sleeping shared-group status warns about input without revoking read permission',()=>{
+  const raw={controlMode:'parallel',parallel:{ready:true,displayId:86,independentKeyguard:true,deviceInteractive:false,screenPolicy:{lastVirtualGroup:{displayId:86,directGroupId:0}}}};
+  const v=describeControlStatus(raw);
+  assert.equal(v.screenControlAllowed,true);assert.equal(v.screenControlReady,true);
+  assert.equal(v.lastCheckedInputBlocked,true);assert.equal(v.lastCheckedInputDisplay,86);
+  assert.equal(v.nextControlAction,'check_parallel_input_interactivity');assert.match(v.controlSummary,/sans effet/);
+  assert.doesNotMatch(v.controlSummary,/indépendant du verrouillage/);assert.deepEqual(v.parallel,raw.parallel);
+});
+test('an independent or unknown group is not declared blocked from primary sleep alone',()=>{
+  for(const group of [7,-1,undefined]){
+    const v=describeControlStatus({controlMode:'parallel',parallel:{ready:true,displayId:86,independentKeyguard:true,deviceInteractive:false,screenPolicy:{lastVirtualGroup:{displayId:86,directGroupId:group}}}});
+    assert.equal(v.lastCheckedInputBlocked,false);assert.equal(v.nextControlAction,'use_parallel_tools');
+  }
+});
+
+test('owned physical blank advertises on-demand masked Android wake without requiring a lit screen',()=>{
+ const raw={controlMode:'parallel',parallel:{ready:true,displayId:89,independentKeyguard:true,deviceInteractive:false,screenPolicy:{sharedGroupWakeRequiresPhysicalBlank:true,physicalPanelOff:true,defaultGroupWakeAllowed:true,lastVirtualGroup:{displayId:89,directGroupId:0}}}};
+ const v=describeControlStatus(raw);assert.equal(v.maskedAndroidWakeReady,true);assert.equal(v.lastCheckedInputBlocked,false);assert.equal(v.nextControlAction,'use_parallel_tools');assert.match(v.controlSummary,/dalle physique noire/);
+ for(const extra of [{physicalPanelOff:false},{defaultGroupWakeAllowed:false},{sharedGroupWakeRequiresPhysicalBlank:false},{defaultGroupWakeAllowed:'true'}]){
+  const old=describeControlStatus({...raw,parallel:{...raw.parallel,screenPolicy:{...raw.parallel.screenPolicy,...extra}}});assert.equal(old.maskedAndroidWakeReady,false);assert.equal(old.lastCheckedInputBlocked,true);
+ }
+ const revoked=describeControlStatus({...raw,sessionActive:false});assert.equal(revoked.maskedAndroidWakeReady,false);assert.equal(revoked.screenControlAllowed,false);
+});

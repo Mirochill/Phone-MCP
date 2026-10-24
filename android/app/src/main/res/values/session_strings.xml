@@ -1,0 +1,7 @@
+<resources>
+    <string name="preview_stop_control">Stop AI control</string>
+    <string name="agent_sessions">AI sessions</string>
+    <string name="agent_exclusive">This app has one navigation instance in this Android profile.</string>
+    <string name="agent_locally_stopped">AI control stopped on this phone.</string>
+    <string name="agent_allow_resume">Allow AI control again</string>
+</resources>

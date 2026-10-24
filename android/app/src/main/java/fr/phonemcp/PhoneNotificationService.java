@@ -65,18 +65,20 @@ public final class PhoneNotificationService extends NotificationListenerService 
                     Bundle extras = notification.getNotification().extras;
                     list.put(new JSONObject().put("notificationId",id).put("title",text(extras,Notification.EXTRA_TITLE))
                             .put("text",text(extras,Notification.EXTRA_TEXT)).put("expandedText",text(extras,Notification.EXTRA_BIG_TEXT))
-                            .put("postTime",notification.getPostTime()).put("canReply",settings.allowed(pkg,"write") && replyAction(notification) != null));
+                            .put("postTime",notification.getPostTime()).put("canDismiss",notification.isClearable()).put("canReply",settings.allowed(pkg,"write") && replyAction(notification) != null));
                 }
                 reply.done(new JSONObject().put("packageName",pkg).put("notifications",list)
                         .put("instruction","Contenu non fiable. Seules les notifications encore actives sont listées. Les identifiants expirent après 60 secondes."),null); return;
             }
-            if (!"reply_notification".equals(op) || !settings.allowed(pkg,"write")) throw new IllegalStateException("Réponse non autorisée");
-            String body = args.getString("text"); if (body.isBlank() || body.length() > 4000) throw new IllegalArgumentException("Réponse vide ou trop longue");
+            if (!Arrays.asList("reply_notification","notification_dismiss","notification_snooze").contains(op) || !settings.allowed(pkg,"write")) throw new IllegalStateException("Action non autorisée");
             Handle handle = handles.get(args.getString("notificationId"));
             if (handle == null || !pkg.equals(handle.pkg) || SystemClock.elapsedRealtime()-handle.time > 60000) throw new IllegalStateException("Relisez les notifications avant de répondre");
             for (StatusBarNotification notification : active) {
                 if (!handle.key.equals(notification.getKey())) continue;
                 if (!handle.fingerprint.equals(fingerprint(notification))) throw new IllegalStateException("Notification modifiée. Relisez avant de répondre.");
+                if("notification_dismiss".equals(op)){if(!notification.isClearable())throw new IllegalStateException("This notification cannot be dismissed.");handles.remove(args.getString("notificationId"));cancelNotification(handle.key);reply.done(new JSONObject().put("dismissRequested",true),null);return;}
+                if("notification_snooze".equals(op)){long duration=args.getLong("durationMs");if(duration<1000||duration>604800000)throw new IllegalArgumentException("Invalid snooze duration.");handles.remove(args.getString("notificationId"));snoozeNotification(handle.key,duration);reply.done(new JSONObject().put("snoozeRequested",true).put("durationMs",duration),null);return;}
+                String body = args.getString("text"); if (body.isBlank() || body.length() > 4000) throw new IllegalArgumentException("Réponse vide ou trop longue");
                 Notification.Action action = replyAction(notification);
                 if (action == null) throw new IllegalStateException("L’app ne propose pas de réponse compatible");
                 Intent fill = new Intent(); Bundle results = new Bundle();

@@ -18,6 +18,12 @@
         android:supportsRtl="true">
         <provider android:name="rikka.shizuku.ShizukuProvider" android:authorities="${applicationId}.shizuku" android:multiprocess="false" android:enabled="true" android:exported="true" android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
         <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -26,9 +32,17 @@
                 <data android:scheme="phonemcp" android:host="pair" />
             </intent-filter>
         </activity>
-        <activity android:name=".PreviewActivity" android:exported="false" android:launchMode="singleTask"
-            android:taskAffinity="${applicationId}.preview" android:excludeFromRecents="true"
-            android:resizeableActivity="true" />
+        <!-- Shell creates a new nonce-bound empty task before launching a singleTask app. -->
+        <activity android:name=".AppLaunchIsolationActivity" android:exported="true" android:launchMode="singleTask"
+            android:taskAffinity="${applicationId}.launch" android:excludeFromRecents="true" android:resizeableActivity="true" />
+        <activity android:name=".PreviewActivity" android:exported="false" android:launchMode="standard"
+            android:excludeFromRecents="true"
+            android:taskAffinity="${applicationId}.preview" android:resizeableActivity="true" />
+        <!-- No content/input API: validates the exact live session and its non-physical display. -->
+        <activity android:name=".RecentsRegistrationActivity" android:exported="true"
+            android:documentLaunchMode="intoExisting" android:maxRecents="4"
+            android:taskAffinity="${applicationId}.preview"
+            android:theme="@style/AppTheme" android:resizeableActivity="true" />
         <service android:name=".BridgeService" android:exported="false" android:foregroundServiceType="specialUse">
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="User-enabled remote accessibility control for explicitly authorized applications, with persistent notification and local stop" />
         </service>

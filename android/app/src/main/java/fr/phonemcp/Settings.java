@@ -28,6 +28,7 @@ final class Settings {
                 || uri.getQuery() != null || uri.getFragment() != null
                 || !(uri.getPath().isEmpty() || "/".equals(uri.getPath())))
             throw new IllegalArgumentException("Utilisez l’origine HTTPS du serveur, sans chemin ni paramètres.");
+        if(token.isEmpty()&&("https://"+uri.getRawAuthority()).equals(endpoint())&&!prefs.getString("token","").isEmpty())token=token();
         if (!token.matches("[A-Za-z0-9_-]{32,256}")) throw new IllegalArgumentException("Jeton d’appairage invalide.");
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
         cipher.init(Cipher.ENCRYPT_MODE, key());
@@ -56,6 +57,9 @@ final class Settings {
     void parallel(boolean value) { prefs.edit().putBoolean("parallel.enabled",value).apply(); }
     boolean panelOff(){return prefs.getBoolean("parallel.panelOff",false);}
     void panelOff(boolean value){prefs.edit().putBoolean("parallel.panelOff",value).apply();}
+    static final class ScreenChoice {final boolean keepOn;final long revision;ScreenChoice(boolean value,long version){keepOn=value;revision=version;}}
+    ScreenChoice screenChoice(){synchronized(Settings.class){return new ScreenChoice(prefs.getBoolean("parallel.keepPhysicalScreenOn",false),prefs.getLong("parallel.screenChoiceRevision",0));}}
+    void keepPhysicalScreenOn(boolean value){synchronized(Settings.class){long revision=Math.addExact(prefs.getLong("parallel.screenChoiceRevision",0),1);prefs.edit().putBoolean("parallel.keepPhysicalScreenOn",value).putLong("parallel.screenChoiceRevision",revision).apply();}}
     boolean filesAllowed(){return prefs.getBoolean("files.enabled",true);}
     void filesAllowed(boolean value){prefs.edit().putBoolean("files.enabled",value).apply();}
     Set<String> availablePackages() {

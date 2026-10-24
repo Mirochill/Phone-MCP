@@ -1,0 +1,4 @@
+fe751fb2aba57c2e6ecd627a82c1674ea779935f674da2fe3ad314bf769d3233  Phone-MCP-0.16.2.apk
+bf1810c126d83168040338e9bcc9b3dc43dab85436741a425a0a6595bf921ee2  Release-0.16.2.json
+0a4a7acb2cef05a884ba2e390ef2db7e95e5c6e2599b5633bcbac29251efc09b  Verification-0.16.2.json
+a4a8c8896e901f7505d5bea905a98f654f8aaa6c7acd9afc25fa552530f63aa7  Publication-checks.json

@@ -1,0 +1,28 @@
+<resources>
+    <string name="update_pair_first">Connectez d’abord un serveur.</string>
+    <string name="update_check_failed">Vérification impossible. Réessayez.</string>
+    <string name="update_current">L’application est à jour.</string>
+    <string name="update_start_session">Démarrez une session avec Shizuku avant l’installation.</string>
+    <string name="all_apps_default">Autoriser toutes les apps et capacités par défaut</string>
+    <string name="accessibility_description">Autorise Phone MCP à lire et contrôler les apps autorisées pendant une session que vous démarrez. Le contenu autorisé est transmis au serveur MCP et au client IA. Les mots de passe sont masqués. Arrêtez à tout moment depuis la notification.</string>
+    <string name="preview_description">Aperçu de l’app contrôlée par l’IA</string>
+    <string name="preview_handoff">Reprendre le contrôle de cette page</string>
+    <string name="preview_close">Fermer l’aperçu</string>
+    <string name="preview_active">Contrôlée par l’IA · Lecture seule</string>
+    <string name="preview_stopped">Aperçu arrêté</string>
+    <string name="preview_unavailable">Aperçu indisponible</string>
+    <string name="preview_notification_action">Voir l’app</string>
+    <string name="preview_recent_title">Aperçu IA · %1$s</string>
+    <string name="capture_button">Capture</string>
+    <string name="capture_image">Photo (PNG)</string>
+    <string name="capture_video_start">Démarrer la vidéo (sans son)</string>
+    <string name="capture_video_stop">Arrêter et enregistrer la vidéo</string>
+    <string name="capture_recording">Enregistrement %1$02d:%2$02d</string>
+    <string name="capture_image_saved">Image enregistrée dans Images/PhoneMCP.</string>
+    <string name="capture_video_saved">Vidéo enregistrée dans Vidéos/PhoneMCP.</string>
+    <string name="capture_failed">Capture impossible. L’écran IA est peut-être indisponible.</string>
+    <string name="capture_notification">Enregistrement de l’écran IA</string>
+    <string name="capture_notification_count">Enregistrements actifs : %1$d</string>
+    <string name="capture_stop_all">Arrêter les enregistrements</string>
+    <string name="capture_notifications_required">Autorisez les notifications pour enregistrer en arrière-plan.</string>
+</resources>

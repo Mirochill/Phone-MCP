@@ -1,0 +1,37 @@
+{
+  "name": "phone-mcp",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "workers_dev": true,
+  "preview_urls": false,
+  "observability": {
+    "enabled": false
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "PHONE_HUB",
+        "class_name": "PhoneHub"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "PhoneHub"
+      ]
+    }
+  ],
+  "vars": {
+    "PUBLIC_URL": "https://phone-mcp.YOUR-SUBDOMAIN.workers.dev"
+  },
+  "assets": {
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "directory": "./assets"
+  }
+}

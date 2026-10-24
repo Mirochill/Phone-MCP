@@ -1,0 +1,28 @@
+<resources>
+    <string name="update_pair_first">Verbinde zuerst einen Server.</string>
+    <string name="update_check_failed">Prüfung fehlgeschlagen. Versuche es erneut.</string>
+    <string name="update_current">Die App ist aktuell.</string>
+    <string name="update_start_session">Starte vor der Installation eine Sitzung mit Shizuku.</string>
+    <string name="all_apps_default">Alle Apps und Funktionen standardmäßig erlauben</string>
+    <string name="accessibility_description">Erlaubt das Lesen und Steuern freigegebener Apps während einer von dir gestarteten Sitzung. Inhalte werden an den MCP-Server und KI-Client übertragen. Passwörter werden verborgen. Beende die Sitzung über die Benachrichtigung.</string>
+    <string name="preview_description">Vorschau der von der KI gesteuerten App</string>
+    <string name="preview_handoff">Diese Seite übernehmen</string>
+    <string name="preview_close">Vorschau schließen</string>
+    <string name="preview_active">Von KI gesteuert · Nur Ansicht</string>
+    <string name="preview_stopped">Vorschau beendet</string>
+    <string name="preview_unavailable">Vorschau nicht verfügbar</string>
+    <string name="preview_notification_action">App ansehen</string>
+    <string name="preview_recent_title">KI-Vorschau · %1$s</string>
+    <string name="capture_button">Aufnahme</string>
+    <string name="capture_image">Foto (PNG)</string>
+    <string name="capture_video_start">Video starten (ohne Ton)</string>
+    <string name="capture_video_stop">Video beenden und speichern</string>
+    <string name="capture_recording">Aufnahme %1$02d:%2$02d</string>
+    <string name="capture_image_saved">Bild unter Bilder/PhoneMCP gespeichert.</string>
+    <string name="capture_video_saved">Video unter Videos/PhoneMCP gespeichert.</string>
+    <string name="capture_failed">Aufnahme fehlgeschlagen. Der KI-Bildschirm ist möglicherweise nicht verfügbar.</string>
+    <string name="capture_notification">KI-Bildschirmaufnahme</string>
+    <string name="capture_notification_count">Aktive Aufnahmen: %1$d</string>
+    <string name="capture_stop_all">Alle Aufnahmen beenden</string>
+    <string name="capture_notifications_required">Erlaube Benachrichtigungen für Aufnahmen im Hintergrund.</string>
+</resources>

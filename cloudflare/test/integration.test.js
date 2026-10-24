@@ -20,12 +20,25 @@ async function authorization(scope='phone.read phone.write'){
 }
 async function grant(scope){const {client,code}=await authorization(scope);const r=await post('/token',{grant_type:'authorization_code',client_id:client.client_id,redirect_uri:callback,code,code_verifier:verifier});assert.equal(r.status,200);return {...await r.json(),client};}
 async function clientFor(t,token){const client=new Client({name:'cloud-integration',version:'1'});await client.connect(new StreamableHTTPClientTransport(new URL(base+'/mcp'),{requestInit:{headers:{Authorization:'Bearer '+token}}}));t.after(()=>client.close());return client;}
-async function phoneFor(t,listener){const socket=new WebSocket(base.replace('http:','ws:')+'/device',{headers:{Authorization:'Bearer '+phoneToken}});socket.on('error',()=>{});await once(socket,'open');if(listener)socket.on('message',data=>listener(JSON.parse(data.toString()),socket));t.after(async()=>{if(socket.readyState===1){socket.close();await once(socket,'close');}});return socket;}
+async function phoneFor(t,listener){const socket=new WebSocket(base.replace('http:','ws:')+'/device',{headers:{Authorization:'Bearer '+phoneToken}});socket.on('error',()=>{});await once(socket,'open');if(listener)socket.on('message',data=>listener(JSON.parse(data.toString()),socket));t.after(async()=>{if(socket.readyState===1){const closed=once(socket,'close');socket.close(1000);const force=setTimeout(()=>socket.terminate(),500);await closed;clearTimeout(force);}});return socket;}
+
+let transportTokens,readOnlyTokens;
+
+test('authenticated reconnect replaces stale socket without command replay',{timeout:10000},async t=>{
+ const first=await phoneFor(t);let seen;first.on('message',data=>{seen=JSON.parse(data);});
+ const token=await grant();transportTokens=token;const client=await clientFor(t,token.access_token);
+ const pending=client.callTool({name:'phone_status',arguments:{}});
+ for(let i=0;i<20&&!seen;i++)await new Promise(ok=>setTimeout(ok,5));assert.ok(seen);
+ let writes=0;
+ await phoneFor(t,(m,socket)=>{writes++;socket.send(JSON.stringify({id:m.id,ok:true,result:{transport:'new'}}));});
+ const failed=await pending;assert.equal(failed.isError,true);assert.match(failed.content[0].text,/remplacée/);
+ const recovered=await client.callTool({name:'phone_status',arguments:{}});assert.equal(JSON.parse(recovered.content[0].text).transport,'new');assert.equal(writes,1);
+});
 
 test('cloud system-window packages preserve the selected window metadata',async t=>{
  const seen=[];
  await phoneFor(t,(message,socket)=>{seen.push(message.args.packageName);socket.send(JSON.stringify({id:message.id,ok:true,result:{packageName:message.args.packageName,windowId:12,windows:[{windowId:12,packageName:message.args.packageName}]}}));});
- const tokens=await grant(),client=await clientFor(t,tokens.access_token);
+ const tokens=transportTokens??await grant(),client=await clientFor(t,tokens.access_token);
  for(const pkg of ['android','com.android.systemui']) {
   const result=JSON.parse((await client.callTool({name:'phone_snapshot',arguments:{packageName:pkg}})).content[0].text);
   assert.equal(result.packageName,pkg);assert.equal(result.windows[0].windowId,12);
@@ -65,7 +78,7 @@ test('cloud OAuth binds PKCE, callback and resource, then consumes the code',asy
 });
 
 test('cloud official MCP client discovers tools and reports the actual offline phone',async t=>{
- const tokens=await grant(),client=await clientFor(t,tokens.access_token);const {tools}=await client.listTools();assert.equal(tools.length,21);
+ const tokens=await grant(),client=await clientFor(t,tokens.access_token);const {tools}=await client.listTools();assert.equal(tools.length,59);
  const r=await client.callTool({name:'phone_connection',arguments:{}});assert.equal(JSON.parse(r.content[0].text).connected,false);assert.equal(r.structuredContent.connected,false);assert.deepEqual(r.structuredContent,JSON.parse(r.content[0].text));
  assert.deepEqual(r.structuredContent.tooling.tools,tools.map(tool=>tool.name));
  assert.equal(r.structuredContent.tooling.serverVersion,r.structuredContent.serverVersion);
@@ -88,7 +101,7 @@ test('cloud WebSocket relays notifications, images and legacy long press while e
  assert.deepEqual(result.tooling,screen.tooling);
  const tap=JSON.parse((await client.callTool({name:'phone_click',arguments:{...legacy,nodeId:'0.2147483646.200.300'}})).content[0].text);assert.equal(tap.performedAction,'tap');assert.equal(seen[6].args.nodeId,undefined);assert.equal(seen[6].args.x,200);
  await client.callTool({name:'phone_set_control_mode',arguments:{mode:'foreground'}});assert.equal(seen[8].op,'control_mode');
- const ro=await grant('phone.read'),readClient=await clientFor(t,ro.access_token);const r=await readClient.callTool({name:'phone_open_app',arguments:{packageName:'org.example.app'}});assert.equal(r.isError,true);
+ const ro=readOnlyTokens=await grant('phone.read'),readClient=await clientFor(t,ro.access_token);const r=await readClient.callTool({name:'phone_open_app',arguments:{packageName:'org.example.app'}});assert.equal(r.isError,true);
  assert.deepEqual(JSON.parse(r.content[1].text).tooling,screen.tooling);
  assert.equal((await readClient.callTool({name:'phone_click',arguments:legacy})).isError,true);
  assert.equal((await readClient.callTool({name:'phone_set_control_mode',arguments:{mode:'foreground'}})).isError,true);
@@ -115,9 +128,61 @@ test('cloud refresh rotates and revocation disables the complete OAuth family',a
  assert.equal((await post('/mcp',{}, {Authorization:'Bearer '+rotated.access_token})).status,401);
 });
 
-test('cloud timeouts and concurrent calls never queue or repeat a device action',async t=>{
+test('cloud concurrent commands have individual timeouts without replay',async t=>{
  let calls=0;await phoneFor(t,()=>{calls++;});const token=await grant();const a=await clientFor(t,token.access_token),b=await clientFor(t,token.access_token);
  const first=a.callTool({name:'phone_status',arguments:{}});await new Promise(ok=>setTimeout(ok,40));
- const concurrent=await b.callTool({name:'phone_status',arguments:{}});assert.equal(concurrent.isError,true);assert.match(concurrent.content[0].text,/déjà en cours/);
- const timeout=await first;assert.equal(timeout.isError,true);assert.match(timeout.content[0].text,/peut-être/);assert.equal(calls,1);
+ const concurrent=await b.callTool({name:'phone_status',arguments:{}});assert.equal(concurrent.isError,true);assert.match(concurrent.content[0].text,/peut avoir eu lieu/);
+ const timeout=await first;assert.equal(timeout.isError,true);assert.match(timeout.content[0].text,/peut avoir eu lieu/);assert.equal(calls,2);
 });
+test('cloud fast sequence and local exact wait relay once with one final capture and preserve partial results',async t=>{
+ const seen=[],packageName='com.example.fixture',sessionId='9405dd7c-cdd2-45b3-8b1f-6157113483d8',snapshotId='9405dd7c-cdd2-45b3-8b1f-6157113483d7';
+ await phoneFor(t,(message,socket)=>{
+  seen.push(message);
+  const result=message.op==='action_sequence'?{completed:false,executedCount:1,totalSteps:2,failedStep:1,error:'Target changed',sessionId}
+   :message.op==='wait_and_click'?{found:false,performed:false,timedOut:true,sessionId}
+   :message.op==='screenshot'?{packageName,sessionId,snapshotId,mimeType:'image/jpeg',data:'aW1hZ2U='}
+   :{packageName,sessionId,snapshotId,nodes:[]};
+  socket.send(JSON.stringify({id:message.id,ok:true,result}));
+ });
+ const tokens=transportTokens??await grant(),client=await clientFor(t,tokens.access_token);
+ const response=await client.callTool({name:'phone_action',arguments:{operation:'action_sequence',arguments:{packageName,sessionId,snapshotId,steps:[{op:'tap',x:100,y:100},{op:'tap',x:200,y:200}],includeScreenshot:true,quality:95,maxDimension:1920}}});
+ assert.equal(response.isError,undefined);assert.equal(response.content[0].type,'image');const result=JSON.parse(response.content.find(c=>c.type==='text').text);
+ assert.equal(result.executedCount,1);assert.equal(result.failedStep,1);assert.equal(result.completed,false);assert.equal(result.observation.snapshotId,snapshotId);
+ assert.deepEqual(seen.map(c=>c.op),['action_sequence','snapshot','screenshot']);assert.equal(seen[2].args.quality,95);assert.equal(seen[2].args.maxDimension,1920);assert.ok(seen.every(c=>c.args.sessionId===sessionId&&c.args._ownerKey===seen[0].args._ownerKey));
+ const waited=await client.callTool({name:'phone_action',arguments:{operation:'wait_and_click',arguments:{packageName,sessionId,query:'Close',by:'description',timeoutMs:500}}});
+ const timeout=JSON.parse(waited.content.find(c=>c.type==='text').text);assert.equal(timeout.found,false);assert.equal(timeout.performed,false);assert.equal(timeout.timedOut,true);
+ assert.deepEqual(seen.map(c=>c.op),['action_sequence','snapshot','screenshot','wait_and_click','snapshot']);assert.equal(seen[3].args.match,'exact');
+});
+
+test('cloud ad jobs route once without snapshots and preserve session/job binding and partial progress',async t=>{
+ const packageName='com.example.fixture',sessionId='9405dd7c-cdd2-45b3-8b1f-6157113483d8',jobId='9405dd7c-cdd2-45b3-8b1f-6157113483d7',seen=[];
+ await phoneFor(t,(message,socket)=>{seen.push(message);socket.send(JSON.stringify({id:message.id,ok:true,result:{packageName,sessionId,jobId,state:message.op==='ad_cancel'?'cancelled':message.op==='ad_status'?'blocked':'running',actions:message.op==='ad_status'?[{type:'close',performed:true}]:[],elapsedMs:123,returnMatched:false,reason:message.op==='ad_status'?'ambiguous_close':''}}));});
+ const tokens=transportTokens??await grant(),client=await clientFor(t,tokens.access_token),read=value=>JSON.parse(value.content.find(x=>x.type==='text').text);
+ const started=await client.callTool({name:'phone_action',arguments:{operation:'ad_start',arguments:{packageName,sessionId,requestId:jobId,returnTargets:[{query:'Rewards'}],timeoutMs:180000}}});assert.equal(started.isError,undefined);assert.equal(read(started).jobId,jobId);assert.ok(Buffer.byteLength(JSON.stringify(read(started).tooling))<2000);
+ const status=await client.callTool({name:'phone_ad_status',arguments:{packageName,sessionId,jobId,waitMs:8000}});assert.equal(status.isError,undefined);assert.equal(read(status).state,'blocked');assert.equal(read(status).actions.length,1);assert.equal(read(status).returnMatched,false);assert.equal(read(status).reason,'ambiguous_close');
+ const cancelled=await client.callTool({name:'phone_ad_cancel',arguments:{packageName,sessionId,jobId}});assert.equal(cancelled.isError,undefined);assert.equal(read(cancelled).state,'cancelled');assert.deepEqual(seen.map(x=>x.op),['ad_start','ad_status','ad_cancel']);assert.ok(seen.every(x=>x.args.packageName===packageName&&x.args.sessionId===sessionId&&x.args._ownerKey===seen[0].args._ownerKey));assert.equal(seen[0].args.visual,true);assert.equal(seen[0].args.returnTargets[0].match,'exact');assert.ok(seen[1].expiresAt-Date.now()>7500);
+ const readonly=readOnlyTokens??await grant('phone.read'),ro=await clientFor(t,readonly.access_token);assert.equal((await ro.callTool({name:'phone_ad_start',arguments:{packageName,sessionId,requestId:jobId,returnTargets:[{query:'Rewards'}]}})).isError,true);assert.equal((await ro.callTool({name:'phone_ad_cancel',arguments:{packageName,sessionId,jobId}})).isError,true);assert.equal(seen.length,3);
+});
+
+test('cloud ad result from another session is refused without repeating a job',async t=>{
+ let calls=0;const packageName='com.example.fixture',sessionId='9405dd7c-cdd2-45b3-8b1f-6157113483d8',jobId='9405dd7c-cdd2-45b3-8b1f-6157113483d7';
+ await phoneFor(t,(message,socket)=>{calls++;socket.send(JSON.stringify({id:message.id,ok:true,result:{packageName,sessionId:'9405dd7c-cdd2-45b3-8b1f-6157113483d9',jobId,state:'running',actions:[]}}));});const tokens=transportTokens??await grant(),client=await clientFor(t,tokens.access_token);
+ const response=await client.callTool({name:'phone_ad_start',arguments:{packageName,sessionId,requestId:jobId,returnTargets:[{query:'Rewards'}]}});assert.equal(response.isError,true);assert.match(response.content[0].text,/different session/);assert.equal(calls,1);
+});
+
+test('cloud binary route handles data beyond the MCP JSON limit without storing or exposing it',async t=>{
+ let count=0,total=0;
+ await phoneFor(t,(message,socket)=>{
+  assert.equal(message.op,'file_upload_chunk');assert.equal(message.args._ownerKey.length,64);
+  assert.equal(message.args.offset,total);total+=Buffer.from(message.args.data,'base64').length;count++;
+  socket.send(JSON.stringify({id:message.id,ok:true,result:{jobId:message.args.jobId,bytesDone:total,state:'receiving'}}));
+ });
+ const target=base+'/uploads/9405dd7c-cdd2-45b3-8b1f-6157113483d7?offset=0';
+ assert.equal((await fetch(target,{method:'PUT',body:Buffer.from('x')})).status,401);
+ const headers={Authorization:'Bearer '+transportTokens.access_token,'Content-Type':'application/octet-stream'};
+ assert.equal((await fetch(target,{method:'PUT',headers,body:Buffer.alloc(1048577)})).status,413);assert.equal(count,0);
+ const r=await fetch(target,{method:'PUT',headers,body:Buffer.alloc(300000,41)});assert.equal(r.status,200);
+ assert.equal((await r.json()).bytesDone,300000);assert.equal(count,3);
+});
+
+

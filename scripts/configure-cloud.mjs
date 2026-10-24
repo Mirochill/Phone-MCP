@@ -9,7 +9,7 @@ if(command==='prepare'){
   const url=new URL(value);
   if(url.protocol!=='https:'||url.pathname!=='/'||url.username||url.password||url.search||url.hash||/your-|example\./i.test(url.hostname))throw Error('Provide your real HTTPS origin without /mcp');
   if(!/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/.test(name))throw Error('Invalid Worker name');
-  const config=JSON.parse(fs.readFileSync(configPath,'utf8'));config.name=name;config.vars.PUBLIC_URL=url.origin;
+  const config=JSON.parse(fs.readFileSync(fs.existsSync(configPath)?configPath:path.join(root,'cloudflare/wrangler.example.jsonc'),'utf8'));config.name=name;config.vars.PUBLIC_URL=url.origin;
   fs.writeFileSync(configPath,JSON.stringify(config,null,2)+'\n');
   fs.mkdirSync(path.dirname(secretFile),{recursive:true});
   if(!fs.existsSync(secretFile))fs.writeFileSync(secretFile,JSON.stringify({PHONE_TOKEN:randomBytes(32).toString('base64url'),ADMIN_PASSWORD:randomBytes(32).toString('base64url')},null,2),{flag:'wx',mode:0o600});

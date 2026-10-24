@@ -18,3 +18,7 @@ dist/
 .unlazy/
 .claude/settings.local.json
 .unlazy-hook-state.json
+
+# Private local deployment; use the committed example on new installations.
+/cloudflare/wrangler.jsonc
+/cloudflare/assets/phone-mcp.apk

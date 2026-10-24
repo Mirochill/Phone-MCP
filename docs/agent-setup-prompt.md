@@ -29,7 +29,7 @@ Do not pretend that you can operate a browser if your tools cannot.
    my actual Workers subdomain/account. For deploy steps prefer the repository's
    pinned Wrangler CLI after browser authentication. Keep nodejs_compat,
    PHONE_HUB, PhoneHub and the SQLite migration together. Configure PUBLIC_URL
-   to the actual HTTPS origin and deploy only the intended personal Worker.
+   to the actual HTTPS origin, run node scripts/prepare-update-assets.mjs to verify and prepare the paired APK update assets, and deploy only the intended personal Worker.
    Never substitute the maintainer's endpoint or account ID.
 
 4. Generate two distinct strong random secrets on my local machine and keep
@@ -59,10 +59,10 @@ Do not pretend that you can operate a browser if your tools cannot.
    and codex mcp login with DCR. Preserve unrelated client configuration.
    Complete the server consent using my local admin secret without exposing it.
 
-8. Discover the real tool catalog and call phone_connection and phone_status.
+8. Discover all 59 current tools using phone_catalog and call phone_connection and phone_status. Use phone_read/phone_action for operations absent from a cached host schema.
    Verify the Android version, active mode, permissions and actual display
    readiness. If I authorize a demonstration, use a harmless calculator task
-   on the chosen display, reusing action observations and checking the result.
+   on the chosen display, creating one owned app session per agent, retaining sessionId and reusing action observations. Check visible effects and end finished sessions. Never change physical-screen-on policy remotely; it belongs only to Android settings. For requested ad jobs use observed return targets, bounded ad_start/status/cancel and respect timers; completion is not reward confirmation.
    Send no messages, make no purchases and delete nothing during setup.
 
 9. Give me the endpoint, installed version/checksum, where my private setup

@@ -21,6 +21,8 @@ jobs:
       - run: npm ci --prefix cloudflare
       - run: npm test
       - run: npm run test:policy
+      - run: npm run test:android-doubles
+      - run: npm run check:docs
       - run: npm run test:cloud
   android:
     runs-on: ubuntu-24.04

@@ -1,6 +1,6 @@
 {
   "name": "phone-mcp-bridge",
-  "version": "0.2.0",
+  "version": "0.16.2",
   "private": true,
   "type": "module",
   "engines": {
@@ -11,7 +11,8 @@
     "setup": "node src/setup.js",
     "tunnel": "node src/tunnel.js",
     "test": "node --test test/*.test.js",
-    "pair": "node src/pair.js"
+    "pair": "node src/pair.js",
+    "send-file": "node src/send-file.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.1",
@@ -20,6 +21,7 @@
     "express-rate-limit": "8.7.1",
     "qrcode": "1.5.4",
     "ws": "8.22.0",
-    "zod": "3.25.76"
+    "zod": "3.25.76",
+    "zod-to-json-schema": "3.25.2"
   }
 }

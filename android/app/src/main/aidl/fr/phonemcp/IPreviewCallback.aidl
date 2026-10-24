@@ -1,4 +1,2 @@
 package fr.phonemcp;
-oneway interface IPreviewCallback {
-    void onPreviewRequested(String packageName);
-}
+oneway interface IPreviewCallback { void onSessionsChanged(String state); }

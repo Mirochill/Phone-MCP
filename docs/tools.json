@@ -1,0 +1,3213 @@
+{
+  "version": "0.16.2",
+  "apiVersion": 1,
+  "catalogVersion": "d86af3e18e51f9a6",
+  "tools": [
+    {
+      "name": "phone_connection",
+      "title": "Phone connection",
+      "description": "Check the actual connection and current server/catalog version, including when the phone is offline.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "connected": {
+            "type": "boolean"
+          },
+          "connectedSince": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "commandInProgress": {
+            "type": "boolean"
+          },
+          "serverVersion": {
+            "type": "string"
+          },
+          "requiresPC": {
+            "type": "boolean"
+          },
+          "tooling": {
+            "type": "object",
+            "properties": {
+              "apiVersion": {
+                "type": "number"
+              },
+              "catalogVersion": {
+                "type": "string"
+              },
+              "stableTools": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "serverVersion": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string",
+                "const": "live_server"
+              },
+              "tools": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "instruction": {
+                "type": "string"
+              },
+              "clientRefreshControlledBy": {
+                "type": "string",
+                "const": "host"
+              }
+            },
+            "required": [
+              "serverVersion",
+              "source",
+              "tools",
+              "instruction",
+              "clientRefreshControlledBy"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "connected",
+          "connectedSince",
+          "commandInProgress",
+          "serverVersion",
+          "tooling"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_catalog",
+      "description": "Live operation catalog. Request an operation for its current arguments schema. The stable gateways automatically use this catalog after server updates.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "knownVersion": {
+            "type": "string",
+            "maxLength": 80
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_read",
+      "description": "Read through the stable API. Discover operation and arguments with phone_catalog. New read operations are available automatically.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "arguments": {
+            "type": "object",
+            "additionalProperties": {},
+            "default": {}
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_action",
+      "description": "Execute an authorized write through the stable API. Discover its current arguments with phone_catalog. New actions are available automatically.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "arguments": {
+            "type": "object",
+            "additionalProperties": {},
+            "default": {}
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_status",
+      "description": "Session, permissions, displays, Android and installed app version.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_diagnostics",
+      "description": "On-demand battery, CPU, memory and Phone MCP wakelock counters. Does not read app contents.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_diagnostic_probe",
+      "description": "Run or retrieve a bounded two-sample battery observation without a wakelock. It can outlive a stopped Phone MCP service.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "probeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "start",
+              "result"
+            ]
+          },
+          "seconds": {
+            "type": "integer",
+            "minimum": 30,
+            "maximum": 900,
+            "default": 180
+          },
+          "startDelaySeconds": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 60,
+            "default": 0
+          }
+        },
+        "required": [
+          "probeId",
+          "action"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_session_create",
+      "description": "Create a separately routed app session. requestId is an idempotent UUID; keep the returned sessionId. Does not launch the app. The physical-screen policy is selected only in local Phone MCP settings. keepRendering=true preserves visual background work during pauses at a higher idle cost. After a successful user handoff, create a new requestId/session; the former session stays terminated. Explicit local Stop still requires local resumption.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "leaseSeconds": {
+            "type": "integer",
+            "minimum": 30,
+            "maximum": 900,
+            "default": 300
+          },
+          "keepRendering": {
+            "type": "boolean",
+            "default": false
+          },
+          "sessionId": {
+            "$ref": "#/properties/requestId"
+          }
+        },
+        "required": [
+          "requestId",
+          "packageName"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_session_wake",
+      "description": "Recover only the existing AI display under the screen policy selected locally in Phone MCP settings. This tool cannot enable the physical-screen-on mode or change the local setting. It does not relaunch the app or bypass keyguard. If off-screen recovery fails, report it instead of choosing a lit-screen fallback.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "noninteractive",
+              "black_render",
+              "app_requires_screen"
+            ],
+            "default": "app_requires_screen"
+          }
+        },
+        "required": [
+          "packageName",
+          "sessionId"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_session_cleanup",
+      "description": "Remove empty abandoned task records for an authorized app. Active and physical tasks are always preserved. Optional taskIds migrate identified legacy AI tasks; no live app is closed.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "taskIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            "maxItems": 64
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "packageName"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_session_list",
+      "description": "List this authorization’s active and ended app sessions, their displays, isolation and lease state.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_session_keepalive",
+      "description": "Extend a legitimate thinking pause for an active session. Does not restart an ended or locally stopped session.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "sessionId"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_session_end",
+      "description": "Finish this app session and release its display and preview. A different app session continues.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "sessionId"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_session_cancel",
+      "description": "Interrupt only this app session and reject its queued commands. A locally stopped app requires local resumption.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "sessionId"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_notifications",
+      "description": "Read current notifications for an authorized app without opening it.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          }
+        },
+        "required": [
+          "packageName"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_reply_notification",
+      "description": "Send the requested reply through a freshly observed notification.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "notificationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          }
+        },
+        "required": [
+          "packageName",
+          "notificationId",
+          "text"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_snapshot",
+      "description": "Read an authorized window. Reuse an action observation. A cursor reads more nodes from the same unchanged snapshot.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "windowId": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "cursor": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 20,
+            "maximum": 350,
+            "default": 200
+          },
+          "includeOffscreen": {
+            "type": "boolean",
+            "default": false
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "compact",
+              "full"
+            ],
+            "default": "compact"
+          },
+          "includeScreenshot": {
+            "type": "boolean",
+            "default": false
+          },
+          "maxDimension": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 1920,
+            "default": 1000
+          },
+          "quality": {
+            "type": "integer",
+            "minimum": 35,
+            "maximum": 95,
+            "default": 75
+          },
+          "annotate": {
+            "type": "boolean",
+            "default": false
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "packageName"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_screenshot",
+      "description": "Capture the authorized window. For black or incomplete images try captureSource=surface: a fresh frame from the owned non-secure virtual display, without changing app state or physical-screen power. Optional labels map through coordinateSpace.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "captureSource": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "surface"
+            ],
+            "default": "auto"
+          },
+          "maxDimension": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 1920,
+            "default": 1000
+          },
+          "quality": {
+            "type": "integer",
+            "minimum": 35,
+            "maximum": 95,
+            "default": 75
+          },
+          "annotate": {
+            "type": "boolean",
+            "default": false
+          },
+          "snapshotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sessionId": {
+            "$ref": "#/properties/snapshotId"
+          }
+        },
+        "required": [
+          "packageName"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_open_app",
+      "description": "Open an authorized app on the active control display. Returns observation with a fresh snapshot after the action.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "observe": {
+            "type": "boolean",
+            "default": true
+          },
+          "settleMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 800
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "compact",
+              "full"
+            ],
+            "default": "compact"
+          },
+          "includeScreenshot": {
+            "type": "boolean",
+            "default": false
+          },
+          "maxDimension": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 1920,
+            "default": 1000
+          },
+          "quality": {
+            "type": "integer",
+            "minimum": 35,
+            "maximum": 95,
+            "default": 75
+          },
+          "annotate": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "packageName"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_open_url",
+      "description": "Open an HTTPS URL in the chosen authorized app on the active display. Returns observation with a fresh snapshot after the action.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "url": {
+            "type": "string",
+            "maxLength": 4096,
+            "format": "uri"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "observe": {
+            "type": "boolean",
+            "default": true
+          },
+          "settleMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 800
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "compact",
+              "full"
+            ],
+            "default": "compact"
+          },
+          "includeScreenshot": {
+            "type": "boolean",
+            "default": false
+          },
+          "maxDimension": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 1920,
+            "default": 1000
+          },
+          "quality": {
+            "type": "integer",
+            "minimum": 35,
+            "maximum": 95,
+            "default": 75
+          },
+          "annotate": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "packageName",
+          "url"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_click",
+      "description": "Click an observed node. Legacy longPressNodeId and coordinateActions remain supported. Returns observation with a fresh snapshot after the action.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "snapshotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sessionId": {
+            "$ref": "#/properties/snapshotId"
+          },
+          "nodeId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 260,
+            "pattern": "^0(?:\\.\\d+)*$"
+          },
+          "observe": {
+            "type": "boolean",
+            "default": true
+          },
+          "settleMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 800
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "compact",
+              "full"
+            ],
+            "default": "compact"
+          },
+          "includeScreenshot": {
+            "type": "boolean",
+            "default": false
+          },
+          "maxDimension": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 1920,
+            "default": 1000
+          },
+          "quality": {
+            "type": "integer",
+            "minimum": 35,
+            "maximum": 95,
+            "default": 75
+          },
+          "annotate": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "packageName",
+          "snapshotId",
+          "nodeId"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_long_press",
+      "description": "Long press an observed node, for example to open its context menu. Returns observation with a fresh snapshot after the action.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "snapshotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sessionId": {
+            "$ref": "#/properties/snapshotId"
+          },
+          "nodeId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 260,
+            "pattern": "^0(?:\\.\\d+)*$"
+          },
+          "observe": {
+            "type": "boolean",
+            "default": true
+          },
+          "settleMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 800
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "compact",
+              "full"
+            ],
+            "default": "compact"
+          },
+          "includeScreenshot": {
+            "type": "boolean",
+            "default": false
+          },
+          "maxDimension": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 1920,
+            "default": 1000
+          },
+          "quality": {
+            "type": "integer",
+            "minimum": 35,
+            "maximum": 95,
+            "default": 75
+          },
+          "annotate": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "packageName",
+          "snapshotId",
+          "nodeId"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_set_text",
+      "description": "Replace an observed editable field, excluding protected fields. Returns observation with a fresh snapshot after the action.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "snapshotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sessionId": {
+            "$ref": "#/properties/snapshotId"
+          },
+          "nodeId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 260,
+            "pattern": "^0(?:\\.\\d+)*$"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "observe": {
+            "type": "boolean",
+            "default": true
+          },
+          "settleMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 800
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "compact",
+              "full"
+            ],
+            "default": "compact"
+          },
+          "includeScreenshot": {
+            "type": "boolean",
+            "default": false
+          },
+          "maxDimension": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 1920,
+            "default": 1000
+          },
+          "quality": {
+            "type": "integer",
+            "minimum": 35,
+            "maximum": 95,
+            "default": 75
+          },
+          "annotate": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "packageName",
+          "snapshotId",
+          "nodeId",
+          "text"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_scroll",
+      "description": "Scroll an observed scrollable node. Returns observation with a fresh snapshot after the action.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "snapshotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sessionId": {
+            "$ref": "#/properties/snapshotId"
+          },
+          "nodeId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 260,
+            "pattern": "^0(?:\\.\\d+)*$"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "forward",
+              "backward"
+            ]
+          },
+          "observe": {
+            "type": "boolean",
+            "default": true
+          },
+          "settleMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 800
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "compact",
+              "full"
+            ],
+            "default": "compact"
+          },
+          "includeScreenshot": {
+            "type": "boolean",
+            "default": false
+          },
+          "maxDimension": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 1920,
+            "default": 1000
+          },
+          "quality": {
+            "type": "integer",
+            "minimum": 35,
+            "maximum": 95,
+            "default": 75
+          },
+          "annotate": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "packageName",
+          "snapshotId",
+          "nodeId",
+          "direction"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_back",
+      "description": "Go back within the observed authorized window. Returns observation with a fresh snapshot after the action.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "snapshotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sessionId": {
+            "$ref": "#/properties/snapshotId"
+          },
+          "observe": {
+            "type": "boolean",
+            "default": true
+          },
+          "settleMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 800
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "compact",
+              "full"
+            ],
+            "default": "compact"
+          },
+          "includeScreenshot": {
+            "type": "boolean",
+            "default": false
+          },
+          "maxDimension": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 1920,
+            "default": 1000
+          },
+          "quality": {
+            "type": "integer",
+            "minimum": 35,
+            "maximum": 95,
+            "default": 75
+          },
+          "annotate": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "packageName",
+          "snapshotId"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_tap",
+      "description": "Tap a freshly observed target. Canvas/game areas require a recent screenshot tied to the same snapshot; unrelated animation does not invalidate a stable target. Returns observation with a fresh snapshot after the action.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "snapshotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sessionId": {
+            "$ref": "#/properties/snapshotId"
+          },
+          "x": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 16383
+          },
+          "y": {
+            "$ref": "#/properties/x"
+          },
+          "observe": {
+            "type": "boolean",
+            "default": true
+          },
+          "settleMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 800
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "compact",
+              "full"
+            ],
+            "default": "compact"
+          },
+          "includeScreenshot": {
+            "type": "boolean",
+            "default": false
+          },
+          "maxDimension": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 1920,
+            "default": 1000
+          },
+          "quality": {
+            "type": "integer",
+            "minimum": 35,
+            "maximum": 95,
+            "default": 75
+          },
+          "annotate": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "packageName",
+          "snapshotId",
+          "x",
+          "y"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_swipe",
+      "description": "Swipe within the freshly observed window and stable geometry. For canvas/game areas, first capture the same snapshot. Returns observation with a fresh snapshot after the action.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "snapshotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sessionId": {
+            "$ref": "#/properties/snapshotId"
+          },
+          "fromX": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 16383
+          },
+          "fromY": {
+            "$ref": "#/properties/fromX"
+          },
+          "toX": {
+            "$ref": "#/properties/fromX"
+          },
+          "toY": {
+            "$ref": "#/properties/fromX"
+          },
+          "durationMs": {
+            "type": "integer",
+            "minimum": 100,
+            "maximum": 1000,
+            "default": 350
+          },
+          "observe": {
+            "type": "boolean",
+            "default": true
+          },
+          "settleMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 800
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "compact",
+              "full"
+            ],
+            "default": "compact"
+          },
+          "includeScreenshot": {
+            "type": "boolean",
+            "default": false
+          },
+          "maxDimension": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 1920,
+            "default": 1000
+          },
+          "quality": {
+            "type": "integer",
+            "minimum": 35,
+            "maximum": 95,
+            "default": 75
+          },
+          "annotate": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "packageName",
+          "snapshotId",
+          "fromX",
+          "fromY",
+          "toX",
+          "toY"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_action_sequence",
+      "description": "Execute up to 8 already observed taps/swipes locally in one bounded command, with one final observation. Prefer one swipe for a drag or two taps for source/destination. Every step keeps the original session, app, window and target guards. Stops at the first failure; inspect executedCount and failedStep, never replay the whole sequence. Does not bypass app timers, protected content or reward conditions. Returns observation with a fresh snapshot after the action.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "snapshotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sessionId": {
+            "$ref": "#/properties/snapshotId"
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "op": {
+                      "type": "string",
+                      "const": "tap"
+                    },
+                    "x": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 16383
+                    },
+                    "y": {
+                      "$ref": "#/properties/steps/items/anyOf/0/properties/x"
+                    }
+                  },
+                  "required": [
+                    "op",
+                    "x",
+                    "y"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "op": {
+                      "type": "string",
+                      "const": "swipe"
+                    },
+                    "fromX": {
+                      "$ref": "#/properties/steps/items/anyOf/0/properties/x"
+                    },
+                    "fromY": {
+                      "$ref": "#/properties/steps/items/anyOf/0/properties/x"
+                    },
+                    "toX": {
+                      "$ref": "#/properties/steps/items/anyOf/0/properties/x"
+                    },
+                    "toY": {
+                      "$ref": "#/properties/steps/items/anyOf/0/properties/x"
+                    },
+                    "durationMs": {
+                      "type": "integer",
+                      "minimum": 100,
+                      "maximum": 1000,
+                      "default": 150
+                    }
+                  },
+                  "required": [
+                    "op",
+                    "fromX",
+                    "fromY",
+                    "toX",
+                    "toY"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 8
+          },
+          "intervalMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 250,
+            "default": 0
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 500,
+            "maximum": 8000,
+            "default": 4000
+          },
+          "observe": {
+            "type": "boolean",
+            "default": true
+          },
+          "settleMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 800
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "compact",
+              "full"
+            ],
+            "default": "compact"
+          },
+          "includeScreenshot": {
+            "type": "boolean",
+            "default": false
+          },
+          "maxDimension": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 1920,
+            "default": 1000
+          },
+          "quality": {
+            "type": "integer",
+            "minimum": 35,
+            "maximum": 95,
+            "default": 75
+          },
+          "annotate": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "packageName",
+          "snapshotId",
+          "steps"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_ad_start",
+      "description": "Start one bounded local ad-closing job on an existing app session. The phone waits and closes available controls across successive ad windows without model round trips. Supply observed app returnTargets; for a graphical game, save its host windowId before the ad, then use by=windowId/exact only after another ad window opens. Available close/skip controls are preferred. Hidden ad controls can be revealed with bounded neutral taps; visual skip icons need positive pixel evidence beside an observed badge. It never skips observed timers or claims rewards; follow ad_status, or ad_cancel. Reuse requestId only for the same job.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requestId": {
+            "$ref": "#/properties/sessionId"
+          },
+          "returnTargets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 250
+                },
+                "by": {
+                  "type": "string",
+                  "enum": [
+                    "text",
+                    "description",
+                    "viewId",
+                    "windowId"
+                  ],
+                  "default": "text"
+                },
+                "match": {
+                  "type": "string",
+                  "enum": [
+                    "exact",
+                    "contains"
+                  ],
+                  "default": "exact"
+                }
+              },
+              "required": [
+                "query"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 6
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1000,
+            "maximum": 180000,
+            "default": 90000
+          },
+          "maxActions": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16,
+            "default": 8
+          },
+          "visual": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": [
+          "packageName",
+          "sessionId",
+          "requestId",
+          "returnTargets"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_ad_status",
+      "description": "Read a local ad job with a bounded long poll. completed confirms an observed returnTarget, not a reward. Keep the exact packageName, sessionId and jobId. Read-only: never clicks or starts another job.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "jobId": {
+            "$ref": "#/properties/sessionId"
+          },
+          "waitMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 8000,
+            "default": 0
+          }
+        },
+        "required": [
+          "packageName",
+          "sessionId",
+          "jobId"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_ad_cancel",
+      "description": "Cancel only this local ad job immediately. It does not end or resume its app session. Actions already delivered may have taken effect; inspect the returned state before continuing.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "jobId": {
+            "$ref": "#/properties/sessionId"
+          }
+        },
+        "required": [
+          "packageName",
+          "sessionId",
+          "jobId"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_set_control_mode",
+      "description": "Explicitly select foreground or parallel, preserving the existing session and permissions.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "foreground",
+              "parallel"
+            ]
+          },
+          "panelOff": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "mode"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_files_list",
+      "description": "List Phone MCP transfers and recent installation jobs. Requires Shizuku.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_send_file",
+      "description": "Send a user-selected or generated chat file to the phone. Pass the host file object; no URL needs to be created, copied or published by the user. Follow file_job until completed.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "file": {
+            "type": "object",
+            "properties": {
+              "download_url": {
+                "type": "string",
+                "maxLength": 4096,
+                "format": "uri"
+              },
+              "file_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "mime_type": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "file_name": {
+                "type": "string",
+                "maxLength": 500
+              }
+            },
+            "required": [
+              "download_url",
+              "file_id"
+            ],
+            "additionalProperties": false
+          },
+          "fileName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 140
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$"
+          },
+          "maxBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 536870912,
+            "default": 536870912
+          }
+        },
+        "required": [
+          "requestId",
+          "file"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      },
+      "_meta": {
+        "openai/fileParams": [
+          "file"
+        ]
+      }
+    },
+    {
+      "name": "phone_upload_begin",
+      "description": "Prepare a direct binary transfer from a local client, without hosting the file. Reuse requestId only for the same file. Return jobId, offset and an authenticated relative upload path.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fileName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 140
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 536870912
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$"
+          }
+        },
+        "required": [
+          "requestId",
+          "fileName",
+          "sizeBytes",
+          "sha256"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_upload_commit",
+      "description": "Finish a fully received binary transfer; SHA-256 and exact size must match before the file becomes completed. Follow file_job; incomplete or mismatched bytes are never published as completed.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "jobId"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_download_file",
+      "description": "Download an HTTPS file, up to 512 MiB. Follow its job; reuse requestId after an uncertain result.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "url": {
+            "type": "string",
+            "maxLength": 4096,
+            "format": "uri"
+          },
+          "fileName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 140
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$"
+          },
+          "maxBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 536870912
+          }
+        },
+        "required": [
+          "requestId",
+          "url",
+          "fileName"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_file_job",
+      "description": "Inspect a transfer/install, or cancel a transfer. Only completed confirms success.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "status",
+              "cancel"
+            ],
+            "default": "status"
+          }
+        },
+        "required": [
+          "jobId"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_install_apk",
+      "description": "Install the specified transferred APK via Shizuku, checking its SHA-256 and package. Follow the job.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fileId": {
+            "$ref": "#/properties/requestId"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$"
+          },
+          "expectedPackage": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          }
+        },
+        "required": [
+          "requestId",
+          "fileId",
+          "sha256",
+          "expectedPackage"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_stop",
+      "description": "Stop the phone session. Restarting requires a local action.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_find_nodes",
+      "description": "Find matching accessible elements on the active display, including later pages.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 250
+          },
+          "by": {
+            "type": "string",
+            "enum": [
+              "text",
+              "description",
+              "viewId",
+              "role",
+              "any"
+            ],
+            "default": "any"
+          },
+          "match": {
+            "type": "string",
+            "enum": [
+              "contains",
+              "exact"
+            ],
+            "default": "contains"
+          },
+          "includeOffscreen": {
+            "type": "boolean",
+            "default": false
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "packageName",
+          "query"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_wait_for",
+      "description": "Wait for a matching element, returning found=false on timeout. Never repeats an action.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 250
+          },
+          "by": {
+            "type": "string",
+            "enum": [
+              "text",
+              "description",
+              "viewId",
+              "role",
+              "any"
+            ],
+            "default": "any"
+          },
+          "match": {
+            "type": "string",
+            "enum": [
+              "contains",
+              "exact"
+            ],
+            "default": "contains"
+          },
+          "includeOffscreen": {
+            "type": "boolean",
+            "default": false
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 100,
+            "maximum": 8000,
+            "default": 5000
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "packageName",
+          "query"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_wait_and_click",
+      "description": "Wait locally up to 8 seconds for one exact visible, enabled, unprotected accessible target, then click once and return its final observation. Timeout returns found=false and performed=false. Ambiguous matches are refused; no coordinate guessing, no timer skipping or action retries. Returns observation with a fresh snapshot after the action.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 250
+          },
+          "by": {
+            "type": "string",
+            "enum": [
+              "text",
+              "description",
+              "viewId"
+            ],
+            "default": "text"
+          },
+          "match": {
+            "type": "string",
+            "const": "exact",
+            "default": "exact"
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 100,
+            "maximum": 8000,
+            "default": 5000
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "observe": {
+            "type": "boolean",
+            "default": true
+          },
+          "settleMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 800
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "compact",
+              "full"
+            ],
+            "default": "compact"
+          },
+          "includeScreenshot": {
+            "type": "boolean",
+            "default": false
+          },
+          "maxDimension": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 1920,
+            "default": 1000
+          },
+          "quality": {
+            "type": "integer",
+            "minimum": 35,
+            "maximum": 95,
+            "default": 75
+          },
+          "annotate": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "packageName",
+          "query"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_wait_for_idle",
+      "description": "Wait until the observed accessibility content is stable; returns idle=false on timeout.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 500,
+            "maximum": 8000,
+            "default": 5000
+          },
+          "stableMs": {
+            "type": "integer",
+            "minimum": 250,
+            "maximum": 1500,
+            "default": 600
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "packageName"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_node_details",
+      "description": "Read the full text and state of one freshly observed, unprotected node.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "snapshotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sessionId": {
+            "$ref": "#/properties/snapshotId"
+          },
+          "nodeId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 260,
+            "pattern": "^0(?:\\.\\d+)*$"
+          }
+        },
+        "required": [
+          "packageName",
+          "snapshotId",
+          "nodeId"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_double_tap",
+      "description": "Double tap inside the freshly observed window and stable target; canvas areas require a recent screenshot. Returns observation with a fresh snapshot after the action.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "snapshotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sessionId": {
+            "$ref": "#/properties/snapshotId"
+          },
+          "x": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 16383
+          },
+          "y": {
+            "$ref": "#/properties/x"
+          },
+          "observe": {
+            "type": "boolean",
+            "default": true
+          },
+          "settleMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 800
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "compact",
+              "full"
+            ],
+            "default": "compact"
+          },
+          "includeScreenshot": {
+            "type": "boolean",
+            "default": false
+          },
+          "maxDimension": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 1920,
+            "default": 1000
+          },
+          "quality": {
+            "type": "integer",
+            "minimum": 35,
+            "maximum": 95,
+            "default": 75
+          },
+          "annotate": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "packageName",
+          "snapshotId",
+          "x",
+          "y"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_pinch",
+      "description": "Pinch or zoom inside the freshly observed window and stable target; canvas areas require a recent screenshot. Returns observation with a fresh snapshot after the action.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "snapshotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sessionId": {
+            "$ref": "#/properties/snapshotId"
+          },
+          "centerX": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 16383
+          },
+          "centerY": {
+            "$ref": "#/properties/centerX"
+          },
+          "startDistance": {
+            "type": "integer",
+            "minimum": 20,
+            "maximum": 1500
+          },
+          "endDistance": {
+            "type": "integer",
+            "minimum": 20,
+            "maximum": 1500
+          },
+          "durationMs": {
+            "type": "integer",
+            "minimum": 150,
+            "maximum": 1000,
+            "default": 400
+          },
+          "observe": {
+            "type": "boolean",
+            "default": true
+          },
+          "settleMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 800
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "compact",
+              "full"
+            ],
+            "default": "compact"
+          },
+          "includeScreenshot": {
+            "type": "boolean",
+            "default": false
+          },
+          "maxDimension": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 1920,
+            "default": 1000
+          },
+          "quality": {
+            "type": "integer",
+            "minimum": 35,
+            "maximum": 95,
+            "default": 75
+          },
+          "annotate": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "packageName",
+          "snapshotId",
+          "centerX",
+          "centerY",
+          "startDistance",
+          "endDistance"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_edit_text",
+      "description": "Append, insert, clear or replace an observed non-protected editable field. Returns observation with a fresh snapshot after the action.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "snapshotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sessionId": {
+            "$ref": "#/properties/snapshotId"
+          },
+          "nodeId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 260,
+            "pattern": "^0(?:\\.\\d+)*$"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "append",
+              "insert",
+              "clear",
+              "replace"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 4000,
+            "default": ""
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4000
+          },
+          "observe": {
+            "type": "boolean",
+            "default": true
+          },
+          "settleMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 800
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "compact",
+              "full"
+            ],
+            "default": "compact"
+          },
+          "includeScreenshot": {
+            "type": "boolean",
+            "default": false
+          },
+          "maxDimension": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 1920,
+            "default": 1000
+          },
+          "quality": {
+            "type": "integer",
+            "minimum": 35,
+            "maximum": 95,
+            "default": 75
+          },
+          "annotate": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "packageName",
+          "snapshotId",
+          "nodeId",
+          "mode"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_press_key",
+      "description": "Submit the observed editable field using its Android IME Enter action. Returns observation with a fresh snapshot after the action.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "snapshotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sessionId": {
+            "$ref": "#/properties/snapshotId"
+          },
+          "nodeId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 260,
+            "pattern": "^0(?:\\.\\d+)*$"
+          },
+          "key": {
+            "type": "string",
+            "const": "enter",
+            "default": "enter"
+          },
+          "observe": {
+            "type": "boolean",
+            "default": true
+          },
+          "settleMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 800
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "compact",
+              "full"
+            ],
+            "default": "compact"
+          },
+          "includeScreenshot": {
+            "type": "boolean",
+            "default": false
+          },
+          "maxDimension": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 1920,
+            "default": 1000
+          },
+          "quality": {
+            "type": "integer",
+            "minimum": 35,
+            "maximum": 95,
+            "default": 75
+          },
+          "annotate": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "packageName",
+          "snapshotId",
+          "nodeId"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_scroll_to_node",
+      "description": "Ask Android to bring an observed node into view. Find with includeOffscreen first. Returns observation with a fresh snapshot after the action.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "snapshotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sessionId": {
+            "$ref": "#/properties/snapshotId"
+          },
+          "nodeId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 260,
+            "pattern": "^0(?:\\.\\d+)*$"
+          },
+          "observe": {
+            "type": "boolean",
+            "default": true
+          },
+          "settleMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 800
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "compact",
+              "full"
+            ],
+            "default": "compact"
+          },
+          "includeScreenshot": {
+            "type": "boolean",
+            "default": false
+          },
+          "maxDimension": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 1920,
+            "default": 1000
+          },
+          "quality": {
+            "type": "integer",
+            "minimum": 35,
+            "maximum": 95,
+            "default": 75
+          },
+          "annotate": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "packageName",
+          "snapshotId",
+          "nodeId"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_notification_dismiss",
+      "description": "Dismiss a freshly observed clearable notification.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "notificationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "packageName",
+          "notificationId"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_notification_snooze",
+      "description": "Snooze a freshly observed notification.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "notificationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "durationMs": {
+            "type": "integer",
+            "minimum": 1000,
+            "maximum": 604800000
+          }
+        },
+        "required": [
+          "packageName",
+          "notificationId",
+          "durationMs"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_storage_locations",
+      "description": "List folders explicitly selected on the phone. Works without Shizuku.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_list_files",
+      "description": "List a path inside an explicitly selected folder.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "locationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "path": {
+            "type": "string",
+            "maxLength": 500,
+            "default": ""
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000,
+            "default": 0
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200,
+            "default": 100
+          }
+        },
+        "required": [
+          "locationId"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_read_file",
+      "description": "Read a UTF-8 text file inside a selected folder, with line pagination.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "locationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "path": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000,
+            "default": 1
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200,
+            "default": 100
+          }
+        },
+        "required": [
+          "locationId",
+          "path"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_write_file",
+      "description": "Create or explicitly replace a UTF-8 file in a selected folder. Text is bounded to 16,000 JSON characters and 24,000 UTF-8 bytes. Overwrite requires overwrite=true.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "locationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "path": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 16000
+          },
+          "overwrite": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "locationId",
+          "path",
+          "text"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_delete_file",
+      "description": "Delete the requested file inside a selected folder. Directories are refused.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "locationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "path": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "locationId",
+          "path"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_shared_content",
+      "description": "List content deliberately shared to Phone MCP through Android Share.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_read_shared_file",
+      "description": "Read a shared text file or image. Does not access other app files.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "fileId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000,
+            "default": 1
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200,
+            "default": 100
+          }
+        },
+        "required": [
+          "fileId"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    }
+  ]
+}

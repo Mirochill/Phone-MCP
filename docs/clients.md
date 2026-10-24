@@ -15,7 +15,9 @@ Account and workspace policies control custom MCP access. The current official f
 
 Official references: [Connect and test a plugin](https://developers.openai.com/plugins/deploy/connect-chatgpt/) and [MCP connections](https://developers.openai.com/codex/mcp/). Product labels and account eligibility can change.
 
-After server metadata changes, refresh the connection and start a fresh conversation. Every response also includes the current `tooling` catalog and compatibility guidance, but **a catalog field cannot add a callable tool to a client's stale cache**. Use the client's supported rediscovery flow. Legacy `phone_click` argument templates support explicit long presses and coordinate actions where the existing client schema permits them; never invent a call to a missing tool.
+The current registry exposes **59 tools**. After server metadata changes, deploy the server, open its connection in ChatGPT Plugins, select **Refresh**, check the new metadata, then start a new conversation. Published plugins use their review/update flow instead. Use `phone_catalog` plus `phone_read` / `phone_action` for current operations when named-tool schemas are cached. Operation responses also include current `tooling` guidance and compatibility guidance, but **a catalog field cannot add a callable tool to a client's stale cache**. Use the client's supported rediscovery flow. Host-native `phone_send_file` attachment binding requires importing its file-parameter metadata; an opaque file ID alone is not readable bytes. Preview PNG/video Capture remains a local Android menu, not a remote tool. [All current tools](tools-reference.md).
+
+Legacy `phone_click` argument templates support explicit long presses and coordinate actions where the existing client schema permits them; never invent a call to a missing tool.
 
 ## Direct Codex connection
 

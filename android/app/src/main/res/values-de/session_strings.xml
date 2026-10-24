@@ -1,0 +1,7 @@
+<resources>
+    <string name="preview_stop_control">KI-Steuerung stoppen</string>
+    <string name="agent_sessions">KI-Sitzungen</string>
+    <string name="agent_exclusive">Diese App hat in diesem Android-Profil nur eine Navigation.</string>
+    <string name="agent_locally_stopped">KI-Steuerung auf diesem Telefon gestoppt.</string>
+    <string name="agent_allow_resume">KI-Steuerung wieder erlauben</string>
+</resources>

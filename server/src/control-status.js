@@ -8,20 +8,26 @@ export function describeControlStatus(raw) {
   const foregroundAllowed=active && mode==='foreground' && explicit(raw.foregroundScreenControlAllowed,raw.screenControlAllowed===true);
   const parallelAllowed=active && mode==='parallel' && explicit(raw.parallelScreenControlAllowed,true);
   const validDisplay=Number.isInteger(parallel.displayId) && parallel.displayId>0;
+  const sessionManager=parallel.maxSessions>0&&Array.isArray(parallel.sessions);
   // APK 0.7+ verifies a trusted, own-group, always-unlocked display in Android before
   // exposing this capability. A locked primary display is not a locked virtual display.
   const independent=parallel.independentKeyguard===true;
   const parallelLocked=!independent && (parallel.keyguardLocked===true || parallel.deviceInteractive===false);
-  const parallelReady=parallelAllowed && parallel.ready===true && validDisplay && !parallelLocked;
+  const parallelReady=parallelAllowed && parallel.ready===true && (validDisplay||sessionManager) && !parallelLocked;
   const foregroundLocked=raw.keyguardLocked===true || raw.deviceInteractive===false;
   const foregroundReady=foregroundAllowed && !foregroundLocked
     ? explicit(raw.foregroundScreenControlReady,explicit(raw.screenControlReady,null)) : false;
   const allowed=foregroundAllowed || parallelAllowed;
   const ready=parallelAllowed ? parallelReady : foregroundAllowed ? foregroundReady : false;
+  const checkedGroup=parallel.screenPolicy?.lastVirtualGroup;
+  const maskedWakeReady=parallelReady && parallel.screenPolicy?.sharedGroupWakeRequiresPhysicalBlank===true && parallel.screenPolicy?.physicalPanelOff===true && parallel.screenPolicy?.defaultGroupWakeAllowed===true;
+  const checkedInputBlocked=!maskedWakeReady && parallelReady && parallel.deviceInteractive===false && checkedGroup?.directGroupId===0 && Number.isInteger(checkedGroup?.displayId) && checkedGroup.displayId>0;
   let summary,nextAction;
   if(parallelAllowed && parallelReady){
-    summary='Contrôle des apps autorisé et prêt sur l’écran séparé. Les actions renvoient leur observation. Le contrôle de l’écran principal est désactivé dans ce mode.'+(independent?' Cet affichage reste indépendant du verrouillage et du bouton latéral de l’écran principal.':'');
-    nextAction='use_parallel_tools';
+    summary='Contrôle des apps autorisé et prêt sur l’écran séparé. Les actions renvoient leur observation. Le contrôle de l’écran principal est désactivé dans ce mode.'+(independent?' Le verrouillage indépendant de la fenêtre ne garantit pas une réception tactile pendant la veille.':'');
+    nextAction=checkedInputBlocked?'check_parallel_input_interactivity':'use_parallel_tools';
+    if(maskedWakeReady)summary='Contrôle séparé prêt. Si son groupe dort, le moteur peut rendre Android interactif en gardant la dalle physique noire et les applications contrôlées silencieuses. Utilisez la session IA ; vérifiez son observation pour confirmer l’effet du geste. Une dalle noire ne signifie pas qu’Android doit rester non interactif.';
+    if(checkedInputBlocked)summary='Session séparée active. Les fenêtres restent lisibles, mais le dernier écran IA vérifié partage le groupe de veille de l’écran principal, actuellement non interactif. Les gestes peuvent être refusés ou consommés sans effet. Ne répétez pas une écriture sans changement d’état ; ne réveillez pas l’écran physique sans demande de son propriétaire.';
   }else if(parallelAllowed){
     summary=parallelLocked
       ? parallel.resumeWithoutRestart===true?'L’affichage séparé est conservé, mais cette version Android partage sa veille avec l’écran principal. Rallumez et déverrouillez le téléphone ; la même session reprendra sans redémarrage.':'Contrôle des apps autorisé sur l’écran séparé, actuellement arrêté car Android est verrouillé ou en veille. Déverrouillez le téléphone puis relancez une session Écran séparé ; l’option d’extinction de Phone MCP permet de garder le contrôle dalle éteinte.'
@@ -40,5 +46,6 @@ export function describeControlStatus(raw) {
   return {...raw,statusContractVersion:2,screenControlAllowed:allowed,screenControlReady:ready,
     foregroundScreenControlAllowed:foregroundAllowed,parallelScreenControlAllowed:parallelAllowed,
     activeControlDisplay:parallelAllowed?'separate':foregroundAllowed?'primary':'none',
-    controlSummary:summary,nextControlAction:nextAction};
+    controlSummary:summary,nextControlAction:nextAction,
+    lastCheckedInputDisplay:checkedGroup?.displayId??null,lastCheckedInputBlocked:checkedInputBlocked,maskedAndroidWakeReady:maskedWakeReady};
 }

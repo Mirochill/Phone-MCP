@@ -1,5 +1,5 @@
 import test from 'node:test';
-import {mkdtempSync,readFileSync,existsSync,unlinkSync,rmdirSync} from 'node:fs';
+import {mkdtempSync,readFileSync,existsSync,unlinkSync,rmdirSync,writeFileSync,mkdirSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import assert from 'node:assert/strict';
@@ -8,6 +8,7 @@ import { once } from 'node:events';
 import WebSocket from 'ws';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import {sendLocalFile} from '../src/send-file.js';
 import { createBridge } from '../src/bridge.js';
 
 const config = {publicUrl:'https://phone.example',phoneToken:'test_phone_token_00000000000000000000000',adminPassword:'test-admin-password-000000000000',commandTimeoutMs:180};
@@ -50,6 +51,16 @@ async function connectPhone(t,f,listener) {
   if (listener) socket.on('message',buffer => listener(JSON.parse(buffer.toString()),socket));
   t.after(() => socket.terminate()); return socket;
 }
+
+test('authenticated replacement reconnect cancels old work and routes new commands once',async t=>{
+ const f=await fixture(t),first=await connectPhone(t,f);let seen;
+ first.on('message',data=>{seen=JSON.parse(data);});const token=await grant(f),client=await connectClient(t,f,token.access_token);
+ const pending=client.callTool({name:'phone_status',arguments:{}});
+ for(let i=0;i<20&&!seen;i++)await new Promise(ok=>setTimeout(ok,5));assert.ok(seen);
+ const closed=once(first,'close');let commands=0;await connectPhone(t,f,(m,socket)=>{commands++;socket.send(JSON.stringify({id:m.id,ok:true,result:{transport:'new'}}));});
+ assert.equal((await closed)[0],4001);assert.equal((await pending).isError,true);
+ assert.equal(JSON.parse((await client.callTool({name:'phone_status',arguments:{}})).content[0].text).transport,'new');assert.equal(commands,1);
+});
 
 test('system-window packages and overlay metadata are relayed without accepting malformed names',async t => {
   const f=await fixture(t),seen=[];
@@ -104,7 +115,7 @@ test('legacy coordinate gestures and explicit control-mode changes enforce write
  const legacy={packageName:'com.example',snapshotId:id,nodeId:'0.2147483646.1200.2200'};
  const result=JSON.parse((await client.callTool({name:'phone_click',arguments:legacy})).content[0].text);
  assert.equal(result.performedAction,'tap');assert.equal(result.observation.width,1440);assert.equal(seen[0].op,'tap');assert.equal(seen[0].args.x,1200);assert.equal(seen[0].args.nodeId,undefined);
- await client.callTool({name:'phone_set_control_mode',arguments:{mode:'foreground'}});assert.equal(seen[2].op,'control_mode');assert.deepEqual(seen[2].args,{mode:'foreground',panelOff:false});
+ await client.callTool({name:'phone_set_control_mode',arguments:{mode:'foreground'}});assert.equal(seen[2].op,'control_mode');assert.equal(seen[2].args.mode,'foreground');assert.equal(seen[2].args.panelOff,false);assert.match(seen[2].args._ownerKey,/^[a-f0-9]{64}$/);
  const reader=await connectClient(t,f,(await grant(f,'phone.read')).access_token);
  assert.equal((await reader.callTool({name:'phone_click',arguments:legacy})).isError,true);
  assert.equal((await reader.callTool({name:'phone_set_control_mode',arguments:{mode:'foreground'}})).isError,true);assert.equal(seen.length,3);
@@ -138,13 +149,13 @@ test('refresh rotates and revocation invalidates the whole token grant',async t 
 });
 test('official MCP client discovers tools and refuses calls when the phone is offline',async t => {
   const f = await fixture(t), tokens = await grant(f), client = await connectClient(t,f,tokens.access_token);
-  const {tools} = await client.listTools(); assert.equal(tools.length,21);
+  const {tools} = await client.listTools(); assert.equal(tools.length,59);
   assert.equal(tools.find(t => t.name === 'phone_click').annotations.destructiveHint,true);
   const connection=await client.callTool({name:'phone_connection',arguments:{}}),data=JSON.parse(connection.content[0].text);
   assert.equal(data.connected,false);assert.deepEqual(connection.structuredContent,data);
   assert.deepEqual(data.tooling.tools,tools.map(tool=>tool.name));
   assert.ok(Buffer.byteLength(JSON.stringify(data.tooling))<2000);
-  assert.match(client.getInstructions(),/automatiquement/);
+  assert.match(client.getInstructions(),/phone_catalog/);
   const result = await client.callTool({name:'phone_status',arguments:{}});
   assert.equal(result.isError,true); assert.match(result.content[0].text,/hors ligne/);
   assert.deepEqual(JSON.parse(result.content[1].text).tooling,data.tooling);
@@ -227,16 +238,16 @@ test('notification reads and replies use background commands without opening the
   assert.equal(JSON.parse(reply.content[0].text).dispatched,true);
   assert.deepEqual(seen,['notifications','reply_notification']);
 });
-test('expired and concurrent commands are not queued or automatically repeated',async t => {
+test('independent commands can overlap and each timeout never replays its action',async t => {
   const f = await fixture(t), tokens = await grant(f); let calls = 0;
   await connectPhone(t,f,() => { calls++; });
   const a = await connectClient(t,f,tokens.access_token), b = await connectClient(t,f,tokens.access_token);
   const first = a.callTool({name:'phone_status',arguments:{}});
   await new Promise(resolve => setTimeout(resolve,25));
   const second = await b.callTool({name:'phone_status',arguments:{}});
-  assert.equal(second.isError,true); assert.match(second.content[0].text,/déjà en cours/);
-  const expired = await first; assert.equal(expired.isError,true); assert.match(expired.content[0].text,/peut-être/);
-  assert.equal(calls,1);
+  assert.equal(second.isError,true); assert.match(second.content[0].text,/peut avoir eu lieu/);
+  const expired = await first; assert.equal(expired.isError,true); assert.match(expired.content[0].text,/peut avoir eu lieu/);
+  assert.equal(calls,2);
 });
 test('pairing endpoint rejects an invalid token',async t => {
   const f = await fixture(t);
@@ -286,3 +297,33 @@ test('pairing endpoint rejects an invalid token',async t => {
   const third=await fixture(t,{stateFile});
   assert.equal((await third.post('/mcp',{}, {Authorization:`Bearer ${renewed.access_token}`})).status,401);
  });
+test('direct HTTP upload enforces authorization, write scope, type and size before contacting the phone',async t=>{
+ const f=await fixture(t),writer=await grant(f),readonly=await grant(f,'phone.read');let received=0;
+ await connectPhone(t,f,(m,s)=>{received++;s.send(JSON.stringify({id:m.id,ok:true,result:{bytesDone:m.args.offset+Buffer.from(m.args.data,'base64').length}}));});
+ const target=f.base+'/uploads/9405dd7c-cdd2-45b3-8b1f-6157113483d7?offset=0';
+ assert.equal((await fetch(target,{method:'PUT',body:Buffer.from('x')})).status,401);
+ assert.equal((await fetch(target,{method:'PUT',headers:{Authorization:'Bearer '+readonly.access_token,'Content-Type':'application/octet-stream'},body:Buffer.from('x')})).status,403);
+ assert.equal((await fetch(target,{method:'PUT',headers:{Authorization:'Bearer '+writer.access_token,'Content-Type':'application/json'},body:'{}'})).status,415);
+ assert.equal((await fetch(target,{method:'PUT',headers:{Authorization:'Bearer '+writer.access_token,'Content-Type':'application/octet-stream'},body:Buffer.alloc(1048577)})).status,413);
+ assert.equal(received,0);
+ const r=await fetch(target,{method:'PUT',headers:{Authorization:'Bearer '+writer.access_token,'Content-Type':'application/octet-stream'},body:Buffer.alloc(300000,39)});
+ assert.equal(r.status,200);assert.equal((await r.json()).bytesDone,300000);assert.equal(received,3);
+});
+test('local file sender recovers a lost HTTP response by checking the confirmed offset',async t=>{
+ const f=await fixture(t),tokens=await grant(f);let received=Buffer.alloc(0),job;
+ await connectPhone(t,f,(m,socket)=>{
+  let result;
+  if(m.op==='file_upload_begin')job={jobId:m.args.requestId,fileName:m.args.fileName,totalBytes:m.args.sizeBytes,expectedSha256:m.args.sha256,bytesDone:0,state:'receiving',uploadPath:'/uploads/'+m.args.requestId,maxRequestBytes:1048576};
+  if(m.op==='file_upload_chunk'){
+   const bytes=Buffer.from(m.args.data,'base64');assert.equal(m.args.offset,received.length);assert.equal(m.args._ownerKey.length,64);received=Buffer.concat([received,bytes]);job.bytesDone=received.length;
+  }
+  if(m.op==='file_upload_commit'){job.sha256=createHash('sha256').update(received).digest('hex');assert.equal(job.sha256,job.expectedSha256);job.state='completed';}
+  result={...job};socket.send(JSON.stringify({id:m.id,ok:true,result}));
+ });
+ mkdirSync('runtime',{recursive:true});const folder=mkdtempSync(join('runtime','local-send-test-')),file=join(folder,'fichier test.bin'),bytes=Buffer.alloc(2097189);
+ for(let i=0;i<bytes.length;i++)bytes[i]=i%251;writeFileSync(file,bytes);t.after(()=>{unlinkSync(file);rmdirSync(folder);});
+ const previous=process.env.PHONE_MCP_ALLOW_LOCAL_HTTP;process.env.PHONE_MCP_ALLOW_LOCAL_HTTP='true';t.after(()=>{if(previous===undefined)delete process.env.PHONE_MCP_ALLOW_LOCAL_HTTP;else process.env.PHONE_MCP_ALLOW_LOCAL_HTTP=previous;});
+ let lost=false;
+ const receipt=await sendLocalFile(file,{endpoint:f.base,accessToken:tokens.access_token,fetchImpl:async(...args)=>{const response=await fetch(...args);if(!lost){lost=true;await response.arrayBuffer();throw Error('Simulated lost acknowledgement');}return response;}});
+ assert.equal(lost,true);assert.equal(receipt.state,'completed');assert.deepEqual(received,bytes);assert.equal(receipt.bytesDone,bytes.length);
+});

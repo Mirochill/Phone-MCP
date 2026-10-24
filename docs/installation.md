@@ -46,7 +46,16 @@ Replace the example before running it. The helper updates the Worker name and `P
 
 The configuration includes `nodejs_compat`, the `PHONE_HUB` binding, the `PhoneHub` class and the `v1` SQLite Durable Object migration. Keep them together. The Worker imports shared server code during bundling, so retain both directories.
 
-### 3. Deploy, upload secrets, and check health
+### 3. Prepare the APK assets, deploy, and check health
+
+The example config binds `ASSETS` to `./assets` with `run_worker_first:true`. Keep that routing guard so raw asset paths cannot bypass update authentication. Before deployment, prepare the exact matching APK and manifest:
+
+```sh
+node scripts/prepare-update-assets.mjs
+```
+
+The helper verifies the released APK hash/size before copying it to `cloudflare/assets/phone-mcp.apk` with the matching manifest. Alternatively `scripts/Build-Release.ps1` builds and verifies your own APK. Authenticated `/updates/latest` checks issue expiring hash-bound download tickets.
+
 
 ```sh
 cd cloudflare
@@ -79,7 +88,7 @@ Your AI client's URL is the relay origin **plus `/mcp`**. Authenticate through O
 
 ### Updates and maintenance
 
-Keep your private secrets and signing key. Pull/review source updates, install locked dependencies with `npm ci`, run the relevant tests, and deploy the updated Worker. Update the APK separately when required. Server metadata changes may require a client refresh. A Phone MCP self-update ends its active Android session.
+Keep your private secrets and signing key. Pull/review source updates, install locked dependencies with `npm ci`, run the relevant tests, and deploy the updated Worker. Update the APK separately when required. Server metadata changes may require a client refresh. A full Phone MCP APK update ends all active Android app sessions; reopen and start the phone service locally. Server-only changes do not install an APK.
 
 Do not change the existing Durable Object migration tag/class arbitrarily on an established deployment. Rotate credentials deliberately; replacing the phone token requires re-pairing the phone. To revoke an AI client, use its disconnect/revoke flow in addition to stopping the phone session.
 
@@ -118,16 +127,17 @@ Do not expose an unencrypted HTTP server to the Internet. `ALLOW_LOCAL_HTTP` is 
 
 ## Android setup
 
-1. Download `Phone-MCP-0.8.2.apk` and `SHA256SUMS.txt` from [Releases](https://github.com/Mirochill/Phone-MCP/releases/latest). Check the file hash before installation. On Windows: `Get-FileHash .\Phone-MCP-0.8.2.apk -Algorithm SHA256`.
+1. Download `Phone-MCP-0.16.2.apk` and `SHA256SUMS.txt` from [Releases](https://github.com/Mirochill/Phone-MCP/releases/latest). Check the file hash before installation. On Windows: `Get-FileHash .\Phone-MCP-0.16.2.apk -Algorithm SHA256`.
 2. Allow installation from the browser/file manager you intentionally use, install the developer-signed preview and open **Phone MCP**. Android still enforces certificate continuity for updates.
 3. Pair using your private link/QR. In **Réglages** (Settings), the server address is the HTTPS origin without `/mcp`. The pairing token is stored encrypted by Android Keystore.
 4. Review **Toutes les apps** and the per-app **Lecture / Actions / Images / Notifications** capabilities. The current preview defaults to allowing installed apps. Disable sensitive apps or start with explicit grants. Disabling read also disables the other capabilities for that app. Changing the all-app default clears per-app overrides.
 5. Enable **Accessibility** for physical-screen interaction. Enable **Notification access** for notification reads/replies. Grant the ordinary notification permission for the persistent session controls when Android asks.
 6. For **Écran séparé** (Separate screen) and files/APK, install and start Shizuku. On supported Android 11+ devices, follow its [wireless debugging setup](https://shizuku.rikka.app/guide/setup/), then grant Phone MCP access in Shizuku. These system permissions are granted on the phone, not by the AI host. Shizuku runs with shell-level privileges, not universal root privileges.
 7. Select **Écran du téléphone**, **Écran séparé** or **Notifications**, choose the session duration, and tap **Démarrer la session**. The app does not auto-start a session after boot.
-8. In your AI client, verify `phone_connection`, then `phone_status`. In parallel mode, require `parallel.ready: true` and a non-primary display ID before screen actions. A connected phone alone does not establish a usable display.
+8. In Android Settings → Screen during control, leave **Keep the physical screen on** disabled for dark-panel operation. Only you can change this preference; agents cannot choose a lit fallback. Initial engine startup still needs an unlocked phone.
+9. In your AI client, verify `phone_connection`, then `phone_status`. In parallel mode, require `parallel.ready: true` and a non-primary display ID before screen actions. A connected phone alone does not establish a usable display. Create one `phone_session_create` per app/agent, retain its `sessionId`, then open the app. End finished app sessions explicitly.
 
-For the read-only preview, use **Voir l'app** in the notification or open the controlled app when supported. Closing the preview does not end the game/session. A frame-based fallback may be used when hardware mirroring is unavailable.
+For a read-only session preview, use **See app / Voir l’app** or its **AI preview** Recents card. Closing the viewer leaves the session active. Stop revokes control; **Take control of this page** moves the existing task to your physical screen. The Capture menu saves a source-only PNG or silent MP4 to the PhoneMCP Gallery album; a recording continues away from the viewer and can be stopped from its notification. Source restrictions remain enforced.
 
 ## Troubleshooting
 
@@ -137,7 +147,7 @@ For the read-only preview, use **Voir l'app** in the notification or open the co
 | `/mcp` is 401 in a browser | Expected without OAuth; check discovery and use a real MCP client. |
 | Phone online, screen not ready | Inspect `controlSummary`, `nextControlAction`, Shizuku and the active display. Explicitly recover parallel mode or choose foreground; do not silently switch screens. |
 | Mode change asks for unlock | Initially creating/changing a display needs an awake, unlocked phone. A previously verified independent display may continue behind the physical keyguard. |
-| Missing new tool in an old chat | Refresh the client connection and begin a fresh conversation; read `tooling` guidance. |
+| Missing new tool in an old chat | Use `phone_catalog` and the stable `phone_read` / `phone_action` gateways; rediscover/refresh the client for new named schemas and host file binding. |
 | Native OAuth callback rejected | Deploy this public server version; use DCR, PKCE S256 and a literal loopback IP callback. |
 | Shizuku unavailable after restart | Restart it using its documented procedure and re-authorize if required. |
 | APK update won't install | Verify package, checksum and signing certificate; a build signed with another key cannot update in place. |

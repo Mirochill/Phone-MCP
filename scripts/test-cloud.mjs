@@ -9,7 +9,7 @@ const base=`http://127.0.0.1:${port}`;
 // Fresh test storage prevents rate-limit state leaking between test runs.
 async function runFile(file) {
 const state=fs.mkdtempSync(path.join(work,'cloud-tests-'));
-const worker=spawn(process.execPath,[path.join(root,'cloudflare/node_modules/wrangler/bin/wrangler.js'),'dev','--local','--ip','127.0.0.1','--port',String(port),'--persist-to',state,'--var',`PUBLIC_URL:${base}`,'--var','ALLOW_LOCAL_HTTP:true','--var','PHONE_TOKEN:test_phone_token_00000000000000000000000','--var','ADMIN_PASSWORD:test-admin-password-000000000000'],{cwd:path.join(root,'cloudflare'),env:{...process.env,WRANGLER_SEND_METRICS:'false'},stdio:['ignore','pipe','pipe'],windowsHide:true});
+const worker=spawn(process.execPath,[path.join(root,'cloudflare/node_modules/wrangler/bin/wrangler.js'),'dev','--config','wrangler.example.jsonc','--local','--ip','127.0.0.1','--port',String(port),'--persist-to',state,'--var',`PUBLIC_URL:${base}`,'--var','ALLOW_LOCAL_HTTP:true','--var','PHONE_TOKEN:test_phone_token_00000000000000000000000','--var','ADMIN_PASSWORD:test-admin-password-000000000000'],{cwd:path.join(root,'cloudflare'),env:{...process.env,WRANGLER_SEND_METRICS:'false'},stdio:['ignore','pipe','pipe'],windowsHide:true});
 let log='';for(const s of [worker.stdout,worker.stderr])s.on('data',b=>{log=(log+b).slice(-20000)});
 try {
   let ready=false;

@@ -1,0 +1,76 @@
+{
+  "version": "0.16.2",
+  "apk": {
+    "versionCode": 65,
+    "sha256": "fe751fb2aba57c2e6ecd627a82c1674ea779935f674da2fe3ad314bf769d3233",
+    "bytes": 3620683
+  },
+  "installed": true,
+  "serverVersion": "0.16.2-cloud",
+  "tools": 59,
+  "localTests": {
+    "captureMirror": 26,
+    "pendingMedia": 16,
+    "screenPolicy": 27,
+    "releaseBuild": "pass",
+    "signature": "pass",
+    "alignment": "pass",
+    "lintErrors": 0,
+    "lintWarnings": 35
+  },
+  "device": {
+    "png": {
+      "validatedRelease": "0.16.0",
+      "sameImageCodeInFinal": true,
+      "width": 720,
+      "height": 1280,
+      "bytes": 100749
+    },
+    "videos": [
+      {
+        "kind": "video",
+        "samples": 148,
+        "bytes": 936662,
+        "audio": false,
+        "width": 720,
+        "height": 1280,
+        "durationMs": 2459
+      },
+      {
+        "kind": "video",
+        "samples": 562,
+        "bytes": 3884025,
+        "audio": false,
+        "width": 720,
+        "height": 1280,
+        "durationMs": 9508
+      }
+    ],
+    "userConfirmed": {
+      "imageAndAnimatedVideoShowOnlyAiApp": true,
+      "noViewerButtonsOrPhysicalScreen": true,
+      "videoRecordsAiAppWhileUserOnHome": true
+    },
+    "final": {
+      "activeRecordings": 0,
+      "pendingImages": 0,
+      "activeSessions": 0,
+      "phoneMcpWakeLocks": [
+        "Only the short diagnostics-command session lease was observed; no local-recording wakelock."
+      ]
+    }
+  },
+  "limits": [
+    "No audio track; explicitly indicated by the local menu.",
+    "No battery or sustained performance benchmark.",
+    "The source-session end was issued after the user recording had already finished, so in-progress session-end auto-finalization is not claimed as hardware-validated.",
+    "Full base-APK replacement still interrupts current sessions; Android setDontKillApp applies to adding splits, not general full updates."
+  ],
+  "earlierFailures": {
+    "versions": [
+      "0.16.0",
+      "0.16.1"
+    ],
+    "video": "No encoder samples; failed empty outputs removed. Fixed by a real compositor root for the mirrored layer."
+  }
+}

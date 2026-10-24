@@ -44,6 +44,12 @@ public final class WindowPolicyTest {
         expect(!WindowPolicy.backTargets(app.id,discord,dialog.id,discord),"A newly active same-app dialog requires a new snapshot");
         expect(!WindowPolicy.backTargets(-1,discord,-1,discord),"An unknown active window must not receive Back");
         expect(!WindowPolicy.backTargets(1,discord,1,system),"Matching identifiers never override a package mismatch");
+        expect(WindowPolicy.recoverOwned(40,40,9,true,discord,discord),"An owned task still on its own display can regain focus");
+        expect(!WindowPolicy.recoverOwned(40,0,9,true,discord,discord),"Never recover an AI task now used on the physical display");
+        expect(!WindowPolicy.recoverOwned(40,41,9,true,discord,discord),"Never focus a task belonging to another agent display");
+        expect(!WindowPolicy.recoverOwned(40,40,9,false,discord,discord),"A same-app task without session ownership is not recoverable");
+        expect(!WindowPolicy.recoverOwned(0,0,9,true,discord,discord),"Recovery never falls back to physical display zero");
+        expect(!WindowPolicy.recoverOwned(40,40,9,true,discord,system),"Task ownership never overrides the requested package");
         System.out.println("PASS: "+checks+" window-selection regression checks");
     }
 }

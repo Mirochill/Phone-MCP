@@ -1,12 +1,17 @@
 {
   "name": "phone-mcp",
-  "version": "0.8.2",
+  "version": "0.16.2",
   "private": true,
   "type": "module",
-  "engines": {"node": ">=22"},
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "test": "npm test --prefix server",
     "test:policy": "node scripts/test-policy.mjs",
-    "test:cloud": "node scripts/test-cloud.mjs"
+    "test:cloud": "node scripts/test-cloud.mjs",
+    "test:android-doubles": "node scripts/test-android-doubles.mjs",
+    "docs:tools": "node scripts/generate-tools.mjs",
+    "check:docs": "node scripts/check-docs.mjs"
   }
 }

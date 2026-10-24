@@ -11,6 +11,8 @@ final class ParallelTaskLease {
     void observe(String pkg,int taskId,int actualDisplay,int ownedDisplay){
         if(pkg!=null&&!pkg.isEmpty()&&taskId>=0&&ownedDisplay>0&&actualDisplay==ownedDisplay)tasks.computeIfAbsent(pkg,key->new HashSet<>()).add(taskId);
     }
+    Set<Integer> taskIds(String pkg){Set<Integer> owned=tasks.get(pkg);return owned==null?new HashSet<>():new HashSet<>(owned);}
+    boolean ownsTask(int taskId){for(Set<Integer> owned:tasks.values())if(owned.contains(taskId))return true;return false;}
     boolean owns(String pkg){return tasks.containsKey(pkg);}
     void retain(Set<String> packages){tasks.keySet().retainAll(packages);}
     boolean reclaim(String pkg,int taskId,int actualDisplay,int ownedDisplay,String[] children){

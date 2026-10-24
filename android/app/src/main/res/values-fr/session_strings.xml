@@ -1,0 +1,7 @@
+<resources>
+    <string name="preview_stop_control">Arrêter le contrôle IA</string>
+    <string name="agent_sessions">Sessions IA</string>
+    <string name="agent_exclusive">Cette app a une seule navigation dans ce profil Android.</string>
+    <string name="agent_locally_stopped">Contrôle IA arrêté sur ce téléphone.</string>
+    <string name="agent_allow_resume">Autoriser à nouveau le contrôle IA</string>
+</resources>

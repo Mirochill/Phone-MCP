@@ -1,0 +1,28 @@
+<resources>
+    <string name="update_pair_first">Conecta primero un servidor.</string>
+    <string name="update_check_failed">No se pudo comprobar. Inténtalo de nuevo.</string>
+    <string name="update_current">La aplicación está actualizada.</string>
+    <string name="update_start_session">Inicia una sesión con Shizuku antes de instalar.</string>
+    <string name="all_apps_default">Permitir todas las apps y funciones por defecto</string>
+    <string name="accessibility_description">Permite leer y controlar apps autorizadas durante una sesión que inicias. El contenido se envía al servidor MCP y al cliente IA. Las contraseñas se ocultan. Detén la sesión desde la notificación.</string>
+    <string name="preview_description">Vista de la app controlada por IA</string>
+    <string name="preview_handoff">Tomar el control de esta página</string>
+    <string name="preview_close">Cerrar vista previa</string>
+    <string name="preview_active">Controlada por IA · Solo lectura</string>
+    <string name="preview_stopped">Vista previa detenida</string>
+    <string name="preview_unavailable">Vista previa no disponible</string>
+    <string name="preview_notification_action">Ver app</string>
+    <string name="preview_recent_title">Vista IA · %1$s</string>
+    <string name="capture_button">Capturar</string>
+    <string name="capture_image">Foto (PNG)</string>
+    <string name="capture_video_start">Iniciar vídeo (sin sonido)</string>
+    <string name="capture_video_stop">Detener y guardar vídeo</string>
+    <string name="capture_recording">Grabando %1$02d:%2$02d</string>
+    <string name="capture_image_saved">Imagen guardada en Imágenes/PhoneMCP.</string>
+    <string name="capture_video_saved">Vídeo guardado en Vídeos/PhoneMCP.</string>
+    <string name="capture_failed">No se pudo capturar. La pantalla de IA puede no estar disponible.</string>
+    <string name="capture_notification">Grabación de pantalla IA</string>
+    <string name="capture_notification_count">Grabaciones activas: %1$d</string>
+    <string name="capture_stop_all">Detener las grabaciones</string>
+    <string name="capture_notifications_required">Permite las notificaciones para grabar en segundo plano.</string>
+</resources>

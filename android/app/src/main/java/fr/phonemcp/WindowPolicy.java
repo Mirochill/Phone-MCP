@@ -23,6 +23,9 @@ final class WindowPolicy {
         }
         return selected;
     }
+    static boolean recoverOwned(int expectedDisplay,int actualDisplay,int taskId,boolean owned,String requestedPackage,String taskPackage){
+        return expectedDisplay>0&&actualDisplay==expectedDisplay&&taskId>=0&&owned&&requestedPackage!=null&&requestedPackage.equals(taskPackage);
+    }
     static boolean backTargets(int selectedId, String selectedPackage, int activeId, String activePackage) {
         return selectedId >= 0 && selectedId == activeId && selectedPackage != null && selectedPackage.equals(activePackage);
     }

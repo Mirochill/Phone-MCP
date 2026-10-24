@@ -1,12 +1,14 @@
 import express from 'express';
 import { createServer } from 'node:http';
-import { randomUUID } from 'node:crypto';
+import {CommandChannel,OperationScheduler} from './command-channel.js';
 import { WebSocketServer, WebSocket } from 'ws';
 import { rateLimit } from 'express-rate-limit';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { validateConfig, sameSecret, randomToken } from './config.js';
 import { installOAuth } from './oauth.js';
 import { makeMcp } from './mcp.js';
+import {uploadSelection,readUploadBody,forwardUpload,uploadFailure} from './direct-upload.js';
+import { VERSION } from './version.js';
 
 
 export function createBridge(inputConfig) {
@@ -23,14 +25,14 @@ export function createBridge(inputConfig) {
     if (origin) {
       res.set('Access-Control-Allow-Origin',origin); res.set('Vary','Origin');
       res.set('Access-Control-Allow-Headers','Authorization, Content-Type, MCP-Protocol-Version, MCP-Session-Id');
-      res.set('Access-Control-Allow-Methods','GET, POST, DELETE, OPTIONS');
+      res.set('Access-Control-Allow-Methods','GET, POST, PUT, DELETE, OPTIONS');
       res.set('Access-Control-Expose-Headers','WWW-Authenticate, MCP-Session-Id');
     }
     if (req.method === 'OPTIONS') return res.status(204).end(); next();
   });
   app.use(express.json({limit:'32kb'})); app.use(express.urlencoded({extended:false,limit:'12kb'}));
   const oauth = installOAuth(app,config);
-  app.get('/health',(_req,res) => res.json({ok:true,version:'0.2.0'}));
+  app.get('/health',(_req,res) => res.json({ok:true,version:VERSION}));
   let pairingUsed = false, pairingCode = config.pairingCode;
   let pairingExpires = Date.now() + 15*60000;
   app.post('/admin/pairing',rateLimit({windowMs:60000,limit:8,standardHeaders:'draft-8',legacyHeaders:false}),(req,res) => {
@@ -52,13 +54,14 @@ export function createBridge(inputConfig) {
   });
   const server = createServer(app);
   const wss = new WebSocketServer({noServer:true,maxPayload:2*1024*1024,perMessageDeflate:false});
-  let phone = null, phoneAlive = false, inFlight = null, connectedSince = null;
+  let phone = null, phoneAlive = false, connectedSince = null;
+  const channel=new CommandChannel(config.commandTimeoutMs??12000),scheduler=new OperationScheduler();
   server.on('upgrade',(req,socket,head) => {
     const authorization = req.headers.authorization;
     if (req.url !== '/device' || req.headers.origin || !sameSecret(authorization,`Bearer ${config.phoneToken}`)) {
       socket.end('HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n'); return;
     }
-    if (phone) { socket.end('HTTP/1.1 409 Conflict\r\nConnection: close\r\n\r\n'); return; }
+    if(phone){const old=phone;phone=null;scheduler.disconnect();channel.disconnect(old,'Connexion du téléphone remplacée ; les commandes ne sont pas rejouées.');old.close(4001,'Device connection replaced');}
     wss.handleUpgrade(req,socket,head,ws => { phone = ws; wss.emit('connection',ws); });
   });
   wss.on('connection',ws => {
@@ -68,39 +71,27 @@ export function createBridge(inputConfig) {
     ws.on('message',data => {
       try {
         const response = JSON.parse(data.toString());
-        if (!inFlight || response.id !== inFlight.id) return;
-        const waiting = inFlight; inFlight = null; clearTimeout(waiting.timer);
-        if (response.ok === true && response.result && typeof response.result === 'object') waiting.resolve(response.result);
-        else waiting.reject(new Error(typeof response.error === 'string' ? response.error.slice(0,300) : 'Le téléphone a refusé la commande.'));
+        channel.receive(ws,response);
       } catch { ws.close(1008,'Invalid response'); }
     });
     ws.on('close',() => {
-      if (phone === ws) { phone = null; if (inFlight) { clearTimeout(inFlight.timer); inFlight.reject(new Error('Téléphone déconnecté.')); inFlight = null; } }
+      if (phone === ws) { phone = null; scheduler.disconnect();channel.disconnect(ws); }
     });
   });
   const heartbeat = setInterval(() => {
     if (!phone) return;
     if (!phoneAlive) { phone.terminate(); return; }
     phoneAlive = false; phone.ping();
-  },25000).unref();
-  function command(op,args) {
-    if (!phone || phone.readyState !== WebSocket.OPEN) return Promise.reject(new Error('Téléphone hors ligne. Démarrez une session dans Phone MCP.'));
-    if (inFlight) return Promise.reject(new Error('Une commande est déjà en cours. Réessayez après sa réponse.'));
-    return new Promise((resolve,reject) => {
-      const id = randomUUID();
-      const timer = setTimeout(() => {
-        if (inFlight?.id === id) inFlight = null;
-        // Never retry an action automatically: it may already have happened.
-        reject(new Error('Délai dépassé. L’action a peut-être été effectuée : relisez l’écran avant de réessayer.'));
-      },config.commandTimeoutMs ?? 12000);
-      inFlight = {id,timer,resolve,reject};
-      phone.send(JSON.stringify({id,op,args,expiresAt:Date.now()+(config.commandTimeoutMs ?? 12000)}),error => {
-        if (error && inFlight?.id === id) { clearTimeout(timer); inFlight = null; reject(new Error('Envoi impossible.')); }
-      });
-    });
-  }
-  app.post('/mcp',oauth.authenticate,rateLimit({windowMs:60000,limit:120,standardHeaders:'draft-8',legacyHeaders:false}),async (req,res,next) => {
-    const mcp = makeMcp(req.phoneGrant,command,() => ({connected:phone?.readyState === WebSocket.OPEN,connectedSince:phone ? connectedSince : null,commandInProgress:!!inFlight,serverVersion:'0.2.0'}));
+  },60000).unref();
+  const command=(op,args)=>channel.send(phone,op,args);
+  app.put('/uploads/:jobId',oauth.authenticate,rateLimit({windowMs:60000,limit:600,standardHeaders:'draft-8',legacyHeaders:false}),async(req,res)=>{
+    if(!req.phoneGrant.scopes.includes('phone.write'))return res.status(403).json({error:'insufficient_scope'});
+    if(req.headers['content-type']?.split(';')[0]!=='application/octet-stream')return res.status(415).json({error:'binary_body_required'});
+    try{const selection=uploadSelection(new URL(req.originalUrl,config.publicUrl));const bytes=await readUploadBody(req,req.headers['content-length']);const value=await forwardUpload(command,req.phoneGrant,selection,bytes);res.json(value);}
+    catch(error){const f=uploadFailure(error);res.status(f.status).json(f.body);}
+  });
+  app.post('/mcp',oauth.authenticate,rateLimit({windowMs:60000,limit:600,standardHeaders:'draft-8',legacyHeaders:false}),async (req,res,next) => {
+    const mcp = makeMcp(req.phoneGrant,command,() => ({connected:phone?.readyState === WebSocket.OPEN,connectedSince:phone ? connectedSince : null,commandInProgress:channel.pending.size>0,serverVersion:VERSION}),VERSION,scheduler);
     const transport = new StreamableHTTPServerTransport({sessionIdGenerator:undefined,enableJsonResponse:true});
     res.on('close',() => { transport.close().catch(() => {}); mcp.close().catch(() => {}); });
     try { await mcp.connect(transport); await transport.handleRequest(req,res,req.body); }
@@ -111,7 +102,7 @@ export function createBridge(inputConfig) {
   app.use((error,_req,res,_next) => res.status(error.status ?? 500).json({error:'request_failed'}));
   async function close() {
     clearInterval(heartbeat); oauth.close();
-    if (inFlight) { clearTimeout(inFlight.timer); inFlight.reject(new Error('Serveur arrêté.')); inFlight = null; }
+    channel.disconnect(null,'Serveur arrêté.');
     for (const ws of wss.clients) ws.terminate();
     await new Promise(resolve => wss.close(resolve));
     if (server.listening) await new Promise(resolve => server.close(resolve));

@@ -7,9 +7,9 @@ public final class ParallelTaskLeaseTest {
         ParallelTaskLease leases=new ParallelTaskLease();String game="com.example.game";
         String[] onlyGame={game+"/.GameActivity"};
         expect(!leases.reclaim(game,45,0,8,onlyGame),"Never move an unowned primary task");
-        leases.observe(game,45,0,8);
+        leases.observe(game,45,0,8);expect(!leases.ownsTask(45),"A primary task is not ours");
         expect(!leases.owns(game),"An observation on the primary display cannot claim ownership");
-        leases.observe(game,45,8,8);
+        leases.observe(game,45,8,8);expect(leases.ownsTask(45),"Track the exact owned task for handoff");expect(!leases.ownsTask(46),"Never revoke a different human task");
         expect(leases.owns(game),"The app is owned after observation on the separate display");
         expect(leases.reclaim(game,45,0,8,onlyGame),"Return the same game task when the launcher moves it to primary");
         expect(!leases.reclaim(game,46,0,8,onlyGame),"A same-package duplicate task is not our task");

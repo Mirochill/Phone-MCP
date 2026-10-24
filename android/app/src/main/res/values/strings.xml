@@ -1,0 +1,28 @@
+<resources>
+    <string name="update_pair_first">Connect a server first.</string>
+    <string name="update_check_failed">Update check failed. Try again.</string>
+    <string name="update_current">Your app is up to date.</string>
+    <string name="update_start_session">Start a session with Shizuku before installing.</string>
+    <string name="all_apps_default">Allow all apps and capabilities by default</string>
+    <string name="accessibility_description">Allows Phone MCP to read and control authorized apps during a session you start. Authorized content is sent to your MCP server and AI client. Passwords are masked. Stop at any time from the notification.</string>
+    <string name="preview_description">Preview of the app controlled by AI</string>
+    <string name="preview_handoff">Take control of this page</string>
+    <string name="preview_close">Close preview</string>
+    <string name="preview_active">Controlled by AI · Read only</string>
+    <string name="preview_stopped">Preview stopped</string>
+    <string name="preview_unavailable">Preview unavailable</string>
+    <string name="preview_notification_action">View app</string>
+    <string name="preview_recent_title">AI preview · %1$s</string>
+    <string name="capture_button">Capture</string>
+    <string name="capture_image">Photo (PNG)</string>
+    <string name="capture_video_start">Start video (no audio)</string>
+    <string name="capture_video_stop">Stop and save video</string>
+    <string name="capture_recording">Recording %1$02d:%2$02d</string>
+    <string name="capture_image_saved">Image saved in Pictures/PhoneMCP.</string>
+    <string name="capture_video_saved">Video saved in Movies/PhoneMCP.</string>
+    <string name="capture_failed">Capture failed. The AI screen may no longer be available.</string>
+    <string name="capture_notification">AI screen recording</string>
+    <string name="capture_notification_count">Active recordings: %1$d</string>
+    <string name="capture_stop_all">Stop all recordings</string>
+    <string name="capture_notifications_required">Allow notifications to record in the background.</string>
+</resources>

@@ -1,44 +1,42 @@
-# Verification and known limits
+# Verification and remaining limits
 
-Verification date: **21 October 2026**. This is a developer preview, with separate evidence for source builds, protocol tests, previous device testing and the current launch preparation.
+Evidence is scoped to the version and scenario actually tested. Successful builds, accepted tool calls, visible app effects and battery improvements are distinct claims.
 
-## Current publication checks
+## 0.16.2 capture release — S24 Ultra / Android 16
 
 | Check | Evidence |
 |---|---|
-| Original Android source builds | `assembleRelease` and `lintRelease` succeeded using the pinned toolchain. |
-| Delivered APK matches source build | All 15 non-signature ZIP entries match the delivered 0.8.2 binary; signature and alignment verified. |
-| Android static analysis | 0 errors, 5 warnings. |
-| Pure Java policy tests | 195 assertions across access permissions, files, session duration, window selection and separate-display task ownership. |
-| Local relay tests | 39 Node tests, including real MCP SDK transport, WebSocket relay, OAuth/PKCE, scopes, persistence, cancellation/timeout behavior and native loopback redirects. |
-| Cloudflare runtime tests | 9 integration tests plus 1 native-client OAuth test in fresh local Wrangler/SQLite Durable Object runtimes. Storage is isolated per test file so production rate limits remain enforced. |
-| Production dependency audit | `npm audit --omit=dev` reported zero known vulnerabilities at the time of this check; this is not a security certification. |
-| Current real phone | Phone MCP 0.8.2 connected on a Samsung S24 Ultra, Android 16; files ready and the parallel display ready. |
-| Current real action | In Codex through the Phone MCP plugin: opened the Samsung Calculator, read its nodes, entered `137×24`, clicked equals, and read/captured `3 288` on separate display 36. |
+| Distributed APK | `fr.phonemcp`, version 0.16.2, code 65, 3,620,683 bytes; SHA-256 in the release manifest. Signature/alignment/build metadata verified. |
+| PNG | Source AI display only, 720×1280, 100,749 bytes. First hardware check on 0.16.0; final image-writing code unchanged. User confirmed correct content. |
+| Final silent MP4 | 0.16.2: 148 encoded samples / 2,459 ms / 936,662 bytes and 562 samples / 9,508 ms / 3,884,025 bytes; both 720×1280, no audio. |
+| Physical-screen isolation | User confirmed animated video and image contained only the AI app, without viewer controls or physical-screen content. Recording continued while the user was on the physical home screen. |
+| Cleanup | Final diagnostics: 0 active recordings, 0 pending images, 0 own test sessions; no local-recording wakelock. |
+| Local regression tests in capture development | 26 actual CaptureMirror checks, 16 PendingMedia checks, 27 screen-controller checks; release/lint/signature/alignment checks passed, 0 lint errors / 35 warnings. |
 
-The calculator's equals action and returned observation took 309 ms on the device in this single sample. This excludes model reasoning, host UI and general network/conversation time; it is not a benchmark or service guarantee. The physical screen was reported non-interactive and locked while the verified independent display remained usable. See [`live-device-verification.json`](live-device-verification.json) and the real calculator screenshot.
+The initial 0.16.0/0.16.1 encoder had no frames and removed empty outputs. The final version fixes the mirrored layer's compositor root. These short recordings are functional checks, not sustained frame-rate, battery or thermal measurements. The exact in-progress session-end auto-finalization path remains unverified on the phone: the session was ended after the observed recording had already stopped.
 
-## Historical device validation used for release provenance
+The sanitized [release verification JSON](../releases/0.16.2/Verification-0.16.2.json) contains sizes, timing and test results. Raw local media URIs and device-session identities are not needed for public use.
 
-The 0.8.2 delivery record reports build/lint, task ownership/revocation checks and 28 checks on Android 16 API 36.1, including SurfaceControl attachment/removal, task reclamation, preview expiry, protected fields and AI interaction while a hardware mirror was attached. These detailed Android instrumentation checks were performed in the prior development session; they were not all rerun as part of this publication pass.
+## Earlier device regressions retained by current source
 
-The released preview was installed and read back on the S24 Ultra in that session. Its read-only preview and AI commands were exercised. On that Samsung the observed preview transport was `frames`; hardware mirroring was demonstrated on the emulator, not established on the Samsung. No frame-rate measurement was recorded.
+- 0.15.4: user confirmed twice that the physical panel stayed black through agent gestures/display recovery, and one side-button press restored it normally. Keep-on was disabled locally; remote enabling was rejected.
+- 0.15.5: user confirmed Samsung hardware-button screenshots from calculator and Chess previews, via See app and Recents. The original intermittent refusal was not reproduced universally.
+- 0.15.3: repeated captures of an unchanged bot Chess.com board after an idle pause succeeded through the owned source surface. The bot board accepted a real two-tap move. The black-board report in an online-human game was not reproduced; no human match was started for diagnosis.
+- 0.15.1/0.15.3: real Macadam ads returned through two Skip controls and one Close in 104.402 s / 114.947 s. First Skip appeared only after 93.429 s / 98.932 s. App-imposed waits were not bypassed. Those observations do not prove universal ad completion or cash rewards.
+- 0.12–0.13: independent same-app neutral windows retained distinct state; concurrent requests stayed on distinct displays; an observed graphical action received genuine DOWN/UP events; unrelated animated layout no longer invalidated a stable target.
+- Local handoff retained calculator 15, rejected the old session and allowed a fresh same-app session. Explicit Stop remains a different local revocation.
 
-Earlier versions include real-device tests of gestures, app/window selection and file downloads, plus emulator file/install checks. These establish development history, not a claim that every app, notification type or APK install was retested for this launch.
+These are historical measured checks, not all repeated for a documentation/publication update. The historical 0.8.2 [device record](live-device-verification.json) and launch media remain labeled as such.
 
-## Client evidence
+## Checks for this GitHub synchronization
 
-- The current Phone MCP plugin was actually called from this Codex conversation, and its results were visible to the agent. Both plugin tools and a separately authenticated official MCP SDK client discovered the live server.
-- The original ChatGPT installation was connected through OAuth. An early October 15 session had a visible-response rendering failure; a server HTTP 200 at that time did not establish a working ChatGPT UI.
-- Chat and Work connection instructions follow the current official OpenAI documentation. This launch pass did not submit a new conversation/task in every product surface or test every plan/account.
-- Native direct-client OAuth is exercised by local and Cloudflare PKCE callback tests. A complete interactive login in every third-party desktop agent is not claimed.
+See [publication checks](../releases/0.16.2/Publication-checks.json) for the exact suites and source/APK checks rerun on the public tree. Its Android source must match the maintained 0.16.2 snapshot; public relay-specific native OAuth/tunnel support is preserved. The full file hash of a rebuild can differ with its local signing key; do not infer an identical signed binary from build success.
 
-## Remaining platform limits
+## Not established
 
-Parallel display creation, task movement, rendering, keyguard isolation and power groups depend on Android, the manufacturer and the app. Some games and secure/system windows are incompatible. When the separate display is unavailable, recover it explicitly or choose foreground deliberately; do not assume an automatic fallback.
-
-Notification reads need notification access; replies need an eligible inline reply action and the required Android version. Successful tool routing does not guarantee the receiving app's delivery.
-
-Transfers require direct HTTPS links and are capped at 512 MiB. Installation accepts one APK, not XAPK/APKS bundles. Updating Phone MCP ends its session. Shizuku startup after reboot and Android permission approval still require user participation.
-
-Phone MCP does not keep an AI thinking after the host conversation ends, guarantee success in arbitrary games, or make every MCP client understand images. A hosted relay removes the need for a running PC relay; it does not remove the phone's connectivity, battery and Android constraints.
+- Universal screen-off interaction, independent navigation or rendering for every Android/OEM/app.
+- Universal removal of partly black app content or source-imposed screenshot restrictions.
+- Instant rewarded-ad completion, every ad-network close path, or rewards from a return event.
+- Every client plan's MCP availability, all host attachment-binding flows, or forced refresh of an existing ChatGPT conversation.
+- Measured battery savings, long-duration recording stability, sustained throughput/frame rate, or a controlled energy before/after comparison. The older Samsung battery history is observational and not causal evidence.
+- Uninterrupted full-APK updates; Android restarts the app and its sessions. No abandoned control context is silently resumed.

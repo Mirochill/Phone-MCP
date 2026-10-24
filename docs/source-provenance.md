@@ -1,49 +1,39 @@
-# Source, APK provenance and rebuilding
+# Source, binary provenance and signing
 
-## What is included
+## Current source
 
-The Android directory contains the **actual editable project files**: 20 Java source files, two AIDL interfaces, the manifest and resources, Gradle configuration, the pinned Gradle wrapper, and standalone policy tests. These are the source of truth and are more complete than a decompiled APK.
+The repository contains the maintained original Android 0.16.2 Java/AIDL/resources and build configuration, shared MCP operation registry, local relay and Cloudflare relay. Public deployment helpers, native desktop OAuth redirect support, portable tunnel lookup and public documentation are retained. Private working copies, device transcripts, tokens, QR codes, account/deployment identifiers and signing keys are excluded.
 
-The recovered source was taken from the maintained Phone MCP working project, including the final 0.8.2 preview changes. Historical Codex development records and versioned delivery files were used to establish the sequence from the original relay/notification prototype through separate displays, file jobs, gestures, observations and the local preview. Private transcripts, local paths, account IDs, pairing files and deployment credentials are intentionally not redistributed.
+Android source correspondence is checked by hashes against the maintained release snapshot. The public relay retains its prior native-loopback OAuth adaptation, separate from the Android APK. Tests and complete MCP tool schemas are generated/run against the actual public source. Publishing this tree does not deploy a user's relay or change an installed client's cache.
 
-The public server adds native desktop loopback OAuth callback support and a callback-specific consent form policy. Publication helpers, English documentation, local test orchestration and the portable `cloudflared` executable lookup are also new. These changes do not modify the Android 0.8.2 source or the released APK. The existing component package versions are retained; Android, relay runtime and Node package metadata are independent version fields.
-
-## APK
+## Distributed APK 0.16.2
 
 | Field | Value |
 |---|---|
-| Application ID | `fr.phonemcp` |
-| Version | `0.8.2` |
-| Version code | `18` |
-| Minimum / target SDK | `30` / `36` |
-| File size | `3,242,914` bytes |
-| SHA-256 | `21c35404d8ba9fcbff71380f0683f47e0cec9fc43cf5445959087842450a19d0` |
-| Signing certificate SHA-256 | `a819c6ef90efe5809d48d41e02c741168b744d1705fa7ab53313e02e5295babe` |
-| Signature | Android debug certificate, APK Signature Scheme v2 |
+| Package | `fr.phonemcp` |
+| Version / code | `0.16.2` / `65` |
+| Bytes | `3620683` |
+| SHA-256 | `fe751fb2aba57c2e6ecd627a82c1674ea779935f674da2fe3ad314bf769d3233` |
+| Original source | `android/` at tag `v0.16.2` |
+| Checks | Release build/lint, APK signature, zip alignment and manifest metadata |
 
-The released binary is the previously delivered final 0.8.2 APK. A fresh build from the recovered Android sources succeeded. All **15 non-signature ZIP entries**, including DEX and packaged resources, matched the delivered APK byte-for-byte. The full rebuilt file hash differs because of packaging/signature metadata; no claim of an identical full-file rebuild is made. `releases/apk-validation.json` records both hashes and the comparison result.
-
-`apksigner verify` and `zipalign -c -P 16 4` passed. Android lint produced zero errors and five warnings. The build uses JDK 17, SDK 36, Build Tools 36.0.0, AGP 8.10.1 and Gradle 8.13.
-
-## Decompiled inspection package
-
-[Download the app-owned decompiled Java package](https://github.com/Mirochill/Phone-MCP/releases/download/v0.8.2/Phone-MCP-0.8.2-decompiled-app.zip).
-
-This additional archive was produced from the released APK with JADX 1.5.6 (`--no-res --show-bad-code`). It includes the generated `fr.phonemcp` namespace, including compiler-generated interfaces/classes. Third-party library implementations are excluded; use the pinned dependency declarations and their upstream sources/licenses instead.
-
-JADX reported nine errors while processing the complete APK. Decompiled Java is approximate and may contain incomplete methods, synthetic constructs and missing source-level information. It is provided for inspection, **not as a replacement for the complete original project**. It is not promised to compile. Original resources and AIDL are available directly in `android/app/src/main`; Android cannot recover source comments or original build configuration from a binary.
+The APK is the same verified developer-signed build installed during the S24 capture validation. It is not a Play Store release. [Manifest](../releases/0.16.2/Release-0.16.2.json) · [Checksums](../releases/0.16.2/SHA256SUMS.txt).
 
 ## Rebuild
 
-Set `ANDROID_HOME` or an untracked `android/local.properties` pointing to your SDK. Run:
+JDK 17, Android SDK Platform 36, Build Tools 36.0.0, AGP 8.10.1 and Gradle 8.13 are pinned. Set `ANDROID_HOME` or an untracked `android/local.properties` to your SDK. Run:
 
 ```sh
 cd android
 ./gradlew --no-daemon assembleRelease lintRelease
 ```
 
-On Windows use `.\gradlew.bat`. The Gradle distribution checksum is pinned in `gradle/wrapper/gradle-wrapper.properties`. Install the exact Platform 36 and Build Tools 36.0.0 if missing. Use `npm ci` for both Node packages; do not upgrade locked dependencies merely to reproduce a release.
+On Windows use `.\gradlew.bat`. The Windows `scripts/Build-Release.ps1` additionally verifies signature, alignment and manifest metadata. `-SkipUpdateAssets` leaves paired publication assets untouched. Install locked Node dependencies with `npm ci --prefix server` and `npm ci --prefix cloudflare`.
 
-The supplied Android release configuration intentionally retains the preview's debug signer. Your machine will normally generate a different local debug key. To maintain update continuity for your own distribution, configure a dedicated private release key outside Git and keep it backed up. Never publish a keystore or password. An Android build signed with a different certificate cannot update the released preview in place.
+The preview build configuration uses your machine's local debug signer. It normally differs from the distributed key; a different certificate cannot update an existing app in place. Maintain a private backed-up signing key for your own distribution. Never commit keys or passwords. A successful rebuild does not promise an identical signed file hash. See publication checks for non-signature ZIP-entry comparison if available.
 
-The project is MIT-licensed; dependency licenses remain applicable. The launch music is generated media with separate provenance, not software licensed by an upstream dependency. See [media credits](media/credits.md).
+## Historical assets
+
+The old 0.8.2 APK, compiled Worker and JADX inspection archive under `releases/` and [v0.8.2](https://github.com/Mirochill/Phone-MCP/releases/tag/v0.8.2) are historical. The decompiled archive is approximate JADX output with documented errors; it is not current source or a buildable replacement. Current `android/` is the editable original source of truth.
+
+The MIT license applies to project software; dependency licenses and [media provenance](media/credits.md) remain applicable. No fresh decompiled archive is needed to build the current source.

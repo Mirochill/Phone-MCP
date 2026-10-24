@@ -1,42 +1,40 @@
 # Architecture and trust boundaries
 
-Phone MCP is a personal bridge between an AI host and an Android session. It contains no model weights, model API key requirement, remote shell tool, or independent background planner.
+Phone MCP is a personal bridge between an AI host and an Android session. It contains no model weights, model API key requirement, remote shell tool or independent background planner.
 
-## Relay choices
+## Relays and command scheduling
 
-**Cloudflare:** `cloudflare/src/index.js` exports the Worker and `PhoneHub` Durable Object. The Worker enforces the configured public origin, security headers and browser-origin policy. The SQLite-backed Durable Object stores OAuth state, pairing records and the active phone WebSocket. A command carries a unique ID and an expiry. Only one device command is in flight; concurrent commands are rejected instead of silently queued. No computer needs to stay on for this path.
+The Cloudflare Worker and SQLite `PhoneHub` Durable Object handle HTTPS, OAuth, private pairing, authenticated WebSocket forwarding, direct-upload chunks and paired update assets. The Node relay implements the same command contract with local durable OAuth storage. Both use the shared operation registry and MCP implementation from `server/src/`.
 
-**Local Node:** `server/src/bridge.js` implements the HTTP and WebSocket relay. `server/src/oauth.js` and `state.js` implement OAuth and local persistence. `server/src/index.js` reads a private `.env` and binds to loopback by default. `tunnel.js` can run an installed `cloudflared` Quick Tunnel. That path requires the computer and server process to remain running.
+A command has an ID, expiry and OAuth-derived owner. `command-channel.js` provides distinct owned session lanes: actions within one app session serialize, independent sessions can proceed concurrently, and the native engine manager coordinates global control transitions. The phone routes each session to its own `VirtualEngine` through `SessionEngineManager`; a single virtual display is not shared by all agents. Pending responses remain matched to their command ID. A replacement authenticated socket invalidates old transport state without replaying writes.
 
-The shared `server/src/mcp.js` registers the tool schemas, authorization scopes, read/write annotations and routing logic. The Cloudflare implementation imports this shared code; do not deploy the `cloudflare` directory without keeping its sibling `server` source directory available during bundling.
+One deployment serves one owner/phone; it is not a multi-tenant fleet service. Distinct OAuth grants do not bypass app permissions or local stops. Navigation separation is different from account-data isolation.
 
-## Authentication
+## Authentication and deployment
 
-1. The owner creates distinct random `PHONE_TOKEN` and `ADMIN_PASSWORD` secrets for one relay.
-2. An authenticated admin request creates a one-use, 15-minute pairing code.
-3. The Android app redeems that code, imports the relay origin and device token, and stores the token under Android Keystore AES-GCM encryption.
-4. The phone connects to `/device` using its bearer token. The token is not an AI-client access token.
-5. An AI client discovers OAuth metadata, registers its redirect, and requests `phone.read` and optionally `phone.write` using PKCE S256. The owner approves using the server admin password on the relay's consent page.
-6. Access and refresh tokens are bound to the grant. Refresh rotates tokens; revocation invalidates the token family.
+Use distinct `PHONE_TOKEN` and `ADMIN_PASSWORD` secrets. Private single-use pairing codes expire after 15 minutes. Android stores the device token with Android Keystore; it is separate from AI OAuth tokens. AI clients use OAuth/PKCE S256 with `phone.read` / `phone.write`, dynamic registration, hashed durable token records, refresh rotation and revocation.
 
-The public server source accepts HTTPS redirect URIs and literal loopback HTTP redirects (`127.0.0.1`, `[::1]`) for native clients. Only the port may vary for loopback registration matching; the code exchange remains bound to the exact requested redirect. The consent page's form policy includes that validated callback origin. Arbitrary non-loopback HTTP redirects, credentials and fragments are rejected.
+Public-source native OAuth accepts HTTPS redirects and literal loopback HTTP (`127.0.0.1`, `[::1]`) for desktop clients. Only the loopback port can vary for registration matching; token exchange remains bound to the exact redirect. The consent CSP includes the validated callback origin. This public client support is retained from the original release.
 
-One deployment represents one owner and one phone token. Sharing the admin password or OAuth grants shares access to that phone's active session. This is not account separation for multiple customers.
+Production requires HTTPS/WSS and a consistent `PUBLIC_URL`. Update assets use `ASSETS` with `run_worker_first:true`; raw APK/manifest routes are not public bypasses. Downloads use authenticated, expiring, artifact-hash-bound tickets. GitHub release assets are intentionally public; personal Worker credentials and pairing remain private.
 
-## Android paths
+## Android ownership and resources
 
-- `BridgeService` owns the foreground service, network connection, session expiry and command routing.
-- `PhoneAccessibilityService` reads and acts on authorized physical-screen windows.
-- `BackgroundClient` connects through Shizuku to `BackgroundControlService` and `VirtualEngine`, which manage the separate display and its input/capture path.
-- `PreviewActivity`, `PreviewMirror` and `PreviewFrames` implement a read-only local viewer. `ParallelTaskLease` constrains task reclamation to a task owned by the current session.
-- `FileEngine` and `FilePolicy` manage the dedicated transfer folder, checksums, job IDs, cancellation and single-APK installation.
-- `PhoneNotificationService` reads authorized active notifications and compatible inline reply actions.
-- `Settings`, `AccessPolicy`, `WindowPolicy`, `SessionPolicy` and `Audit` implement configuration, permission, window, session and local audit boundaries.
+- `BridgeService`: manual phone service, transport, command dispatch and local capture owner.
+- `SessionEngineManager` / `VirtualEngine`: per-session display/task ownership, source permissions, leases, window/target guards and native input/capture.
+- `ScreenOffController`: local physical-screen policy, owned hardware blanking, native interactivity, audio restrictions and side-button restoration. Agents cannot enable physical keep-on.
+- `PhoneAccessibilityService`: authorized physical-screen interaction and semantic app reads where applicable.
+- `PreviewActivity`, `PreviewMirror`, `PreviewFrames`, `RecentsRegistrationActivity`: read-only viewer and content-free per-session Recents routing. Page handoff revokes old AI input before moving the owned task to the physical display.
+- `PreviewMedia`, `CaptureMirror`, `PendingMedia`: local source-only PNG and hardware-encoded silent MP4. A dedicated compositor root is attached only to an own-content encoder display; no source-display 0 fallback, microphone or MediaProjection of the physical screen.
+- `FileEngine`, `UploadReceiver`, `FilePolicy`: scoped files, bounded transfer/jobs, SHA-256, idempotency and guarded single-APK install. Selected Android folders and deliberately shared content have separate grants.
+- Notification service and access policies retain fresh IDs, allowed apps, protected fields, local revocation and expiry.
 
-## Data and execution limits
+Recording has its own short renewable source-specific lease and bounded partial wakelock while active. No recording loop runs when no local video exists. MediaStore rows remain pending until validated; failed/empty/cancelled outputs are removed. Source loss, stop and disconnection invalidate the mirror and release resources. Hardware evidence for finalization while a session ends is still incomplete; see [verification](verification.md).
 
-Commands and screenshots travel through the relay, so the relay owner and hosting provider are inside the data trust boundary. Screen and notification content is untrusted input to the AI. A tool result must never be interpreted as permission to send, buy, delete or disclose something.
+## Limits and lifecycle
 
-Foreground mode uses the physical display; parallel mode requires a verified display ID greater than zero. There is no silent fallback from parallel to foreground. A primary keyguard, a separate display's keyguard flags, and Android's display power groups are distinct states. Device-specific behavior must be measured rather than inferred from a single flag.
+App sessions preserve separate navigation where supported, but same-user processes, services and data remain shared. Android/OEM behavior, keyguard, app multi-display and secure-content policies can prevent a path. Recovery cannot silently choose the physical display, relaunch an app, bypass security or claim a black frame is valid.
 
-A manually started unlimited session remains active until stopped or interrupted by Android, but it does not make an AI client run forever. Phone MCP's own APK update ends its process/session. Notifications, downloads and installation have app/platform-specific failure paths and are reported separately from success.
+The relay sees forwarded payloads. TLS is transport encryption, not end-to-end protection against the relay operator. App/file/notification contents remain untrusted to the AI. User intent must authorize consequential actions.
+
+A persistent connection does not create an always-running AI agent. Full base-APK replacement stops Android processes and sessions; no unsafe orphan-control or automatic stale-session revival is implemented. Server-only updates do not replace the APK, but transport changes can still require clients to reconnect.
