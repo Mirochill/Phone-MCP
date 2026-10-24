@@ -18,7 +18,20 @@ export default {
   let result;
   if(url.pathname==='/health' && request.method==='GET')result=json({ok:true,version:VERSION,hosting:'cloudflare',requiresPC:false});
   else if(url.pathname==='/' && request.method==='GET')result=html('<h1>Phone MCP</h1><p>Le serveur fonctionne dans le cloud. Votre PC peut être éteint.</p><p>Utilisez votre lien d’appairage pour connecter le téléphone. Le contrôle reste limité aux apps, capacités et sessions que vous autorisez sur ce téléphone.</p>');
-  else {try {result=await env.PHONE_HUB.get(env.PHONE_HUB.idFromName('personal-phone-v1')).fetch(request);}catch {result=fail('server_error',500);}}
+  else {try {
+   // Materialize only the bounded binary route before crossing a fetch boundary.
+   // A DO may reject early; forwarding the original live request stream can leave
+   // the dev/runtime proxy reading it after that response has already completed.
+   let routed=request;
+   if(url.pathname.startsWith('/uploads/')&&request.body){
+    const bytes=await readUploadBody(request.body,null);
+    routed=new Request(request,{body:bytes});
+   }
+   result=await env.PHONE_HUB.get(env.PHONE_HUB.idFromName('personal-phone-v1')).fetch(routed);
+  }catch(error){
+   if(url.pathname.startsWith('/uploads/')&&/upload_body_too_large|empty_upload_body|incomplete_upload_body/.test(String(error?.message))){const failure=uploadFailure(error);result=json(failure.body,failure.status);}
+   else result=fail('server_error',500);
+  }}
   if(result.status===101)return result;
   const out=new Response(result.body,result);for(const [k,v] of Object.entries(headers)){if(k==='Content-Security-Policy'&&out.headers.has(k))continue;out.headers.set(k,v);}
   if(origin){out.headers.set('Access-Control-Allow-Origin',origin);out.headers.set('Vary','Origin');out.headers.set('Access-Control-Expose-Headers','WWW-Authenticate, MCP-Session-Id');}
