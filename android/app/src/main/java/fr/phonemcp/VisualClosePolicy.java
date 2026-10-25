@@ -24,7 +24,7 @@ final class VisualClosePolicy {
             if(Integer.bitCount(mask)>=7&&pairs>=3)return true;
         }return false;
     }
-    private static Candidate prove(int[] p,int w,int h,int x,int y,int r){
+    private static Candidate prove(int[] p,int w,int h,int x,int y,int r,boolean store){
         int margin=r+9;if(x-margin<0||y-margin<0||x+margin>=w||y+margin>=h)return null;
         int a=pixel(p,w,x-r-2,y),b=pixel(p,w,x+r+2,y),c=pixel(p,w,x,y-r-2),d=pixel(p,w,x,y+r+2),bg=(a+b+c+d)/4;
         if(Math.max(Math.max(a,b),Math.max(c,d))-Math.min(Math.min(a,b),Math.min(c,d))>28)return null;
@@ -37,13 +37,16 @@ final class VisualClosePolicy {
         if(empty*100<axis*75)return null;
         boolean enclosed=false;for(int q=r+8;q<=Math.min(70,r*3+16);q+=2){if(x-q<0||y-q<0||x+q>=w||y+q>=h)break;int enclosure=0;for(int direction=0;direction<4;direction++){int dx=direction==0?q:direction==1?-q:0,dy=direction==2?q:direction==3?-q:0;if(Math.abs(pixel(p,w,x+dx,y+dy)-bg)>=35)enclosure++;}if(enclosure>=3){enclosed=true;break;}}
         if(!enclosed&&score/Math.max(1,total)>=140)enclosed=faintRing(p,w,h,x,y,r);
-        if(!enclosed)return null;return new Candidate(x,y,r,score/Math.max(1,total));
+        if(!enclosed&&!store)return null;return new Candidate(x,y,r,score/Math.max(1,total),store?"visual_store_close":"visual_close");
     }
-    static Candidate find(int[] pixels,int width,int height){
+    static Candidate find(int[] pixels,int width,int height){return find(pixels,width,height,false);}
+    /** Only called for a positively identified embedded store endcard, never a generic ad. */
+    static Candidate storeClose(int[] pixels,int width,int height){return find(pixels,width,height,true);}
+    private static Candidate find(int[] pixels,int width,int height,boolean store){
         if(width<80||height<80||pixels==null||pixels.length!=(long)width*height)return null;
         int edge=Math.min(180,width/4),top=Math.min(220,height/4);Candidate best=null;
         for(int y=18;y<top;y+=2)for(int x=18;x<width-18;x+=2){if(x>=edge&&x<width-edge)continue;
-            Candidate hit=null;for(int r=5;r<=24;r++){Candidate candidate=prove(pixels,width,height,x,y,r);if(candidate!=null&&(hit==null||candidate.score>hit.score))hit=candidate;}
+            Candidate hit=null;for(int r=5;r<=24;r++){Candidate candidate=prove(pixels,width,height,x,y,r,store);if(candidate!=null&&(hit==null||candidate.score>hit.score))hit=candidate;}
             if(hit==null)continue;
             if(best!=null&&Math.abs(best.x-hit.x)>12)return null;
             if(best!=null&&Math.abs(best.y-hit.y)>12)return null;

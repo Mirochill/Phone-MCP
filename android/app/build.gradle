@@ -8,8 +8,8 @@ android {
         applicationId 'fr.phonemcp'
         minSdk 30
         targetSdk 36
-        versionCode 65
-        versionName '0.16.2'
+        versionCode 69
+        versionName '0.19.0'
         testInstrumentationRunner 'fr.phonemcp.UpgradeInstrumentation'
     }
     buildFeatures { aidl true; buildConfig true }

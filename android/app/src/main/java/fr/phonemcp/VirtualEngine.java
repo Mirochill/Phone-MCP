@@ -49,9 +49,9 @@ final class VirtualEngine {
     private final Set<FutureTask<?>> pendingTasks=java.util.concurrent.ConcurrentHashMap.newKeySet();
     void setPowerDelegate(PowerDelegate value){powerDelegate=value;}
     int displayIdentifier(){return displayId;}
-    void cancel(){cancelAdWork("session_stopped");revoked=true;for(FutureTask<?> task:pendingTasks)task.cancel(!gestureInFlight);worker.post(this::stopInternal);}
+    void cancel(){cancelPlanWork("session_stopped");cancelAdWork("session_stopped");revoked=true;for(FutureTask<?> task:pendingTasks)task.cancel(!gestureInFlight);worker.post(this::stopInternal);}
     void revokeForHandoff(){
-        cancelAdWork("handed_to_user");handoffPending=true;revoked=true;
+        cancelPlanWork("handed_to_user");cancelAdWork("handed_to_user");handoffPending=true;revoked=true;
         for(FutureTask<?> task:pendingTasks)task.cancel(!gestureInFlight);
         worker.removeCallbacks(checkOwnership);worker.removeCallbacks(verifyTaskPresence);worker.removeCallbacks(watchTasks);worker.post(releaseDisplayLease);
     }
@@ -170,7 +170,7 @@ final class VirtualEngine {
             Object wm=Class.forName("android.view.WindowManagerGlobal").getMethod("getWindowManagerService").invoke(null);
             wm.getClass().getMethod("setDisplayImePolicy",int.class,int.class).invoke(wm,displayId,0); // IME stays on the virtual display.
             automation=AutomationHub.acquire(displayId,new AutomationHub.Listener(){
-                @Override public void changed(int type,int targetWindow){worker.post(()->{if(type==AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED){if(targetWindow==windowId)contentVersion++;}else if(type==AccessibilityEvent.TYPE_WINDOWS_CHANGED||type==AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED){generation++;contentVersion++;windowGeometryEpoch++;}});}
+                @Override public void changed(int type,int targetWindow){worker.post(()->{if(type==AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED){if(targetWindow==windowId)contentVersion++;}else if(type==AccessibilityEvent.TYPE_WINDOWS_CHANGED||type==AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED){generation++;contentVersion++;windowGeometryEpoch++;}signalPlan();});}
                 @Override public void topologyChanged(){worker.removeCallbacks(checkOwnership);worker.postDelayed(checkOwnership,150);}
             });
 
@@ -255,6 +255,7 @@ final class VirtualEngine {
             throw new IllegalStateException("Téléphone verrouillé ou mis en veille. Déverrouillez-le puis relancez la session. Pour garder le contrôle dalle éteinte, utilisez l’option dédiée dans Phone MCP.");
     }
     private void requireSession(){
+        if(planExecuting&&executingPlan!=null&&(executingPlan.cancelled||!executingPlan.active||SystemClock.elapsedRealtime()>=executingPlan.until))throw new IllegalStateException("Plan arrêté ou expiré.");
         if(adExecuting&&currentAd!=null&&(currentAd.cancelled||!currentAd.active||SystemClock.elapsedRealtime()>=currentAd.until))throw new IllegalStateException("Autopilote arrêté ou expiré.");
         if(revoked||System.currentTimeMillis()>commandExpires||SystemClock.elapsedRealtime()>sequenceUntilElapsed||Thread.currentThread().isInterrupted())throw new IllegalStateException("Commande annulée après expiration. Relisez avant d’agir.");
         if(displayId<=0 || display==null || SystemClock.elapsedRealtime()>=deadline)throw new IllegalStateException("Affichage parallèle arrêté ou session expirée.");
@@ -340,6 +341,7 @@ final class VirtualEngine {
     }
     private JSONObject executeInternal(String op,JSONObject args)throws Exception{return executeInternal(op,args,null);}
     private JSONObject executeInternal(String op,JSONObject args,SnapshotGeometryPolicy.Frame stableGeometry)throws Exception{
+        if(planActive()&&!planExecuting&&!AdPolicy.externalUiAllowed(op,true))throw new IllegalStateException("Un plan conditionnel possède cette session. Annulez-le avant une autre écriture.");
         if(!AdPolicy.externalUiAllowed(op,adActive()))throw new IllegalStateException("L’autopilote possède encore cette session ; commande UI en attente refusée.");
         if("status".equals(op)){
             JSONArray allowed=args.optJSONArray("allowedLeasePackages");
@@ -438,6 +440,133 @@ final class VirtualEngine {
             return new JSONObject().put("performed",true).put("displayId",displayId).put("inputDelivery",Arrays.asList("tap","swipe","double_tap","pinch").contains(op)?"android_input_acknowledged_effect_unverified":"accessibility_action_accepted").put("applicationEffectVerified",false).put("instruction","Vérifiez le résultat dans observation. Une livraison tactile ne prouve pas que l’application a effectué l’action attendue.");
         }finally{if(actionAttempted)clearSnapshot();root.recycle();}
     }
+    private static final class PlanJob {
+        final String id,pkg,configuration,kind;final JSONObject spec;final JSONArray captures,actions=new JSONArray();final long started,until;final boolean previousKeep;
+        final ConditionalGate gate=new ConditionalGate(80,1200);final Set<Integer> used=new HashSet<>();
+        volatile boolean active=true,cancelled;volatile String cached="{}",state="watching",reason="waiting_for_predicted_case";
+        int window,polls,stage,nextStage=-1;long nextAt;String boardGeometry="";JSONObject waiting,verifying;boolean terminalAfter,initialConsidered;volatile boolean inputAttempted;long actionAt,matchedAt,scanAt,unavailableAt;int verifyRule=-1;
+        PlanJob(String id,String pkg,String conf,JSONObject spec,JSONArray captures,long now,long until,boolean keep){this.id=id;this.pkg=pkg;configuration=conf;this.spec=spec;this.captures=captures;kind=spec.optString("kind");started=now;this.until=until;previousKeep=keep;waiting=spec.optJSONObject("waiting");if(waiting==null)waiting=spec.optJSONObject("anchor");}
+    }
+    private final ConcurrentMap<String,PlanJob> planJobs=new ConcurrentHashMap<>();private final Set<String> usedPlanIds=new HashSet<>();private volatile PlanJob currentPlan,executingPlan;private boolean planExecuting,planBaselineKeep;private long planNextAt;
+    private List<PlanJob> activePlans(){List<PlanJob> out=new ArrayList<>();for(PlanJob j:planJobs.values())if(j.active&&!j.cancelled)out.add(j);out.sort(Comparator.comparingLong((PlanJob j)->j.started).thenComparing(j->j.id));return out;}
+    private final Runnable planTick=()->{planNextAt=0;for(PlanJob j:activePlans())if(SystemClock.elapsedRealtime()>=j.nextAt)pollPlan(j);long now=SystemClock.elapsedRealtime(),next=Long.MAX_VALUE;for(PlanJob j:activePlans())next=Math.min(next,j.nextAt);if(next!=Long.MAX_VALUE)schedulePlan(Math.max(0,next-now));};
+    boolean planActive(){for(PlanJob j:planJobs.values())if(j.active&&!j.cancelled)return true;return false;}
+    void cancelPlanWork(String reason){for(PlanJob j:planJobs.values())if(j.active){j.reason=reason;j.cancelled=true;synchronized(j){j.notifyAll();}worker.post(()->finishPlan(j,"cancelled",reason));}}
+    private void schedulePlan(long delay){if(!planActive())return;long at=SystemClock.elapsedRealtime()+Math.max(0,delay);if(planNextAt!=0&&planNextAt<=at)return;worker.removeCallbacks(planTick);planNextAt=at;worker.postDelayed(planTick,Math.max(0,delay));}
+    private void signalPlan(){long now=SystemClock.elapsedRealtime(),next=Long.MAX_VALUE;for(PlanJob j:activePlans()){j.nextAt=Math.min(j.nextAt,Math.max(now,j.scanAt+80));next=Math.min(next,j.nextAt);}if(next!=Long.MAX_VALUE)schedulePlan(Math.max(0,next-now));}
+    private void publishPlan(PlanJob j){try{j.cached=new JSONObject().put("planId",j.id).put("packageName",j.pkg).put("kind",j.kind).put("active",j.active&&!j.cancelled).put("state",j.state).put("reason",j.reason).put("stage",j.stage).put("caseCount",j.spec.getJSONArray("cases").length()).put("graphVersion",j.spec.optInt("graphVersion",1)).put("onUnexpected",j.spec.optString("onUnexpected","yield")).put("sessionEnded",false).put("taskGoalStatus","not_evaluated_by_runner").put("elapsedMs",SystemClock.elapsedRealtime()-j.started).put("polls",j.polls).put("actions",j.actions).put("requiresModel",j.state.equals("needs_model")).put("replayed",false).put("inputMayHaveOccurred",j.inputAttempted).toString();}catch(Exception ignored){}synchronized(j){j.notifyAll();}}
+    private void finishPlan(PlanJob j,String state,String reason){synchronized(j){if(!j.active)return;j.active=false;j.state=state;j.reason=reason;publishPlan(j);}if(!planActive()){worker.removeCallbacks(planTick);planNextAt=0;keepRendering=planBaselineKeep;if(!keepRendering){worker.removeCallbacks(releaseDisplayLease);releaseDisplayLease.run();}}}
+    JSONObject listPlans(JSONObject args)throws Exception{JSONArray list=new JSONArray();List<PlanJob> jobs=new ArrayList<>(planJobs.values());jobs.sort(Comparator.comparingLong((PlanJob j)->j.started).thenComparing(j->j.id));for(PlanJob j:jobs){if(!j.pkg.equals(args.optString("packageName")))continue;list.put(new JSONObject(j.cached).put("active",j.active&&!j.cancelled).put("elapsedMs",SystemClock.elapsedRealtime()-j.started));}return new JSONObject().put("packageName",args.getString("packageName")).put("plans",list).put("activeCount",activePlans().size()).put("maxActivePlans",4).put("conditionalPlansVersion",2);}
+    private static final class PlanDeferred extends Exception {}
+    // Run on the session's single worker. Conflicting ready cases yield before any input.
+    private void arbitratePlans(PlanJob selected,AdScan scan)throws Exception{
+        List<PlanJob> conflicts=new ArrayList<>();conflicts.add(selected);
+        for(PlanJob other:activePlans())if(other!=selected){
+            if(other.verifying!=null)throw new PlanDeferred();
+            ChessPosition.Board board=other.kind.equals("chess")?planBoard(scan):null;
+            boolean ready=!other.initialConsidered&&other.spec.has("initial")&&board!=null&&other.spec.getJSONObject("anchor").getString("fen").equals(board.fen);
+            JSONArray cases=other.spec.getJSONArray("cases");for(int i=0;i<cases.length()&&!ready;i++){JSONObject c=cases.getJSONObject(i);if(c.optInt("stage",0)==other.stage&&!other.used.contains(i)&&planMatches(c.getJSONObject("when"),other,scan,board))ready=true;}
+            if(ready)conflicts.add(other);
+        }
+        if(conflicts.size()>1){for(PlanJob j:conflicts)finishPlan(j,"needs_model","conflicting_ready_plans");throw new PlanDeferred();}
+    }
+    private PlanJob selectedPlan(JSONObject a){PlanJob j=planJobs.get(a.optString("planId"));if(j==null||!j.pkg.equals(a.optString("packageName")))throw new SecurityException("Plan inconnu pour cette session/application.");return j;}
+    JSONObject planStatus(JSONObject a)throws Exception{PlanJob j=selectedPlan(a);int wait=a.optInt("waitMs",0);if(wait<0||wait>8000)throw new IllegalArgumentException("Attente de plan bornée à 8 secondes.");long until=SystemClock.elapsedRealtime()+wait;synchronized(j){while(j.active&&!j.cancelled&&SystemClock.elapsedRealtime()<until)j.wait(Math.min(200,Math.max(1,until-SystemClock.elapsedRealtime())));}return new JSONObject(j.cached).put("elapsedMs",SystemClock.elapsedRealtime()-j.started).put("active",j.active&&!j.cancelled).put("state",j.cancelled?"cancelled":j.state).put("reason",j.cancelled?j.reason:new JSONObject(j.cached).optString("reason")).put("inputMayHaveOccurred",j.inputAttempted);}
+    JSONObject cancelPlan(JSONObject a)throws Exception{PlanJob j=selectedPlan(a);if(j.active){j.cancelled=true;j.reason="requested";synchronized(j){j.notifyAll();}}return onWorker(()->{finishPlan(j,"cancelled","requested");return new JSONObject(j.cached);});}
+    private static void validatePlanMatcher(JSONObject m,boolean chess)throws Exception{
+        if(m==null)throw new IllegalArgumentException("Condition de plan manquante.");if(chess){ChessPosition.decode(m.getString("fen"));return;}
+        JSONArray all=m.getJSONArray("all"),none=m.optJSONArray("none");if(all.length()<1||all.length()>6||(none!=null&&none.length()>6))throw new IllegalArgumentException("Conditions limitées à six sélecteurs exacts.");
+        for(JSONArray set:new JSONArray[]{all,none})if(set!=null)for(int i=0;i<set.length();i++){JSONObject s=set.getJSONObject(i);String by=s.optString("by","text"),q=s.getString("query");if(!Arrays.asList("text","description","viewId").contains(by)||q.trim().isEmpty()||q.length()>250)throw new IllegalArgumentException("Sélecteur exact invalide.");}
+    }
+    JSONObject startPlan(JSONObject a)throws Exception{onWorker(this::prepareDisplay);awaitOwnedWindow("snapshot",a);return onWorker(()->{
+        requireSession();String id=FilePolicy.id(a.getString("requestId")),pkg=a.getString("packageName");JSONObject spec=a.getJSONObject("compiledPlan");String wireConfiguration=spec.toString(),configuration=a.optLong("timeoutMs",60000)+"|"+wireConfiguration;if(wireConfiguration.length()>12000)throw new IllegalArgumentException("Plan trop long.");
+        PlanJob old=planJobs.get(id);if(old!=null){if(!old.pkg.equals(pkg)||!old.configuration.equals(configuration))throw new SecurityException("Identifiant de plan déjà utilisé autrement.");return new JSONObject(old.cached);}
+        if(usedPlanIds.contains(id))throw new SecurityException("Résultat de plan expiré : ne rejouez pas cet identifiant.");
+        if(adActive())throw new IllegalStateException("Une publicité possède déjà cette session.");if(activePlans().size()>=4)throw new IllegalStateException("Quatre plans simultanés maximum par session.");
+        if(!a.optBoolean("_planCaptureGranted")||!taskLeases.owns(pkg))throw new SecurityException("Plan conditionnel : lecture, actions et captures requises.");
+        String kind=spec.getString("kind");boolean chess=kind.equals("chess");if(!chess&&!kind.equals("ui"))throw new IllegalArgumentException("Type de plan invalide.");validatePlanMatcher(spec.getJSONObject("anchor"),chess);
+        JSONArray cases=spec.getJSONArray("cases");boolean graph=spec.optInt("graphVersion",1)==2;if(cases.length()<1||cases.length()>(graph?32:8))throw new IllegalArgumentException("Plan limité à 32 branches et six niveaux.");int[] stages=new int[cases.length()],nextStages=new int[cases.length()];for(int i=0;i<cases.length();i++){stages[i]=cases.getJSONObject(i).optInt("stage",0);nextStages[i]=cases.getJSONObject(i).optInt("nextStage",-1);}PlanGraphPolicy.validate(stages,nextStages);if(!Arrays.asList("yield","wait").contains(spec.optString("onUnexpected","yield")))throw new IllegalArgumentException("Politique d’attente invalide.");
+        for(int i=0;i<cases.length();i++){JSONObject c=cases.getJSONObject(i);validatePlanMatcher(c.getJSONObject("when"),chess);validatePlanMatcher(c.getJSONObject("after"),chess);String op=c.getJSONObject("action").getString("op");if(chess){if(!op.equals("board_move")||!ChessPosition.move(c.getJSONObject("when").getString("fen"),c.getJSONObject("action").getString("uci")).equals(c.getJSONObject("after").getString("fen")))throw new IllegalArgumentException("Réponse prédite incohérente.");}else{if(!Arrays.asList("click","back").contains(op))throw new IllegalArgumentException("Action conditionnelle refusée.");if(c.getJSONObject("when").toString().equals(c.getJSONObject("after").toString()))throw new IllegalArgumentException("Une postcondition distincte est requise.");}}
+        long timeout=a.optLong("timeoutMs",60000),now=SystemClock.elapsedRealtime();if(timeout<1000||timeout>180000)throw new IllegalArgumentException("Plan limité à trois minutes.");
+        PlanJob j=new PlanJob(id,pkg,configuration,new JSONObject(wireConfiguration),a.optJSONArray("capturePackages"),now,Math.min(deadline,Math.min(a.optLong("_planLeaseExpiresElapsedMs",deadline),now+timeout)),keepRendering);
+        AccessibilityNodeInfo root=guard(pkg);AdScan scan=new AdScan();try{requireFocusedWindow(root);if(containsPassword(root,new int[]{0},0))throw new SecurityException("Fenêtre protégée.");adNodes(root,scan,0);if(!scan.complete)throw new SecurityException("Lecture incomplète.");j.window=root.getWindowId();if(chess){ChessPosition.Board b=planBoard(scan);if(b==null)throw new IllegalStateException("Plateau complet indisponible.");j.boardGeometry=b.geometry;if(!j.spec.getString("geometry").equals(b.geometry)||j.spec.getInt("windowId")!=j.window)throw new SecurityException("Géométrie du plateau modifiée.");}}finally{scan.close();root.recycle();}
+        for(Iterator<Map.Entry<String,PlanJob>> it=planJobs.entrySet().iterator();planJobs.size()>=32&&it.hasNext();)if(!it.next().getValue().active)it.remove();
+        if(System.currentTimeMillis()>a.optLong("_expiresAt",Long.MAX_VALUE))throw new SecurityException("Demande de plan expirée avant publication.");usedPlanIds.add(id);if(!planActive())planBaselineKeep=keepRendering;planJobs.put(id,j);currentPlan=j;keepRendering=true;worker.removeCallbacks(releaseDisplayLease);publishPlan(j);schedulePlan(0);return new JSONObject(j.cached);
+    });}
+    private ChessPosition.Board planBoard(AdScan scan){List<ChessPosition.Cell> values=new ArrayList<>();for(AccessibilityNodeInfo n:scan.nodes){Rect b=new Rect();n.getBoundsInScreen(b);values.add(new ChessPosition.Cell(trim(n.getContentDescription()),b.left,b.top,b.right,b.bottom));}return ChessPosition.read(values);}
+    private boolean planMatches(JSONObject m,PlanJob j,AdScan scan,ChessPosition.Board board)throws Exception{
+        if(j.kind.equals("chess"))return board!=null&&m.getString("fen").equals(board.fen);
+        for(String name:new String[]{"all","none"}){JSONArray selectors=m.optJSONArray(name);if(selectors==null)continue;for(int i=0;i<selectors.length();i++){JSONObject q=selectors.getJSONObject(i);int count=0;for(AccessibilityNodeInfo n:scan.nodes)if(n.isEnabled()&&!n.isPassword()&&!NodeIdentity.protectedAncestor(n)&&q.getString("query").equals(selectorValue(n,q.optString("by","text"))))count++;if(name.equals("all")){if(count>1)throw new IllegalStateException("Condition ambiguë : retour au modèle.");if(count!=1)return false;}else if(count>0)return false;}}return true;
+    }
+    private void pollPlan(PlanJob j){
+        if(!j.active)return;if(j.cancelled||revoked){finishPlan(j,"cancelled",j.cancelled?j.reason:"session_stopped");return;}if(SystemClock.elapsedRealtime()>=j.until){finishPlan(j,"timed_out","prediction_wait_expired");return;}
+        AccessibilityNodeInfo root=null;AdScan scan=new AdScan();planExecuting=true;executingPlan=j;j.scanAt=SystemClock.elapsedRealtime();j.polls++;long delay=1000;
+        try{requireSession();prepareDisplay();automation.clearCache();root=guard(j.pkg);requireFocusedWindow(root);j.unavailableAt=0;if(containsPassword(root,new int[]{0},0))throw new SecurityException("Fenêtre protégée.");adNodes(root,scan,0);if(!scan.complete)throw new SecurityException("Lecture incomplète.");ChessPosition.Board board=j.kind.equals("chess")?planBoard(scan):null;
+            if(j.kind.equals("chess")&&(root.getWindowId()!=j.window||board==null||!j.boardGeometry.equals(board.geometry)))throw new SecurityException("Plateau ou fenêtre changé.");
+            if(!j.kind.equals("chess")&&root.getWindowId()!=j.window&&!j.spec.optBoolean("allowWindowChange"))throw new SecurityException("Fenêtre inattendue.");
+            long now=SystemClock.elapsedRealtime();
+            if(j.verifying!=null){if(planMatches(j.verifying,j,scan,board)){JSONObject last=j.actions.getJSONObject(j.actions.length()-1);last.put("effectVerified",true).put("verifiedElapsedMs",now-j.started);j.waiting=j.verifying;j.verifying=null;if(j.nextStage>=0){j.stage=j.nextStage;j.nextStage=-1;}j.gate.reset();if(j.terminalAfter){finishPlan(j,"completed","predicted_effect_verified");return;}j.state="watching";j.reason="waiting_for_next_predicted_case";}else{if(now-j.actionAt>1800){finishPlan(j,"needs_model","action_effect_not_confirmed");return;}j.reason="verifying_action_effect";delay=80;publishPlan(j);return;}}
+            if(j.actions.length()>=33){finishPlan(j,"needs_model","bounded_action_limit");return;}
+            JSONObject initial=j.initialConsidered?null:j.spec.optJSONObject("initial");if(initial!=null&&board!=null&&j.spec.getJSONObject("anchor").getString("fen").equals(board.fen)){j.matchedAt=now;runPlanAction(j,initial,new JSONObject().put("fen",ChessPosition.move(board.fen,initial.getString("uci"))),false,-1,root,scan,board);delay=80;return;}j.initialConsidered=true;
+            JSONArray cases=j.spec.getJSONArray("cases");int matches=0,index=-1;String key="";for(int i=0;i<cases.length();i++)if(cases.getJSONObject(i).optInt("stage",0)==j.stage&&!j.used.contains(i)&&planMatches(cases.getJSONObject(i).getJSONObject("when"),j,scan,board)){matches++;index=i;key=i+"|"+root.getWindowId()+"|"+(board==null?Long.toString(windowGeometryEpoch):board.fen+board.geometry);}
+            boolean waiting=planMatches(j.waiting,j,scan,board)||j.spec.optString("onUnexpected","yield").equals("wait");int choice=j.gate.update(matches,index,key,waiting,now);
+            if(choice==ConditionalGate.AMBIGUOUS){finishPlan(j,"needs_model","ambiguous_predicted_cases");return;}if(choice==ConditionalGate.UNKNOWN){finishPlan(j,"needs_model","unpredicted_state");return;}
+            if(choice>=0){JSONObject c=cases.getJSONObject(choice);j.matchedAt=j.gate.pendingSince();runPlanAction(j,c.getJSONObject("action"),c.getJSONObject("after"),(c.optInt("nextStage",-1)<0&&c.optBoolean("terminal",true)),choice,root,scan,board);delay=80;return;}
+            j.reason=matches==1?"confirming_predicted_case":waiting?"waiting_for_predicted_case":"checking_unpredicted_transition";if(matches==1||!waiting)delay=80;publishPlan(j);
+        }catch(PlanDeferred deferred){delay=80;if(j.active){j.reason="waiting_for_other_plan_effect";publishPlan(j);}}
+        catch(WindowUnavailable|WindowGeometryPending e){long now=SystemClock.elapsedRealtime();if(j.unavailableAt==0)j.unavailableAt=now;if(now-j.unavailableAt>=1500)finishPlan(j,"needs_model","owned_window_unavailable");else{j.reason="waiting_for_owned_window_transition";delay=120;publishPlan(j);}}
+        catch(Exception e){finishPlan(j,j.cancelled||revoked?"cancelled":"needs_model",String.valueOf(e.getMessage()).substring(0,Math.min(250,String.valueOf(e.getMessage()).length())));}
+        finally{scan.close();if(root!=null)root.recycle();planExecuting=false;executingPlan=null;if(j.active){j.nextAt=SystemClock.elapsedRealtime()+delay;schedulePlan(delay);}}
+    }
+    private AccessibilityNodeInfo planClickTarget(AccessibilityNodeInfo root,AdScan scan,JSONObject action,String pkg)throws Exception{
+        AccessibilityNodeInfo found=null;String identity=null;Rect area=new Rect();root.getBoundsInScreen(area);
+        try{for(AccessibilityNodeInfo leaf:scan.nodes)if(action.getString("query").equals(selectorValue(leaf,action.optString("by","text")))){
+            AccessibilityNodeInfo n=AccessibilityNodeInfo.obtain(leaf);
+            for(int depth=0;n!=null&&depth<8;depth++){Rect b=new Rect();n.getBoundsInScreen(b);if(n.getWindowId()!=root.getWindowId()||n.getPackageName()==null||!pkg.contentEquals(n.getPackageName())||!n.isVisibleToUser()||!n.isEnabled()||n.isPassword()||NodeIdentity.protectedAncestor(n)||b.isEmpty()||!area.contains(b)){n.recycle();n=null;break;}if(n.isClickable())break;AccessibilityNodeInfo parent=n.getParent();n.recycle();n=parent;}
+            if(n==null)continue;if(!n.isClickable()){n.recycle();continue;}String key=NodeIdentity.of(n);if(found!=null&&!identity.equals(key)){n.recycle();throw new SecurityException("Cible conditionnelle ambiguë.");}if(found==null){found=n;identity=key;}else n.recycle();
+        }if(found==null)throw new IllegalStateException("Cible exacte indisponible.");AccessibilityNodeInfo result=found;found=null;return result;}finally{if(found!=null)found.recycle();}
+    }
+    private String chessNodeId(String pkg,ChessPosition.Cell cell){
+        if(cell==null)return null;String found=null;
+        for(Map.Entry<String,AccessibilityNodeInfo> entry:nodes.entrySet()){AccessibilityNodeInfo n=entry.getValue();Rect b=new Rect();n.getBoundsInScreen(b);
+            if(!cell.label.equals(trim(n.getContentDescription()))||b.left!=cell.l||b.top!=cell.t||b.right!=cell.r||b.bottom!=cell.b)continue;
+            if(n.getPackageName()==null||!pkg.contentEquals(n.getPackageName())||!n.isClickable()||!n.isEnabled()||!n.isVisibleToUser()||n.isPassword()||NodeIdentity.protectedAncestor(n))return null;
+            if(found!=null)return null;found=entry.getKey();
+        }return found;
+    }
+    private JSONObject semanticChessMove(PlanJob j,ChessPosition.Board expected,String move)throws Exception{
+        int executed=0;boolean attempted=false;
+        try{for(String square:new String[]{move.substring(0,2),move.substring(2)}){
+            requireSession();snapshot(j.pkg,new JSONObject());AccessibilityNodeInfo fresh=guard(j.pkg,j.window);AdScan scan=new AdScan();String id;
+            try{requireFocusedWindow(fresh);adNodes(fresh,scan,0);ChessPosition.Board current=scan.complete?planBoard(scan):null;
+                if(current==null||!expected.fen.equals(current.fen)||!expected.geometry.equals(current.geometry))throw new SecurityException("Position ou géométrie modifiée pendant la sélection ; destination non envoyée.");
+                id=chessNodeId(j.pkg,current.cells.get(square));if(id==null)throw new SecurityException("Case accessible indisponible ; aucun geste de remplacement.");
+                requireCaptureWindow(j.pkg,j.captures);
+            }finally{scan.close();fresh.recycle();}
+            requireSession();attempted=true;JSONObject result=executeInternal("click",new JSONObject().put("packageName",j.pkg).put("snapshotId",snapshotId).put("nodeId",id));
+            if(!result.optBoolean("performed"))throw new IllegalStateException("Action de case non confirmée.");executed++;attempted=false;
+        }return new JSONObject().put("completed",true).put("executedCount",2).put("inputTransport","accessible_squares").put("replayed",false);
+        }catch(Exception failure){return new JSONObject().put("completed",false).put("executedCount",executed).put("inputMayHaveOccurred",attempted||executed>0).put("inputTransport","accessible_squares").put("error",String.valueOf(failure.getMessage())).put("replayed",false);}
+    }
+    private void runPlanAction(PlanJob j,JSONObject action,JSONObject after,boolean terminal,int rule,AccessibilityNodeInfo before,AdScan prior,ChessPosition.Board beforeBoard)throws Exception{
+        requireSession();String op=action.getString("op");snapshot(j.pkg,new JSONObject());AccessibilityNodeInfo root=guard(j.pkg,before.getWindowId());AdScan scan=new AdScan();AccessibilityNodeInfo target=null;
+        try{requireFocusedWindow(root);if(containsPassword(root,new int[]{0},0))throw new SecurityException("Fenêtre devenue protégée.");adNodes(root,scan,0);if(!scan.complete)throw new SecurityException("Lecture incomplète avant action.");
+            ChessPosition.Board board=j.kind.equals("chess")?planBoard(scan):null;JSONArray steps=new JSONArray();
+            if(j.kind.equals("chess")){if(board==null||beforeBoard==null||!board.fen.equals(beforeBoard.fen)||!board.geometry.equals(j.boardGeometry))throw new SecurityException("Position changée avant le coup prévu.");String move=action.getString("uci");if(!ChessPosition.move(board.fen,move).equals(after.getString("fen")))throw new SecurityException("Effet prédit incohérent.");ChessPosition.Cell from=board.cells.get(move.substring(0,2)),to=board.cells.get(move.substring(2));steps.put(new JSONObject().put("op","tap").put("x",(from.l+from.r)/2).put("y",(from.t+from.b)/2));steps.put(new JSONObject().put("op","tap").put("x",(to.l+to.r)/2).put("y",(to.t+to.b)/2));}
+            else{JSONObject expected=j.spec.getJSONArray("cases").getJSONObject(rule).getJSONObject("when");if(!planMatches(expected,j,scan,null))throw new SecurityException("Condition modifiée avant action.");if(op.equals("click")){target=planClickTarget(root,scan,action,j.pkg);Rect b=new Rect();target.getBoundsInScreen(b);steps.put(new JSONObject().put("op","tap").put("x",b.centerX()).put("y",b.centerY()));}}
+            // Fresh native visual/target evidence stays local; only the requested final image is sent to the model.
+            boolean semanticChess=j.kind.equals("chess")&&chessNodeId(j.pkg,board.cells.get(action.getString("uci").substring(0,2)))!=null&&chessNodeId(j.pkg,board.cells.get(action.getString("uci").substring(2)))!=null;
+            if(!semanticChess){screenshot(j.pkg,new JSONObject().put("snapshotId",snapshotId).put("maxDimension",320).put("quality",35).put("capturePackages",j.captures));if(lastCaptureBlank)throw new SecurityException("Image source indisponible.");}requireSession();
+            arbitratePlans(j,scan);requireSession();if(j.cancelled)throw new SecurityException("Plan arrêté.");if(rule<0)j.initialConsidered=true;else{j.used.add(rule);j.nextStage=j.spec.getJSONArray("cases").getJSONObject(rule).optInt("nextStage",-1);}
+            long inputAt=SystemClock.elapsedRealtime();j.inputAttempted=true;JSONObject result=semanticChess?semanticChessMove(j,board,action.getString("uci")):op.equals("back")?executeInternal("back",new JSONObject().put("packageName",j.pkg).put("snapshotId",snapshotId)):actionSequence(j.pkg,new JSONObject().put("snapshotId",snapshotId).put("steps",steps).put("intervalMs",40).put("timeoutMs",4000));
+            if(j.cancelled){finishPlan(j,"cancelled",j.reason);return;}
+            JSONObject record=new JSONObject().put("rule",rule).put("op",op).put("triggerSeenElapsedMs",j.matchedAt-j.started).put("inputStartedElapsedMs",inputAt-j.started).put("inputCompletedElapsedMs",SystemClock.elapsedRealtime()-j.started).put("reactionMs",inputAt-j.matchedAt).put("inputTransport",semanticChess?"accessible_squares":"native_target_uid").put("effectVerified",false).put("executedCount",result.optInt("executedCount",op.equals("back")?1:0));if(action.has("uci"))record.put("uci",action.getString("uci"));j.actions.put(record);
+            if(!op.equals("back")&&!result.optBoolean("completed")){finishPlan(j,"needs_model","partial_or_uncertain_input");return;}
+            j.verifying=after;j.terminalAfter=terminal;j.actionAt=SystemClock.elapsedRealtime();j.verifyRule=rule;j.state="verifying";j.reason="verifying_predicted_effect";publishPlan(j);
+        }finally{if(target!=null)target.recycle();scan.close();root.recycle();}
+    }
+    JSONObject cachedPlanState()throws Exception{JSONObject out=currentPlan==null?new JSONObject():new JSONObject(currentPlan.cached);JSONArray active=new JSONArray();for(PlanJob j:activePlans())active.put(new JSONObject(j.cached));return out.put("active",planActive()).put("activeCount",active.length()).put("plans",active).put("maxActivePlans",4);}
+
     private static final class AdJob {
         final String id,pkg,configuration;final JSONArray returnTargets,captures,actions=new JSONArray();final long started,until;final int maxActions;final boolean visual,previousKeepRendering;
         final Object monitor=new Object();volatile boolean active=true,cancelled;volatile String cached="{}";
@@ -469,9 +598,9 @@ final class VirtualEngine {
         synchronized(job.monitor){while(job.active&&!job.cancelled&&SystemClock.elapsedRealtime()<until){if(revoked||System.currentTimeMillis()>args.optLong("_expiresAt",Long.MAX_VALUE))break;job.monitor.wait(Math.min(200,Math.max(1,until-SystemClock.elapsedRealtime())));}}
         JSONObject value=new JSONObject(job.cached);if(job.active)value.put("elapsedMs",SystemClock.elapsedRealtime()-job.started);if(job.cancelled&&job.active)value.put("state","cancelled").put("active",false).put("reason",job.reason);return value;
     }
-    JSONObject startAd(JSONObject args)throws Exception{return onWorker(()->{
+    JSONObject startAd(JSONObject args)throws Exception{onWorker(this::prepareDisplay);awaitOwnedWindow("snapshot",args);return onWorker(()->{
         if(System.currentTimeMillis()>args.optLong("_expiresAt",Long.MAX_VALUE))throw new SecurityException("Demande d’autopilote expirée avant son démarrage.");
-        requireSession();String pkg=args.getString("packageName"),id=FilePolicy.id(args.getString("requestId"));long timeout=args.optLong("timeoutMs",90000);int max=args.optInt("maxActions",8);boolean visual=args.optBoolean("visual",false);
+        requireSession();if(planActive())throw new IllegalStateException("Un plan conditionnel possède cette session.");String pkg=args.getString("packageName"),id=FilePolicy.id(args.getString("requestId"));long timeout=args.optLong("timeoutMs",90000);int max=args.optInt("maxActions",8);boolean visual=args.optBoolean("visual",false);
         if(!AccessPolicy.validPackage(pkg)||PhoneAccessibilityService.forbiddenPackage(context,pkg)||!taskLeases.owns(pkg))throw new SecurityException("Ouvrez d’abord l’application dans cette session possédée.");
         if(!AdPolicy.valid(timeout,max))throw new IllegalArgumentException("Autopilote limité à 180 secondes et 16 actions.");
         if(visual&&!args.optBoolean("_adVisualCaptureGranted"))throw new SecurityException("La fermeture visuelle nécessite l’autorisation de capture de cette application.");
@@ -535,7 +664,7 @@ final class VirtualEngine {
             adNodes(root,scan,0);if(!scan.complete)throw new SecurityException("Fenêtre trop complexe pour un choix unique.");
             String returned=adReturn(job,scan,root);long now=SystemClock.elapsedRealtime();
             if(returned!=null){if(!returned.equals(job.returnKey)){job.returnKey=returned;job.returnAt=now;}else if(now-job.returnAt>=AdPolicy.TARGET_STABLE_MS){finishAd(job,"completed","return_target_confirmed");return;}job.reason="confirming_return_target";publishAd(job);return;}job.returnKey="";
-            if(scan.countdown&&!scan.warning){job.pendingKey="";job.visualCandidate=null;job.visualKey="";job.reason="waiting_for_mandatory_timer";publishAd(job);return;}
+            if(scan.countdown&&!scan.warning&&!embeddedStore(scan)){job.pendingKey="";job.visualCandidate=null;job.visualKey="";job.reason="waiting_for_mandatory_timer";publishAd(job);return;}
             String kind=null,key=null;int priority=0;boolean ambiguous=false;
             for(AccessibilityNodeInfo leaf:scan.nodes){String candidateKind=AdPolicy.kind(trim(leaf.getText()),trim(leaf.getContentDescription()),leaf.getViewIdResourceName(),scan.warning);if(candidateKind==null)continue;if(AdPolicy.crossLabel(trim(leaf.getText()))||AdPolicy.crossLabel(trim(leaf.getContentDescription()))){Rect crossBounds=new Rect();leaf.getBoundsInScreen(crossBounds);if(!AdPolicy.smallCorner(crossBounds.left,crossBounds.top,crossBounds.right,crossBounds.bottom,WIDTH,HEIGHT))continue;}AccessibilityNodeInfo target=adClickable(leaf,root,job.pkg);if(target==null)continue;
                 String candidateKey=adNodeKey(target,candidateKind,windowGeometryEpoch);int candidatePriority=AdPolicy.priority(candidateKind);
@@ -585,9 +714,14 @@ final class VirtualEngine {
         if(node.isVisibleToUser()&&b.contains(x,y)&&(node.isPassword()||!node.isEnabled()||node.isClickable()||node.isEditable()||!trim(node.getText()).isEmpty()||!trim(node.getContentDescription()).isEmpty()))return false;
         for(int i=0;i<node.getChildCount();i++){AccessibilityNodeInfo child=node.getChild(i,AccessibilityNodeInfo.FLAG_PREFETCH_ANCESTORS|AccessibilityNodeInfo.FLAG_PREFETCH_DESCENDANTS_DEPTH_FIRST|AccessibilityNodeInfo.FLAG_PREFETCH_UNINTERRUPTIBLE);try{if(child!=null&&!revealPointSafe(child,x,y,count,depth+1))return false;}finally{if(child!=null)child.recycle();}}return true;
     }
+    private static boolean embeddedStore(AdScan scan){
+        boolean badge=false,install=false,about=false,container=false;
+        for(AccessibilityNodeInfo n:scan.nodes){String t=AdPolicy.normalize(trim(n.getText()));badge|=t.equals("ad");install|=t.equals("install")||t.equals("installer");about|=t.equals("about this game")||t.equals("about this app")||t.equals("a propos de ce jeu")||t.equals("a propos de cette application");container|="storePromoContainer".equals(n.getViewIdResourceName());}
+        if(!(badge&&install&&about&&container))return false;for(AccessibilityNodeInfo n:scan.nodes)if(adWebControl(n))return true;return false;
+    }
     private void visualAdClose(AdJob job,AccessibilityNodeInfo root,AdScan scan)throws Exception{
         requireCaptureWindow(job.pkg,job.captures);SnapshotGeometryPolicy.Frame geometry=snapshotGeometry(root);Bitmap image=null;VisualClosePolicy.Candidate candidate;
-        try{image=captureBitmap();if(image==null||image.getWidth()!=WIDTH||image.getHeight()!=HEIGHT)throw new IllegalStateException("Capture visuelle indisponible.");int[] pixels=new int[WIDTH*HEIGHT];image.getPixels(pixels,0,WIDTH,0,0,WIDTH,HEIGHT);candidate=VisualClosePolicy.find(pixels,WIDTH,HEIGHT);if(candidate==null)for(AccessibilityNodeInfo node:scan.nodes)if(AdRevealPolicy.badge(trim(node.getText()))){Rect b=new Rect();node.getBoundsInScreen(b);candidate=VisualSkipPolicy.beforeLabel(pixels,WIDTH,HEIGHT,b.left,b.top,b.right,b.bottom);if(candidate!=null)break;}}finally{if(image!=null)image.recycle();}
+        try{image=captureBitmap();if(image==null||image.getWidth()!=WIDTH||image.getHeight()!=HEIGHT)throw new IllegalStateException("Capture visuelle indisponible.");int[] pixels=new int[WIDTH*HEIGHT];image.getPixels(pixels,0,WIDTH,0,0,WIDTH,HEIGHT);candidate=VisualClosePolicy.find(pixels,WIDTH,HEIGHT);if(candidate==null)for(AccessibilityNodeInfo node:scan.nodes)if(AdRevealPolicy.badge(trim(node.getText()))){Rect b=new Rect();node.getBoundsInScreen(b);candidate=VisualSkipPolicy.beforeLabel(pixels,WIDTH,HEIGHT,b.left,b.top,b.right,b.bottom);if(candidate!=null)break;}if(candidate==null){boolean adBadge=false;for(AccessibilityNodeInfo node:scan.nodes)adBadge|=AdPolicy.normalize(trim(node.getText())).equals("ad");if(adBadge){candidate=VisualSkipPolicy.corner(pixels,WIDTH,HEIGHT);if(candidate==null)for(AccessibilityNodeInfo control:scan.nodes){Rect b=new Rect();control.getBoundsInScreen(b);candidate=VisualSkipPolicy.inControl(pixels,WIDTH,HEIGHT,control.getViewIdResourceName(),b.left,b.top,b.right,b.bottom);if(candidate!=null)break;}}}if(candidate==null&&embeddedStore(scan))candidate=VisualClosePolicy.storeClose(pixels,WIDTH,HEIGHT);}finally{if(image!=null)image.recycle();}
         requireCaptureWindow(job.pkg,job.captures);AccessibilityNodeInfo fresh=guard(job.pkg,root.getWindowId());try{requireFocusedWindow(fresh);if(!geometry.equals(snapshotGeometry(fresh))||containsPassword(fresh,new int[]{0},0))throw new SecurityException("Fenêtre modifiée pendant la preuve visuelle.");}finally{fresh.recycle();}
         if(candidate==null){job.visualCandidate=null;job.visualKey="";if(job.lastActionKey.startsWith("visual|"))job.lastActionKey="";
             String phase=root.getWindowId()+"|"+(scan.video?"video":scan.gameCanvas?"canvas":scan.interactiveHtml?"html":scan.playable?"playable":"other");long now=SystemClock.elapsedRealtime();
@@ -1035,6 +1169,7 @@ final class VirtualEngine {
     void stop(){try{onWorker(()->{stopInternal();return null;});}catch(Exception ignored){}}
     void destroy(){stop();captureWorker.shutdownNow();workerThread.quitSafely();framesThread.quitSafely();}
     private void stopInternal(){
+        cancelPlanWork("session_stopped");for(PlanJob plan:planJobs.values())if(plan.active)finishPlan(plan,"cancelled","session_stopped");
         cancelAdWork("session_stopped");AdJob stopping=currentAd;if(stopping!=null&&stopping.active)finishAd(stopping,"cancelled","session_stopped");
         if(displayLease!=null){if(displayLease.isHeld())displayLease.release();displayLease=null;}
         revoked=true;stablePublishedWindow=-1;stablePublishedPackage="";freshLaunchSnapshot=false;int releasingDisplay=displayId;deadline=0;displayId=-1;worker.removeCallbacks(releaseDisplayLease);worker.removeCallbacks(suspendSurface);surfaceAttached=false;previewLeaseUntil=0;worker.removeCallbacks(checkOwnership);worker.removeCallbacks(verifyTaskPresence);worker.removeCallbacks(watchTasks);clearSnapshot();

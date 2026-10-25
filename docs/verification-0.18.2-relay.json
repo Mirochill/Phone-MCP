@@ -1,0 +1,118 @@
+{
+  "before": {
+    "version": "0.18.1-cloud",
+    "completed": true,
+    "performedActions": 1,
+    "frameContent": "black_or_empty",
+    "timing": {
+      "actionMs": 215,
+      "observationMs": 229,
+      "captureMs": 369,
+      "totalMs": 813
+    },
+    "relayTiming": {
+      "totalMs": 813,
+      "deviceMs": 813,
+      "deviceCommands": 3,
+      "queueMs": 0,
+      "modelTimeIncluded": false
+    }
+  },
+  "after": {
+    "version": "0.18.2-cloud",
+    "completed": true,
+    "performedActions": 1,
+    "frameContent": "visible_pixels",
+    "captureRecovery": {
+      "state": "visible_after_retry",
+      "attempts": 3,
+      "blackFrames": 2,
+      "elapsedMs": 1285,
+      "recoveredFromBlack": true
+    },
+    "timing": {
+      "actionMs": 164,
+      "observationMs": 210,
+      "captureMs": 1285,
+      "totalMs": 1659
+    },
+    "relayTiming": {
+      "totalMs": 1659,
+      "deviceMs": 1359,
+      "deviceCommands": 5,
+      "queueMs": 0,
+      "modelTimeIncluded": false
+    }
+  },
+  "persistent": {
+    "version": "0.18.2-cloud",
+    "completed": true,
+    "performedActions": 1,
+    "frameContent": "black_or_empty",
+    "captureRecovery": {
+      "state": "still_black",
+      "attempts": 4,
+      "blackFrames": 4,
+      "elapsedMs": 1989,
+      "recoveredFromBlack": false
+    },
+    "timing": {
+      "actionMs": 207,
+      "observationMs": 214,
+      "captureMs": 1989,
+      "totalMs": 2410
+    },
+    "relayTiming": {
+      "totalMs": 2410,
+      "deviceMs": 1760,
+      "deviceCommands": 6,
+      "queueMs": 0,
+      "modelTimeIncluded": false
+    }
+  },
+  "healthy": {
+    "version": "0.18.2-cloud",
+    "frameContent": "visible_pixels",
+    "timing": {
+      "totalMs": 312
+    },
+    "relayTiming": {
+      "totalMs": 626,
+      "deviceMs": 626,
+      "deviceCommands": 2,
+      "queueMs": 0,
+      "modelTimeIncluded": false
+    }
+  },
+  "direct": {
+    "version": "0.18.2-cloud",
+    "frameContent": "visible_pixels",
+    "relayTiming": {
+      "totalMs": 419,
+      "deviceMs": 419,
+      "deviceCommands": 1,
+      "queueMs": 0,
+      "modelTimeIncluded": false
+    }
+  },
+  "finalStatus": {
+    "server": "0.18.2-cloud",
+    "android": "0.18.1",
+    "activeSessions": 0,
+    "draining": 0,
+    "keepScreenOn": false
+  },
+  "testDate": "2026-10-25",
+  "device": "Samsung Galaxy S24 Ultra / Android 16",
+  "mechanism": "Controlled 900 ms full-black rendering transition on real S24; not a replay of the online Chess.com match.",
+  "tests": {
+    "server": 135,
+    "cloudflare": 19
+  },
+  "limitations": [
+    "The reported online match was already handed to the user and was not reproduced; no new online match was started.",
+    "Recovery is for fully black transition frames; persistently black/protected or partially rendered content is not proven fixed.",
+    "Android Phone MCP remains 0.18.1; native job-internal capture loops are unchanged."
+  ],
+  "publicEvidenceNote": "Device scenarios were measured before publication; test identifiers are pseudonymized. No credential, private endpoint, recording or personal account data is included."
+}

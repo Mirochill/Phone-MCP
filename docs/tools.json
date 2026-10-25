@@ -1,7 +1,7 @@
 {
-  "version": "0.17.0",
+  "version": "0.19.0",
   "apiVersion": 1,
-  "catalogVersion": "c1b6e733309e4029",
+  "catalogVersion": "9536208318cf0507",
   "tools": [
     {
       "name": "phone_connection",
@@ -415,6 +415,7 @@
             "type": "string",
             "enum": [
               "compact",
+              "decision",
               "full"
             ],
             "default": "compact"
@@ -534,6 +535,7 @@
             "type": "string",
             "enum": [
               "compact",
+              "decision",
               "full"
             ],
             "default": "compact"
@@ -579,7 +581,7 @@
     },
     {
       "name": "phone_board_move",
-      "description": "Play one already-decided chess move such as e2e4 using the boardId from observation.board. Prefer the observed board.piecePlacementFen over manually decoding coordinates. Freshly rechecks all 64 accessible squares and app/session/window geometry, captures the current source, then sends one two-tap sequence with a final observation/image. Refuses changed/incomplete boards before any input. No engine or move selection; no full legality or turn inference. Promotion choices remain separate. Never replay partial/uncertain inputs. Returns observation with a fresh snapshot after the action.",
+      "description": "Play one already-decided chess move such as e2e4 using the boardId from observation.board. Prefer the observed board.piecePlacementFen over manually decoding coordinates. Freshly rechecks all 64 accessible squares and app/session/window geometry. If every square is a clickable accessible control, clicks named source/destination and rereads the complete board between them, allowing selection highlights without requiring raster pixels. Otherwise requires a fresh visible capture and uses one guarded two-tap sequence. Returns final observation/image; never switches input path after a partial action. Refuses changed/incomplete boards before any input. No engine or move selection; no full legality or turn inference. Promotion choices remain separate. Never replay partial/uncertain inputs. Returns observation with a fresh snapshot after the action.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -614,6 +616,7 @@
             "type": "string",
             "enum": [
               "compact",
+              "decision",
               "full"
             ],
             "default": "compact"
@@ -644,6 +647,720 @@
           "sessionId",
           "boardId",
           "uci"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_plan_start",
+      "description": "Prefer prepared conditional trees to avoid model round trips. Each case may contain then:[cases] for up to 6 levels / 32 total cases / 8 siblings. Android 0.19+ permits 4 independent armed plans per session; start with waitMs=0 before awaiting. Same-session inputs are serialized and conflicting ready plans yield before input. onUnexpected=wait keeps a standby plan armed without acting on unknown states, until its deadline; yield is default. A completed plan does NOT complete the user objective or end the app session. Prefer chess cases while the opponent thinks: provide observed boardId+anchorFen, own color and prepared opponent/reply pairs; optional initialMove is sent once. Catch-up accepts an already-present predicted opponent move, never replays the initial move. UI plans require exact semantic guards, one click/back and an explicit postcondition per case. Unknown/ambiguous state yields needs_model. Native stops, lease and capture/write permissions stay enforced. Trees/multiple plans require Android 0.19+; flat plans support 0.18+. No engine, arbitrary code or guessed response. New requestId for a revised plan.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requestId": {
+            "$ref": "#/properties/sessionId"
+          },
+          "plan": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "ui"
+                  },
+                  "anchor": {
+                    "type": "object",
+                    "properties": {
+                      "all": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "query": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 250
+                            },
+                            "by": {
+                              "type": "string",
+                              "enum": [
+                                "text",
+                                "description",
+                                "viewId"
+                              ],
+                              "default": "text"
+                            }
+                          },
+                          "required": [
+                            "query"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "minItems": 1,
+                        "maxItems": 6
+                      },
+                      "none": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/properties/plan/anyOf/0/properties/anchor/properties/all/items"
+                        },
+                        "maxItems": 6,
+                        "default": []
+                      }
+                    },
+                    "required": [
+                      "all"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "allowWindowChange": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "onUnexpected": {
+                    "type": "string",
+                    "enum": [
+                      "yield",
+                      "wait"
+                    ],
+                    "default": "yield"
+                  },
+                  "cases": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "when": {
+                          "$ref": "#/properties/plan/anyOf/0/properties/anchor"
+                        },
+                        "action": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "op": {
+                                  "type": "string",
+                                  "const": "click"
+                                },
+                                "query": {
+                                  "$ref": "#/properties/plan/anyOf/0/properties/anchor/properties/all/items/properties/query"
+                                },
+                                "by": {
+                                  "$ref": "#/properties/plan/anyOf/0/properties/anchor/properties/all/items/properties/by"
+                                }
+                              },
+                              "required": [
+                                "op",
+                                "query"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "op": {
+                                  "type": "string",
+                                  "const": "back"
+                                }
+                              },
+                              "required": [
+                                "op"
+                              ],
+                              "additionalProperties": false
+                            }
+                          ]
+                        },
+                        "after": {
+                          "$ref": "#/properties/plan/anyOf/0/properties/anchor"
+                        },
+                        "terminal": {
+                          "type": "boolean",
+                          "default": true
+                        },
+                        "then": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "when": {
+                                "$ref": "#/properties/plan/anyOf/0/properties/anchor"
+                              },
+                              "action": {
+                                "$ref": "#/properties/plan/anyOf/0/properties/cases/items/properties/action"
+                              },
+                              "after": {
+                                "$ref": "#/properties/plan/anyOf/0/properties/anchor"
+                              },
+                              "terminal": {
+                                "$ref": "#/properties/plan/anyOf/0/properties/cases/items/properties/terminal"
+                              },
+                              "then": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "when": {
+                                      "$ref": "#/properties/plan/anyOf/0/properties/anchor"
+                                    },
+                                    "action": {
+                                      "$ref": "#/properties/plan/anyOf/0/properties/cases/items/properties/action"
+                                    },
+                                    "after": {
+                                      "$ref": "#/properties/plan/anyOf/0/properties/anchor"
+                                    },
+                                    "terminal": {
+                                      "$ref": "#/properties/plan/anyOf/0/properties/cases/items/properties/terminal"
+                                    },
+                                    "then": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "properties": {
+                                          "when": {
+                                            "$ref": "#/properties/plan/anyOf/0/properties/anchor"
+                                          },
+                                          "action": {
+                                            "$ref": "#/properties/plan/anyOf/0/properties/cases/items/properties/action"
+                                          },
+                                          "after": {
+                                            "$ref": "#/properties/plan/anyOf/0/properties/anchor"
+                                          },
+                                          "terminal": {
+                                            "$ref": "#/properties/plan/anyOf/0/properties/cases/items/properties/terminal"
+                                          },
+                                          "then": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "object",
+                                              "properties": {
+                                                "when": {
+                                                  "$ref": "#/properties/plan/anyOf/0/properties/anchor"
+                                                },
+                                                "action": {
+                                                  "$ref": "#/properties/plan/anyOf/0/properties/cases/items/properties/action"
+                                                },
+                                                "after": {
+                                                  "$ref": "#/properties/plan/anyOf/0/properties/anchor"
+                                                },
+                                                "terminal": {
+                                                  "$ref": "#/properties/plan/anyOf/0/properties/cases/items/properties/terminal"
+                                                },
+                                                "then": {
+                                                  "type": "array",
+                                                  "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "when": {
+                                                        "$ref": "#/properties/plan/anyOf/0/properties/anchor"
+                                                      },
+                                                      "action": {
+                                                        "$ref": "#/properties/plan/anyOf/0/properties/cases/items/properties/action"
+                                                      },
+                                                      "after": {
+                                                        "$ref": "#/properties/plan/anyOf/0/properties/anchor"
+                                                      },
+                                                      "terminal": {
+                                                        "$ref": "#/properties/plan/anyOf/0/properties/cases/items/properties/terminal"
+                                                      }
+                                                    },
+                                                    "required": [
+                                                      "when",
+                                                      "action",
+                                                      "after"
+                                                    ],
+                                                    "additionalProperties": false
+                                                  },
+                                                  "minItems": 1,
+                                                  "maxItems": 8
+                                                }
+                                              },
+                                              "required": [
+                                                "when",
+                                                "action",
+                                                "after"
+                                              ],
+                                              "additionalProperties": false
+                                            },
+                                            "minItems": 1,
+                                            "maxItems": 8
+                                          }
+                                        },
+                                        "required": [
+                                          "when",
+                                          "action",
+                                          "after"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "minItems": 1,
+                                      "maxItems": 8
+                                    }
+                                  },
+                                  "required": [
+                                    "when",
+                                    "action",
+                                    "after"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "minItems": 1,
+                                "maxItems": 8
+                              }
+                            },
+                            "required": [
+                              "when",
+                              "action",
+                              "after"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "minItems": 1,
+                          "maxItems": 8
+                        }
+                      },
+                      "required": [
+                        "when",
+                        "action",
+                        "after"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "minItems": 1,
+                    "maxItems": 8
+                  }
+                },
+                "required": [
+                  "kind",
+                  "anchor",
+                  "cases"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "chess"
+                  },
+                  "boardId": {
+                    "type": "string",
+                    "pattern": "^[a-fA-F0-9]{64}$"
+                  },
+                  "anchorFen": {
+                    "type": "string",
+                    "minLength": 15,
+                    "maxLength": 90,
+                    "pattern": "^[1-8prnbqkPRNBQK/]+$"
+                  },
+                  "ourColor": {
+                    "type": "string",
+                    "enum": [
+                      "white",
+                      "black"
+                    ]
+                  },
+                  "initialMove": {
+                    "type": "string",
+                    "pattern": "^[a-h][1-8][a-h][1-8]$"
+                  },
+                  "onUnexpected": {
+                    "type": "string",
+                    "enum": [
+                      "yield",
+                      "wait"
+                    ],
+                    "default": "yield"
+                  },
+                  "cases": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "opponent": {
+                          "$ref": "#/properties/plan/anyOf/1/properties/initialMove"
+                        },
+                        "reply": {
+                          "$ref": "#/properties/plan/anyOf/1/properties/initialMove"
+                        },
+                        "then": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "opponent": {
+                                "$ref": "#/properties/plan/anyOf/1/properties/initialMove"
+                              },
+                              "reply": {
+                                "$ref": "#/properties/plan/anyOf/1/properties/initialMove"
+                              },
+                              "then": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "opponent": {
+                                      "$ref": "#/properties/plan/anyOf/1/properties/initialMove"
+                                    },
+                                    "reply": {
+                                      "$ref": "#/properties/plan/anyOf/1/properties/initialMove"
+                                    },
+                                    "then": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "properties": {
+                                          "opponent": {
+                                            "$ref": "#/properties/plan/anyOf/1/properties/initialMove"
+                                          },
+                                          "reply": {
+                                            "$ref": "#/properties/plan/anyOf/1/properties/initialMove"
+                                          },
+                                          "then": {
+                                            "type": "array",
+                                            "items": {
+                                              "type": "object",
+                                              "properties": {
+                                                "opponent": {
+                                                  "$ref": "#/properties/plan/anyOf/1/properties/initialMove"
+                                                },
+                                                "reply": {
+                                                  "$ref": "#/properties/plan/anyOf/1/properties/initialMove"
+                                                },
+                                                "then": {
+                                                  "type": "array",
+                                                  "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "opponent": {
+                                                        "$ref": "#/properties/plan/anyOf/1/properties/initialMove"
+                                                      },
+                                                      "reply": {
+                                                        "$ref": "#/properties/plan/anyOf/1/properties/initialMove"
+                                                      }
+                                                    },
+                                                    "required": [
+                                                      "opponent",
+                                                      "reply"
+                                                    ],
+                                                    "additionalProperties": false
+                                                  },
+                                                  "minItems": 1,
+                                                  "maxItems": 8
+                                                }
+                                              },
+                                              "required": [
+                                                "opponent",
+                                                "reply"
+                                              ],
+                                              "additionalProperties": false
+                                            },
+                                            "minItems": 1,
+                                            "maxItems": 8
+                                          }
+                                        },
+                                        "required": [
+                                          "opponent",
+                                          "reply"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "minItems": 1,
+                                      "maxItems": 8
+                                    }
+                                  },
+                                  "required": [
+                                    "opponent",
+                                    "reply"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "minItems": 1,
+                                "maxItems": 8
+                              }
+                            },
+                            "required": [
+                              "opponent",
+                              "reply"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "minItems": 1,
+                          "maxItems": 8
+                        }
+                      },
+                      "required": [
+                        "opponent",
+                        "reply"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "minItems": 1,
+                    "maxItems": 8
+                  }
+                },
+                "required": [
+                  "kind",
+                  "boardId",
+                  "anchorFen",
+                  "ourColor",
+                  "cases"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1000,
+            "maximum": 180000,
+            "default": 60000
+          },
+          "waitMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20000,
+            "default": 0
+          },
+          "observe": {
+            "type": "boolean",
+            "default": true
+          },
+          "includeScreenshot": {
+            "type": "boolean",
+            "default": false
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "decision",
+              "full"
+            ],
+            "default": "decision"
+          },
+          "maxDimension": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 1920,
+            "default": 1000
+          },
+          "quality": {
+            "type": "integer",
+            "minimum": 35,
+            "maximum": 95,
+            "default": 75
+          },
+          "annotate": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "packageName",
+          "sessionId",
+          "requestId",
+          "plan"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_plan_list",
+      "description": "List all prepared plans for this owned app/session, active and retained terminal results. Read-only; does not start, resume, cancel, extend or clean anything. Use plan_status with a bounded wait for a selected plan.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "packageName",
+          "sessionId"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_plan_status",
+      "description": "Read a local conditional plan. Prefer a bounded wait and reuse its final decision observation; no polling snapshot loop. Active jobs defer images. needs_model means no more local actions will run: analyze the unexpected state and prepare a new plan. Reaction timings exclude model plan-preparation time; measure both. Read-only, never starts or replays a plan.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "planId": {
+            "$ref": "#/properties/sessionId"
+          },
+          "waitMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20000,
+            "default": 0
+          },
+          "observe": {
+            "type": "boolean",
+            "default": true
+          },
+          "includeScreenshot": {
+            "type": "boolean",
+            "default": false
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "decision",
+              "full"
+            ],
+            "default": "decision"
+          },
+          "maxDimension": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 1920,
+            "default": 1000
+          },
+          "quality": {
+            "type": "integer",
+            "minimum": 35,
+            "maximum": 95,
+            "default": 75
+          },
+          "annotate": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "packageName",
+          "sessionId",
+          "planId"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "phone_plan_cancel",
+      "description": "Cancel only this conditional plan, preserving the app/session. Stops later planned actions; an input already delivered may have taken effect. Inspect actions and observed state before continuing.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 240,
+            "pattern": "^(?:android|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "planId": {
+            "$ref": "#/properties/sessionId"
+          },
+          "observe": {
+            "type": "boolean",
+            "default": true
+          },
+          "includeScreenshot": {
+            "type": "boolean",
+            "default": false
+          },
+          "detail": {
+            "type": "string",
+            "enum": [
+              "decision",
+              "full"
+            ],
+            "default": "decision"
+          },
+          "maxDimension": {
+            "type": "integer",
+            "minimum": 320,
+            "maximum": 1920,
+            "default": 1000
+          },
+          "quality": {
+            "type": "integer",
+            "minimum": 35,
+            "maximum": 95,
+            "default": 75
+          },
+          "annotate": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "packageName",
+          "sessionId",
+          "planId"
         ],
         "additionalProperties": false,
         "$schema": "http://json-schema.org/draft-07/schema#"
@@ -790,7 +1507,7 @@
     },
     {
       "name": "phone_session_end",
-      "description": "Finish this app session and release its display and preview. A different app session continues.",
+      "description": "Release this app session, its tasks/display/preview and pending plans after the user objective is verified complete, or on explicit user stop. Do not call merely because a plan finished, an action failed, the position is difficult, or a progress report is ready. Recover and continue an authorized unfinished objective; preserve its state across thinking pauses. If blocked, explain the unmet objective and keep the session only within its bounded lease. A different app session continues.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -913,7 +1630,7 @@
     },
     {
       "name": "phone_snapshot",
-      "description": "Read an authorized window. Reuse an action observation. A cursor reads more nodes from the same unchanged snapshot.",
+      "description": "Read an authorized window. Reuse an action observation. For chess prefer detail=decision: complete board FEN/hash and relevant UI, without redundant square nodes; detail=full keeps all nodes. A cursor reads more nodes from the same unchanged snapshot.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -945,6 +1662,7 @@
             "type": "string",
             "enum": [
               "compact",
+              "decision",
               "full"
             ],
             "default": "compact"
@@ -1079,6 +1797,7 @@
             "type": "string",
             "enum": [
               "compact",
+              "decision",
               "full"
             ],
             "default": "compact"
@@ -1154,6 +1873,7 @@
             "type": "string",
             "enum": [
               "compact",
+              "decision",
               "full"
             ],
             "default": "compact"
@@ -1234,6 +1954,7 @@
             "type": "string",
             "enum": [
               "compact",
+              "decision",
               "full"
             ],
             "default": "compact"
@@ -1315,6 +2036,7 @@
             "type": "string",
             "enum": [
               "compact",
+              "decision",
               "full"
             ],
             "default": "compact"
@@ -1400,6 +2122,7 @@
             "type": "string",
             "enum": [
               "compact",
+              "decision",
               "full"
             ],
             "default": "compact"
@@ -1489,6 +2212,7 @@
             "type": "string",
             "enum": [
               "compact",
+              "decision",
               "full"
             ],
             "default": "compact"
@@ -1565,6 +2289,7 @@
             "type": "string",
             "enum": [
               "compact",
+              "decision",
               "full"
             ],
             "default": "compact"
@@ -1647,6 +2372,7 @@
             "type": "string",
             "enum": [
               "compact",
+              "decision",
               "full"
             ],
             "default": "compact"
@@ -1743,6 +2469,7 @@
             "type": "string",
             "enum": [
               "compact",
+              "decision",
               "full"
             ],
             "default": "compact"
@@ -1900,6 +2627,7 @@
             "type": "string",
             "enum": [
               "compact",
+              "decision",
               "full"
             ],
             "default": "compact"
@@ -2668,6 +3396,7 @@
             "type": "string",
             "enum": [
               "compact",
+              "decision",
               "full"
             ],
             "default": "compact"
@@ -2839,6 +3568,7 @@
             "type": "string",
             "enum": [
               "compact",
+              "decision",
               "full"
             ],
             "default": "compact"
@@ -2939,6 +3669,7 @@
             "type": "string",
             "enum": [
               "compact",
+              "decision",
               "full"
             ],
             "default": "compact"
@@ -3042,6 +3773,7 @@
             "type": "string",
             "enum": [
               "compact",
+              "decision",
               "full"
             ],
             "default": "compact"
@@ -3129,6 +3861,7 @@
             "type": "string",
             "enum": [
               "compact",
+              "decision",
               "full"
             ],
             "default": "compact"
@@ -3210,6 +3943,7 @@
             "type": "string",
             "enum": [
               "compact",
+              "decision",
               "full"
             ],
             "default": "compact"

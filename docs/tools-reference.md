@@ -2,7 +2,7 @@
 
 Generated from the real MCP `tools/list` response by `npm run docs:tools`; do not hand-edit. See [tool workflows](tools.md) for sessions, gestures, ad jobs and file transfers.
 
-Release **0.17.0** · **62 tools** · API **1** · catalog **c1b6e733309e4029**.
+Release **0.19.0** · **66 tools** · API **1** · catalog **9536208318cf0507**.
 
 | Tool | Access | Purpose |
 |---|---|---|
@@ -16,16 +16,20 @@ Release **0.17.0** · **62 tools** · API **1** · catalog **c1b6e733309e4029**.
 | [`phone_session_create`](#phone-session-create) | Action | Create a separately routed app session. requestId is an idempotent UUID; keep the returned sessionId. Does not launch the app. The physical-screen policy is selected only in local Phone MCP settings. keepRendering=true preserves visual background work during pauses at a higher idle cost. After a successful user handoff, create a new requestId/session; the former session stays terminated. Explicit local Stop still requires local resumption. |
 | [`phone_start_app`](#phone-start-app) | Action | Fast path: create one owned app session, open the app once and return its first observation plus screenshot in ONE tool call. Prefer this over separate create/open/snapshot/capture calls. A repeated requestId retains the existing session without reopening its app. Inspect launchUncertain and observationError; never replay an uncertain launch. Returns observation with a fresh snapshot after the action. |
 | [`phone_ui_flow`](#phone-ui-flow) | Action | Execute 1-8 planned exact semantic clicks/waits with fresh native target guards and ONE final observation/screenshot. Use for already understood navigation; no model round trip between steps. Stops at the first missing/ambiguous/protected target, error or deadline. Inspect completedSteps/failedStep/uncertain; never replay a partial flow. App/session and local stop guards remain enforced. Use action_sequence for already observed Canvas/game gestures. Returns observation with a fresh snapshot after the action. |
-| [`phone_board_move`](#phone-board-move) | Action | Play one already-decided chess move such as e2e4 using the boardId from observation.board. Prefer the observed board.piecePlacementFen over manually decoding coordinates. Freshly rechecks all 64 accessible squares and app/session/window geometry, captures the current source, then sends one two-tap sequence with a final observation/image. Refuses changed/incomplete boards before any input. No engine or move selection; no full legality or turn inference. Promotion choices remain separate. Never replay partial/uncertain inputs. Returns observation with a fresh snapshot after the action. |
+| [`phone_board_move`](#phone-board-move) | Action | Play one already-decided chess move such as e2e4 using the boardId from observation.board. Prefer the observed board.piecePlacementFen over manually decoding coordinates. Freshly rechecks all 64 accessible squares and app/session/window geometry. If every square is a clickable accessible control, clicks named source/destination and rereads the complete board between them, allowing selection highlights without requiring raster pixels. Otherwise requires a fresh visible capture and uses one guarded two-tap sequence. Returns final observation/image; never switches input path after a partial action. Refuses changed/incomplete boards before any input. No engine or move selection; no full legality or turn inference. Promotion choices remain separate. Never replay partial/uncertain inputs. Returns observation with a fresh snapshot after the action. |
+| [`phone_plan_start`](#phone-plan-start) | Action | Prefer prepared conditional trees to avoid model round trips. Each case may contain then:[cases] for up to 6 levels / 32 total cases / 8 siblings. Android 0.19+ permits 4 independent armed plans per session; start with waitMs=0 before awaiting. Same-session inputs are serialized and conflicting ready plans yield before input. onUnexpected=wait keeps a standby plan armed without acting on unknown states, until its deadline; yield is default. A completed plan does NOT complete the user objective or end the app session. Prefer chess cases while the opponent thinks: provide observed boardId+anchorFen, own color and prepared opponent/reply pairs; optional initialMove is sent once. Catch-up accepts an already-present predicted opponent move, never replays the initial move. UI plans require exact semantic guards, one click/back and an explicit postcondition per case. Unknown/ambiguous state yields needs_model. Native stops, lease and capture/write permissions stay enforced. Trees/multiple plans require Android 0.19+; flat plans support 0.18+. No engine, arbitrary code or guessed response. New requestId for a revised plan. |
+| [`phone_plan_list`](#phone-plan-list) | Read | List all prepared plans for this owned app/session, active and retained terminal results. Read-only; does not start, resume, cancel, extend or clean anything. Use plan_status with a bounded wait for a selected plan. |
+| [`phone_plan_status`](#phone-plan-status) | Read | Read a local conditional plan. Prefer a bounded wait and reuse its final decision observation; no polling snapshot loop. Active jobs defer images. needs_model means no more local actions will run: analyze the unexpected state and prepare a new plan. Reaction timings exclude model plan-preparation time; measure both. Read-only, never starts or replays a plan. |
+| [`phone_plan_cancel`](#phone-plan-cancel) | Action | Cancel only this conditional plan, preserving the app/session. Stops later planned actions; an input already delivered may have taken effect. Inspect actions and observed state before continuing. |
 | [`phone_session_wake`](#phone-session-wake) | Action | Recover only the existing AI display under the screen policy selected locally in Phone MCP settings. This tool cannot enable the physical-screen-on mode or change the local setting. It does not relaunch the app or bypass keyguard. If off-screen recovery fails, report it instead of choosing a lit-screen fallback. |
 | [`phone_session_cleanup`](#phone-session-cleanup) | Action | Remove empty abandoned task records for an authorized app. Active and physical tasks are always preserved. Optional taskIds migrate identified legacy AI tasks; no live app is closed. |
 | [`phone_session_list`](#phone-session-list) | Read | List this authorization’s active and ended app sessions, their displays, isolation and lease state. |
 | [`phone_session_keepalive`](#phone-session-keepalive) | Action | Extend a legitimate thinking pause for an active session. Does not restart an ended or locally stopped session. |
-| [`phone_session_end`](#phone-session-end) | Action | Finish this app session and release its display and preview. A different app session continues. |
+| [`phone_session_end`](#phone-session-end) | Action | Release this app session, its tasks/display/preview and pending plans after the user objective is verified complete, or on explicit user stop. Do not call merely because a plan finished, an action failed, the position is difficult, or a progress report is ready. Recover and continue an authorized unfinished objective; preserve its state across thinking pauses. If blocked, explain the unmet objective and keep the session only within its bounded lease. A different app session continues. |
 | [`phone_session_cancel`](#phone-session-cancel) | Action | Interrupt only this app session and reject its queued commands. A locally stopped app requires local resumption. |
 | [`phone_notifications`](#phone-notifications) | Read | Read current notifications for an authorized app without opening it. |
 | [`phone_reply_notification`](#phone-reply-notification) | Action | Send the requested reply through a freshly observed notification. |
-| [`phone_snapshot`](#phone-snapshot) | Read | Read an authorized window. Reuse an action observation. A cursor reads more nodes from the same unchanged snapshot. |
+| [`phone_snapshot`](#phone-snapshot) | Read | Read an authorized window. Reuse an action observation. For chess prefer detail=decision: complete board FEN/hash and relevant UI, without redundant square nodes; detail=full keeps all nodes. A cursor reads more nodes from the same unchanged snapshot. |
 | [`phone_screenshot`](#phone-screenshot) | Read | Capture the authorized window. For black or incomplete images try captureSource=surface: a fresh frame from the owned non-secure virtual display, without changing app state or physical-screen power. Optional labels map through coordinateSpace. |
 | [`phone_open_app`](#phone-open-app) | Action | Open an authorized app on the active control display. Returns observation with a fresh snapshot after the action. |
 | [`phone_open_url`](#phone-open-url) | Action | Open an HTTPS URL in the chosen authorized app on the active display. Returns observation with a fresh snapshot after the action. |
@@ -175,7 +179,7 @@ Fast path: create one owned app session, open the app once and return its first 
 | `keepRendering` | No | `{"type":"boolean","default":false}` |
 | `observe` | No | `{"type":"boolean","default":true}` |
 | `settleMs` | No | `{"type":"integer","minimum":0,"maximum":800}` |
-| `detail` | No | `{"type":"string","enum":["compact","full"],"default":"compact"}` |
+| `detail` | No | `{"type":"string","enum":["compact","decision","full"],"default":"compact"}` |
 | `includeScreenshot` | No | `{"type":"boolean","default":true}` |
 | `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
 | `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |
@@ -195,7 +199,7 @@ Execute 1-8 planned exact semantic clicks/waits with fresh native target guards 
 | `timeoutMs` | No | `{"type":"integer","minimum":100,"maximum":8000,"default":8000}` |
 | `observe` | No | `{"type":"boolean","default":true}` |
 | `settleMs` | No | `{"type":"integer","minimum":0,"maximum":800}` |
-| `detail` | No | `{"type":"string","enum":["compact","full"],"default":"compact"}` |
+| `detail` | No | `{"type":"string","enum":["compact","decision","full"],"default":"compact"}` |
 | `includeScreenshot` | No | `{"type":"boolean","default":true}` |
 | `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
 | `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |
@@ -205,7 +209,7 @@ Execute 1-8 planned exact semantic clicks/waits with fresh native target guards 
 
 `phone_board_move`
 
-Play one already-decided chess move such as e2e4 using the boardId from observation.board. Prefer the observed board.piecePlacementFen over manually decoding coordinates. Freshly rechecks all 64 accessible squares and app/session/window geometry, captures the current source, then sends one two-tap sequence with a final observation/image. Refuses changed/incomplete boards before any input. No engine or move selection; no full legality or turn inference. Promotion choices remain separate. Never replay partial/uncertain inputs. Returns observation with a fresh snapshot after the action.
+Play one already-decided chess move such as e2e4 using the boardId from observation.board. Prefer the observed board.piecePlacementFen over manually decoding coordinates. Freshly rechecks all 64 accessible squares and app/session/window geometry. If every square is a clickable accessible control, clicks named source/destination and rereads the complete board between them, allowing selection highlights without requiring raster pixels. Otherwise requires a fresh visible capture and uses one guarded two-tap sequence. Returns final observation/image; never switches input path after a partial action. Refuses changed/incomplete boards before any input. No engine or move selection; no full legality or turn inference. Promotion choices remain separate. Never replay partial/uncertain inputs. Returns observation with a fresh snapshot after the action.
 
 | Parameter | Required | Schema |
 |---|---|---|
@@ -215,8 +219,77 @@ Play one already-decided chess move such as e2e4 using the boardId from observat
 | `uci` | Yes | `{"type":"string","pattern":"^[a-h][1-8][a-h][1-8]$"}` |
 | `observe` | No | `{"type":"boolean","default":true}` |
 | `settleMs` | No | `{"type":"integer","minimum":0,"maximum":800}` |
-| `detail` | No | `{"type":"string","enum":["compact","full"],"default":"compact"}` |
+| `detail` | No | `{"type":"string","enum":["compact","decision","full"],"default":"compact"}` |
 | `includeScreenshot` | No | `{"type":"boolean","default":true}` |
+| `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
+| `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |
+| `annotate` | No | `{"type":"boolean","default":false}` |
+
+## phone-plan-start
+
+`phone_plan_start`
+
+Prefer prepared conditional trees to avoid model round trips. Each case may contain then:[cases] for up to 6 levels / 32 total cases / 8 siblings. Android 0.19+ permits 4 independent armed plans per session; start with waitMs=0 before awaiting. Same-session inputs are serialized and conflicting ready plans yield before input. onUnexpected=wait keeps a standby plan armed without acting on unknown states, until its deadline; yield is default. A completed plan does NOT complete the user objective or end the app session. Prefer chess cases while the opponent thinks: provide observed boardId+anchorFen, own color and prepared opponent/reply pairs; optional initialMove is sent once. Catch-up accepts an already-present predicted opponent move, never replays the initial move. UI plans require exact semantic guards, one click/back and an explicit postcondition per case. Unknown/ambiguous state yields needs_model. Native stops, lease and capture/write permissions stay enforced. Trees/multiple plans require Android 0.19+; flat plans support 0.18+. No engine, arbitrary code or guessed response. New requestId for a revised plan.
+
+| Parameter | Required | Schema |
+|---|---|---|
+| `packageName` | Yes | `{"type":"string","minLength":3,"maxLength":240,"pattern":"^(?:android\|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"}` |
+| `sessionId` | Yes | `{"type":"string","format":"uuid"}` |
+| `requestId` | Yes | `{"$ref":"#/properties/sessionId"}` |
+| `plan` | Yes | `{"anyOf":[{"type":"object","properties":{"kind":{"type":"string","const":"ui"},"anchor":{"type":"object","properties":{"all":{"type":"array","items":{"type":"object","properties":{"query":{"type":"string","minLength":1,"maxLength":250},"by":{"type":"string","enum":["text","description","viewId"],"default":"text"}},"required":["query"],"additionalProperties":false},"minItems":1,"maxItems":6},"none":{"type":"array","items":{"$ref":"#/properties/plan/anyOf/0/properties/anchor/properties/all/items"},"maxItems":6,"default":[]}},"required":["all"],"additionalProperties":false},"allowWindowChange":{"type":"boolean","default":false},"onUnexpected":{"type":"string","enum":["yield","wait"],"default":"yield"},"cases":{"type":"array","items":{"type":"object","properties":{"when":{"$ref":"#/properties/plan/anyOf/0/properties/anchor"},"action":{"anyOf":[{"type":"object","properties":{"op":{"type":"string","const":"click"},"query":{"$ref":"#/properties/plan/anyOf/0/properties/anchor/properties/all/items/properties/query"},"by":{"$ref":"#/properties/plan/anyOf/0/properties/anchor/properties/all/items/properties/by"}},"required":["op","query"],"additionalProperties":false},{"type":"object","properties":{"op":{"type":"string","const":"back"}},"required":["op"],"additionalProperties":false}]},"after":{"$ref":"#/properties/plan/anyOf/0/properties/anchor"},"terminal":{"type":"boolean","default":true},"then":{"type":"array","items":{"type":"object","properties":{"when":{"$ref":"#/properties/plan/anyOf/0/properties/anchor"},"action":{"$ref":"#/properties/plan/anyOf/0/properties/cases/items/properties/action"},"after":{"$ref":"#/properties/plan/anyOf/0/properties/anchor"},"terminal":{"$ref":"#/properties/plan/anyOf/0/properties/cases/items/properties/terminal"},"then":{"type":"array","items":{"type":"object","properties":{"when":{"$ref":"#/properties/plan/anyOf/0/properties/anchor"},"action":{"$ref":"#/properties/plan/anyOf/0/properties/cases/items/properties/action"},"after":{"$ref":"#/properties/plan/anyOf/0/properties/anchor"},"terminal":{"$ref":"#/properties/plan/anyOf/0/properties/cases/items/properties/terminal"},"then":{"type":"array","items":{"type":"object","properties":{"when":{"$ref":"#/properties/plan/anyOf/0/properties/anchor"},"action":{"$ref":"#/properties/plan/anyOf/0/properties/cases/items/properties/action"},"after":{"$ref":"#/properties/plan/anyOf/0/properties/anchor"},"terminal":{"$ref":"#/properties/plan/anyOf/0/properties/cases/items/properties/terminal"},"then":{"type":"array","items":{"type":"object","properties":{"when":{"$ref":"#/properties/plan/anyOf/0/properties/anchor"},"action":{"$ref":"#/properties/plan/anyOf/0/properties/cases/items/properties/action"},"after":{"$ref":"#/properties/plan/anyOf/0/properties/anchor"},"terminal":{"$ref":"#/properties/plan/anyOf/0/properties/cases/items/properties/terminal"},"then":{"type":"array","items":{"type":"object","properties":{"when":{"$ref":"#/properties/plan/anyOf/0/properties/anchor"},"action":{"$ref":"#/properties/plan/anyOf/0/properties/cases/items/properties/action"},"after":{"$ref":"#/properties/plan/anyOf/0/properties/anchor"},"terminal":{"$ref":"#/properties/plan/anyOf/0/properties/cases/items/properties/terminal"}},"required":["when","action","after"],"additionalProperties":false},"minItems":1,"maxItems":8}},"required":["when","action","after"],"additionalProperties":false},"minItems":1,"maxItems":8}},"required":["when","action","after"],"additionalProperties":false},"minItems":1,"maxItems":8}},"required":["when","action","after"],"additionalProperties":false},"minItems":1,"maxItems":8}},"required":["when","action","after"],"additionalProperties":false},"minItems":1,"maxItems":8}},"required":["when","action","after"],"additionalProperties":false},"minItems":1,"maxItems":8}},"required":["kind","anchor","cases"],"additionalProperties":false},{"type":"object","properties":{"kind":{"type":"string","const":"chess"},"boardId":{"type":"string","pattern":"^[a-fA-F0-9]{64}$"},"anchorFen":{"type":"string","minLength":15,"maxLength":90,"pattern":"^[1-8prnbqkPRNBQK/]+$"},"ourColor":{"type":"string","enum":["white","black"]},"initialMove":{"type":"string","pattern":"^[a-h][1-8][a-h][1-8]$"},"onUnexpected":{"type":"string","enum":["yield","wait"],"default":"yield"},"cases":{"type":"array","items":{"type":"object","properties":{"opponent":{"$ref":"#/properties/plan/anyOf/1/properties/initialMove"},"reply":{"$ref":"#/properties/plan/anyOf/1/properties/initialMove"},"then":{"type":"array","items":{"type":"object","properties":{"opponent":{"$ref":"#/properties/plan/anyOf/1/properties/initialMove"},"reply":{"$ref":"#/properties/plan/anyOf/1/properties/initialMove"},"then":{"type":"array","items":{"type":"object","properties":{"opponent":{"$ref":"#/properties/plan/anyOf/1/properties/initialMove"},"reply":{"$ref":"#/properties/plan/anyOf/1/properties/initialMove"},"then":{"type":"array","items":{"type":"object","properties":{"opponent":{"$ref":"#/properties/plan/anyOf/1/properties/initialMove"},"reply":{"$ref":"#/properties/plan/anyOf/1/properties/initialMove"},"then":{"type":"array","items":{"type":"object","properties":{"opponent":{"$ref":"#/properties/plan/anyOf/1/properties/initialMove"},"reply":{"$ref":"#/properties/plan/anyOf/1/properties/initialMove"},"then":{"type":"array","items":{"type":"object","properties":{"opponent":{"$ref":"#/properties/plan/anyOf/1/properties/initialMove"},"reply":{"$ref":"#/properties/plan/anyOf/1/properties/initialMove"}},"required":["opponent","reply"],"additionalProperties":false},"minItems":1,"maxItems":8}},"required":["opponent","reply"],"additionalProperties":false},"minItems":1,"maxItems":8}},"required":["opponent","reply"],"additionalProperties":false},"minItems":1,"maxItems":8}},"required":["opponent","reply"],"additionalProperties":false},"minItems":1,"maxItems":8}},"required":["opponent","reply"],"additionalProperties":false},"minItems":1,"maxItems":8}},"required":["opponent","reply"],"additionalProperties":false},"minItems":1,"maxItems":8}},"required":["kind","boardId","anchorFen","ourColor","cases"],"additionalProperties":false}]}` |
+| `timeoutMs` | No | `{"type":"integer","minimum":1000,"maximum":180000,"default":60000}` |
+| `waitMs` | No | `{"type":"integer","minimum":0,"maximum":20000,"default":0}` |
+| `observe` | No | `{"type":"boolean","default":true}` |
+| `includeScreenshot` | No | `{"type":"boolean","default":false}` |
+| `detail` | No | `{"type":"string","enum":["decision","full"],"default":"decision"}` |
+| `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
+| `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |
+| `annotate` | No | `{"type":"boolean","default":false}` |
+
+## phone-plan-list
+
+`phone_plan_list`
+
+List all prepared plans for this owned app/session, active and retained terminal results. Read-only; does not start, resume, cancel, extend or clean anything. Use plan_status with a bounded wait for a selected plan.
+
+| Parameter | Required | Schema |
+|---|---|---|
+| `packageName` | Yes | `{"type":"string","minLength":3,"maxLength":240,"pattern":"^(?:android\|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"}` |
+| `sessionId` | Yes | `{"type":"string","format":"uuid"}` |
+
+## phone-plan-status
+
+`phone_plan_status`
+
+Read a local conditional plan. Prefer a bounded wait and reuse its final decision observation; no polling snapshot loop. Active jobs defer images. needs_model means no more local actions will run: analyze the unexpected state and prepare a new plan. Reaction timings exclude model plan-preparation time; measure both. Read-only, never starts or replays a plan.
+
+| Parameter | Required | Schema |
+|---|---|---|
+| `packageName` | Yes | `{"type":"string","minLength":3,"maxLength":240,"pattern":"^(?:android\|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"}` |
+| `sessionId` | Yes | `{"type":"string","format":"uuid"}` |
+| `planId` | Yes | `{"$ref":"#/properties/sessionId"}` |
+| `waitMs` | No | `{"type":"integer","minimum":0,"maximum":20000,"default":0}` |
+| `observe` | No | `{"type":"boolean","default":true}` |
+| `includeScreenshot` | No | `{"type":"boolean","default":false}` |
+| `detail` | No | `{"type":"string","enum":["decision","full"],"default":"decision"}` |
+| `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
+| `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |
+| `annotate` | No | `{"type":"boolean","default":false}` |
+
+## phone-plan-cancel
+
+`phone_plan_cancel`
+
+Cancel only this conditional plan, preserving the app/session. Stops later planned actions; an input already delivered may have taken effect. Inspect actions and observed state before continuing.
+
+| Parameter | Required | Schema |
+|---|---|---|
+| `packageName` | Yes | `{"type":"string","minLength":3,"maxLength":240,"pattern":"^(?:android\|[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)+)$"}` |
+| `sessionId` | Yes | `{"type":"string","format":"uuid"}` |
+| `planId` | Yes | `{"$ref":"#/properties/sessionId"}` |
+| `observe` | No | `{"type":"boolean","default":true}` |
+| `includeScreenshot` | No | `{"type":"boolean","default":false}` |
+| `detail` | No | `{"type":"string","enum":["decision","full"],"default":"decision"}` |
 | `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
 | `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |
 | `annotate` | No | `{"type":"boolean","default":false}` |
@@ -269,7 +342,7 @@ Extend a legitimate thinking pause for an active session. Does not restart an en
 
 `phone_session_end`
 
-Finish this app session and release its display and preview. A different app session continues.
+Release this app session, its tasks/display/preview and pending plans after the user objective is verified complete, or on explicit user stop. Do not call merely because a plan finished, an action failed, the position is difficult, or a progress report is ready. Recover and continue an authorized unfinished objective; preserve its state across thinking pauses. If blocked, explain the unmet objective and keep the session only within its bounded lease. A different app session continues.
 
 | Parameter | Required | Schema |
 |---|---|---|
@@ -311,7 +384,7 @@ Send the requested reply through a freshly observed notification.
 
 `phone_snapshot`
 
-Read an authorized window. Reuse an action observation. A cursor reads more nodes from the same unchanged snapshot.
+Read an authorized window. Reuse an action observation. For chess prefer detail=decision: complete board FEN/hash and relevant UI, without redundant square nodes; detail=full keeps all nodes. A cursor reads more nodes from the same unchanged snapshot.
 
 | Parameter | Required | Schema |
 |---|---|---|
@@ -320,7 +393,7 @@ Read an authorized window. Reuse an action observation. A cursor reads more node
 | `cursor` | No | `{"type":"string","maxLength":100}` |
 | `limit` | No | `{"type":"integer","minimum":20,"maximum":350,"default":200}` |
 | `includeOffscreen` | No | `{"type":"boolean","default":false}` |
-| `detail` | No | `{"type":"string","enum":["compact","full"],"default":"compact"}` |
+| `detail` | No | `{"type":"string","enum":["compact","decision","full"],"default":"compact"}` |
 | `includeScreenshot` | No | `{"type":"boolean","default":false}` |
 | `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
 | `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |
@@ -355,7 +428,7 @@ Open an authorized app on the active control display. Returns observation with a
 | `sessionId` | No | `{"type":"string","format":"uuid"}` |
 | `observe` | No | `{"type":"boolean","default":true}` |
 | `settleMs` | No | `{"type":"integer","minimum":0,"maximum":800}` |
-| `detail` | No | `{"type":"string","enum":["compact","full"],"default":"compact"}` |
+| `detail` | No | `{"type":"string","enum":["compact","decision","full"],"default":"compact"}` |
 | `includeScreenshot` | No | `{"type":"boolean","default":false}` |
 | `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
 | `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |
@@ -374,7 +447,7 @@ Open an HTTPS URL in the chosen authorized app on the active display. Returns ob
 | `sessionId` | No | `{"type":"string","format":"uuid"}` |
 | `observe` | No | `{"type":"boolean","default":true}` |
 | `settleMs` | No | `{"type":"integer","minimum":0,"maximum":800}` |
-| `detail` | No | `{"type":"string","enum":["compact","full"],"default":"compact"}` |
+| `detail` | No | `{"type":"string","enum":["compact","decision","full"],"default":"compact"}` |
 | `includeScreenshot` | No | `{"type":"boolean","default":false}` |
 | `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
 | `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |
@@ -394,7 +467,7 @@ Click an observed node. Legacy longPressNodeId and coordinateActions remain supp
 | `nodeId` | Yes | `{"type":"string","minLength":1,"maxLength":260,"pattern":"^0(?:\\.\\d+)*$"}` |
 | `observe` | No | `{"type":"boolean","default":true}` |
 | `settleMs` | No | `{"type":"integer","minimum":0,"maximum":800}` |
-| `detail` | No | `{"type":"string","enum":["compact","full"],"default":"compact"}` |
+| `detail` | No | `{"type":"string","enum":["compact","decision","full"],"default":"compact"}` |
 | `includeScreenshot` | No | `{"type":"boolean","default":false}` |
 | `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
 | `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |
@@ -414,7 +487,7 @@ Long press an observed node, for example to open its context menu. Returns obser
 | `nodeId` | Yes | `{"type":"string","minLength":1,"maxLength":260,"pattern":"^0(?:\\.\\d+)*$"}` |
 | `observe` | No | `{"type":"boolean","default":true}` |
 | `settleMs` | No | `{"type":"integer","minimum":0,"maximum":800}` |
-| `detail` | No | `{"type":"string","enum":["compact","full"],"default":"compact"}` |
+| `detail` | No | `{"type":"string","enum":["compact","decision","full"],"default":"compact"}` |
 | `includeScreenshot` | No | `{"type":"boolean","default":false}` |
 | `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
 | `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |
@@ -435,7 +508,7 @@ Replace an observed editable field, excluding protected fields. Returns observat
 | `text` | Yes | `{"type":"string","maxLength":4000}` |
 | `observe` | No | `{"type":"boolean","default":true}` |
 | `settleMs` | No | `{"type":"integer","minimum":0,"maximum":800}` |
-| `detail` | No | `{"type":"string","enum":["compact","full"],"default":"compact"}` |
+| `detail` | No | `{"type":"string","enum":["compact","decision","full"],"default":"compact"}` |
 | `includeScreenshot` | No | `{"type":"boolean","default":false}` |
 | `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
 | `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |
@@ -456,7 +529,7 @@ Scroll an observed scrollable node. Returns observation with a fresh snapshot af
 | `direction` | Yes | `{"type":"string","enum":["forward","backward"]}` |
 | `observe` | No | `{"type":"boolean","default":true}` |
 | `settleMs` | No | `{"type":"integer","minimum":0,"maximum":800}` |
-| `detail` | No | `{"type":"string","enum":["compact","full"],"default":"compact"}` |
+| `detail` | No | `{"type":"string","enum":["compact","decision","full"],"default":"compact"}` |
 | `includeScreenshot` | No | `{"type":"boolean","default":false}` |
 | `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
 | `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |
@@ -475,7 +548,7 @@ Go back within the observed authorized window. Returns observation with a fresh 
 | `sessionId` | No | `{"$ref":"#/properties/snapshotId"}` |
 | `observe` | No | `{"type":"boolean","default":true}` |
 | `settleMs` | No | `{"type":"integer","minimum":0,"maximum":800}` |
-| `detail` | No | `{"type":"string","enum":["compact","full"],"default":"compact"}` |
+| `detail` | No | `{"type":"string","enum":["compact","decision","full"],"default":"compact"}` |
 | `includeScreenshot` | No | `{"type":"boolean","default":false}` |
 | `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
 | `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |
@@ -496,7 +569,7 @@ Tap a freshly observed target. Canvas/game areas require a recent screenshot tie
 | `y` | Yes | `{"$ref":"#/properties/x"}` |
 | `observe` | No | `{"type":"boolean","default":true}` |
 | `settleMs` | No | `{"type":"integer","minimum":0,"maximum":800}` |
-| `detail` | No | `{"type":"string","enum":["compact","full"],"default":"compact"}` |
+| `detail` | No | `{"type":"string","enum":["compact","decision","full"],"default":"compact"}` |
 | `includeScreenshot` | No | `{"type":"boolean","default":false}` |
 | `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
 | `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |
@@ -520,7 +593,7 @@ Swipe within the freshly observed window and stable geometry. For canvas/game ar
 | `durationMs` | No | `{"type":"integer","minimum":100,"maximum":1000,"default":350}` |
 | `observe` | No | `{"type":"boolean","default":true}` |
 | `settleMs` | No | `{"type":"integer","minimum":0,"maximum":800}` |
-| `detail` | No | `{"type":"string","enum":["compact","full"],"default":"compact"}` |
+| `detail` | No | `{"type":"string","enum":["compact","decision","full"],"default":"compact"}` |
 | `includeScreenshot` | No | `{"type":"boolean","default":false}` |
 | `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
 | `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |
@@ -542,7 +615,7 @@ Execute up to 8 already observed taps/swipes locally in one bounded command, wit
 | `timeoutMs` | No | `{"type":"integer","minimum":500,"maximum":8000,"default":4000}` |
 | `observe` | No | `{"type":"boolean","default":true}` |
 | `settleMs` | No | `{"type":"integer","minimum":0,"maximum":800}` |
-| `detail` | No | `{"type":"string","enum":["compact","full"],"default":"compact"}` |
+| `detail` | No | `{"type":"string","enum":["compact","decision","full"],"default":"compact"}` |
 | `includeScreenshot` | No | `{"type":"boolean","default":false}` |
 | `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
 | `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |
@@ -749,7 +822,7 @@ Wait locally up to 8 seconds for one exact visible, enabled, unprotected accessi
 | `sessionId` | No | `{"type":"string","format":"uuid"}` |
 | `observe` | No | `{"type":"boolean","default":true}` |
 | `settleMs` | No | `{"type":"integer","minimum":0,"maximum":800}` |
-| `detail` | No | `{"type":"string","enum":["compact","full"],"default":"compact"}` |
+| `detail` | No | `{"type":"string","enum":["compact","decision","full"],"default":"compact"}` |
 | `includeScreenshot` | No | `{"type":"boolean","default":false}` |
 | `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
 | `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |
@@ -796,7 +869,7 @@ Double tap inside the freshly observed window and stable target; canvas areas re
 | `y` | Yes | `{"$ref":"#/properties/x"}` |
 | `observe` | No | `{"type":"boolean","default":true}` |
 | `settleMs` | No | `{"type":"integer","minimum":0,"maximum":800}` |
-| `detail` | No | `{"type":"string","enum":["compact","full"],"default":"compact"}` |
+| `detail` | No | `{"type":"string","enum":["compact","decision","full"],"default":"compact"}` |
 | `includeScreenshot` | No | `{"type":"boolean","default":false}` |
 | `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
 | `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |
@@ -820,7 +893,7 @@ Pinch or zoom inside the freshly observed window and stable target; canvas areas
 | `durationMs` | No | `{"type":"integer","minimum":150,"maximum":1000,"default":400}` |
 | `observe` | No | `{"type":"boolean","default":true}` |
 | `settleMs` | No | `{"type":"integer","minimum":0,"maximum":800}` |
-| `detail` | No | `{"type":"string","enum":["compact","full"],"default":"compact"}` |
+| `detail` | No | `{"type":"string","enum":["compact","decision","full"],"default":"compact"}` |
 | `includeScreenshot` | No | `{"type":"boolean","default":false}` |
 | `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
 | `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |
@@ -843,7 +916,7 @@ Append, insert, clear or replace an observed non-protected editable field. Retur
 | `position` | No | `{"type":"integer","minimum":0,"maximum":4000}` |
 | `observe` | No | `{"type":"boolean","default":true}` |
 | `settleMs` | No | `{"type":"integer","minimum":0,"maximum":800}` |
-| `detail` | No | `{"type":"string","enum":["compact","full"],"default":"compact"}` |
+| `detail` | No | `{"type":"string","enum":["compact","decision","full"],"default":"compact"}` |
 | `includeScreenshot` | No | `{"type":"boolean","default":false}` |
 | `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
 | `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |
@@ -864,7 +937,7 @@ Submit the observed editable field using its Android IME Enter action. Returns o
 | `key` | No | `{"type":"string","const":"enter","default":"enter"}` |
 | `observe` | No | `{"type":"boolean","default":true}` |
 | `settleMs` | No | `{"type":"integer","minimum":0,"maximum":800}` |
-| `detail` | No | `{"type":"string","enum":["compact","full"],"default":"compact"}` |
+| `detail` | No | `{"type":"string","enum":["compact","decision","full"],"default":"compact"}` |
 | `includeScreenshot` | No | `{"type":"boolean","default":false}` |
 | `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
 | `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |
@@ -884,7 +957,7 @@ Ask Android to bring an observed node into view. Find with includeOffscreen firs
 | `nodeId` | Yes | `{"type":"string","minLength":1,"maxLength":260,"pattern":"^0(?:\\.\\d+)*$"}` |
 | `observe` | No | `{"type":"boolean","default":true}` |
 | `settleMs` | No | `{"type":"integer","minimum":0,"maximum":800}` |
-| `detail` | No | `{"type":"string","enum":["compact","full"],"default":"compact"}` |
+| `detail` | No | `{"type":"string","enum":["compact","decision","full"],"default":"compact"}` |
 | `includeScreenshot` | No | `{"type":"boolean","default":false}` |
 | `maxDimension` | No | `{"type":"integer","minimum":320,"maximum":1920,"default":1000}` |
 | `quality` | No | `{"type":"integer","minimum":35,"maximum":95,"default":75}` |

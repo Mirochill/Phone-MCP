@@ -2,7 +2,7 @@
 
 **Installing a new APK or clicking Update/Refresh in ChatGPT does not update every layer.** Updating this GitHub repository does not deploy other users' Workers. Each self-hosted user must update their own relay and Android app, then refresh their own AI client's tool metadata when it changes. A custom plugin refresh affects that connection; it is not a deployment to everyone who copied the repository.
 
-For the 0.17.0 relay (compatible with Android 0.16.2), the expected inventory is **62 tools** (58 operations plus `phone_connection`, `phone_catalog`, `phone_read`, `phone_action`), API 1, catalog `c1b6e733309e4029`. Cloud hosting reports `0.17.0-cloud`; the Node relay reports its own version without that suffix. Future releases may legitimately change the count/hash: use their generated [tool reference](tools-reference.md) and live discovery.
+For relay and Android 0.19.0, the expected inventory is **66 tools** (62 operations plus `phone_connection`, `phone_catalog`, `phone_read`, `phone_action`), API 1, catalog `9536208318cf0507`. Cloud hosting reports `0.19.0-cloud`; the Node relay reports its own version without that suffix. Future releases may legitimately change the count/hash: use their generated [tool reference](tools-reference.md) and live discovery.
 
 ## Which update changes what?
 
@@ -62,11 +62,11 @@ These steps follow [OpenAI's custom MCP refresh flow](https://developers.openai.
 
 Ask the agent to:
 
-- Call `phone_connection` and inspect `serverVersion`, `tooling.apiVersion`, `tooling.catalogVersion` and the tool-name set. For relay 0.17.0, compare all 62 unique names with [tools.json](tools.json), not just the total. Normalize only the host/provider namespace prefix when comparing logical tool names.
-- Call `phone_catalog` for the 58 live operations, then request the schema of an affected operation. The four discovery/gateway tools are not repeated in that operations list.
-- Compare this with the tools genuinely exposed to the agent by its host. A server advertising 61 names does not prove the host imported all 59, and a matching count does not prove identical schemas.
-- For this release, `phone_catalog({"operation":"screenshot"})` must include optional `captureSource` with `auto` / `surface`. If the named `phone_screenshot` in the chat lacks that argument, the chat has a stale named-tool definition despite having all 62 names.
-- For 0.17.0, check `start_app`, `ui_flow` and `board_move` plus `ad_status.waitMs` allowing 20000 and the optional final observation/image. See [fast workflows](performance.md). The Android 0.16.2 APK remains the current companion; do not invent a 0.17.0 APK.
+- Call `phone_connection` and inspect `serverVersion`, `tooling.apiVersion`, `tooling.catalogVersion` and the tool-name set. For relay 0.19.0, compare all 66 unique names with [tools.json](tools.json), not just the total. Normalize only the host/provider namespace prefix when comparing logical tool names.
+- Call `phone_catalog` for the 62 live operations, then request the schema of an affected operation. The four discovery/gateway tools are not repeated in that operations list.
+- Compare this with the tools genuinely exposed to the agent by its host. A server advertising 66 names does not prove the host imported all 66, and a matching count does not prove identical schemas.
+- For this release, `phone_catalog({"operation":"screenshot"})` must include optional `captureSource` with `auto` / `surface`. If the named `phone_screenshot` in the chat lacks that argument, the chat has a stale named-tool definition despite having all 66 names.
+- For 0.19.0, require `phone_plan_list`, nested `plan_start.plan.cases[].then`, `onUnexpected=yield|wait`, and the initialization guidance that plan completion is not user-goal completion. The matching APK reports `conditionalPlansVersion=2` and four active plans per session. Also check `plan_start`, `plan_list`, `plan_status`, `plan_cancel`, snapshot `detail=decision`, `start_app`, `ui_flow` and `board_move` plus `ad_status.waitMs` allowing 20000 and the optional final observation/image. See [fast workflows](performance.md). The companion for this release is Android 0.19.0. Flat plans require Android 0.18+; trees and multiple armed plans require Android 0.19+.
 - Verify app readiness separately with `phone_status` only when phone operation is needed. Metadata inspection does not require starting games, ads, installs or device actions. Never run every write tool merely to check its availability.
 
 In the earlier 0.16.2 check on 2026-10-24, the maintainer's chat had all 59 names while its cached named screenshot definition still lacked `captureSource`; the live server schema already included it. The custom connection was refreshed in ChatGPT, and its imported UI inventory was read back as **39 write + 20 read tools**, with the updated surface-capture description. This did not replace the existing conversation's cached named arguments. See the [dated metadata verification](connection-verification-2026-10-24.json); no claim is made that every write operation was executed or that a fresh-chat capture was tested. This is why checking only the count is insufficient. A completed connector refresh must still be followed by a fresh-chat check; an existing conversation can retain its earlier definitions.
@@ -97,3 +97,16 @@ If the old chat lacks the gateways too, refresh the connection and open a new co
 Use the [copy-ready agent update prompt](agent-update-prompt.md). It requires separate evidence for local source, deployed relay, Android readiness, host metadata and the current conversation. The [initial setup prompt](agent-setup-prompt.md) remains available for a new installation.
 
 The later 0.17.0 refresh was read back as **42 write + 20 read = 62 tools**, including `phone_board_move`. The live catalog and complete name set matched; fast workflows ran through the stable gateway in the existing conversation. See [the 0.17.0 metadata check](connection-verification-0.17.0.json). This is distinct from claiming every fresh-chat named tool was executed.
+
+
+## 0.19.0 acceptance checklist (custom ChatGPT connections)
+
+The maintainer's connection was refreshed and read back as **44 action + 22 read = 66 unique names**, including `phone_plan_list` and the new tree/persistence descriptions. This is evidence for that connection, not an automatic update of every user's client. On your connection, verify:
+
+1. Deployed relay: `0.19.0` (Node) / `0.19.0-cloud` (Cloudflare), API 1, catalog `9536208318cf0507`.
+2. Companion when required: installed `0.19.0`, code 69; a locally restarted separate-screen engine advertises conditional plans version 2. Full APK replacement interrupts sessions.
+3. ChatGPT: completed **Refresh tools**, then a **new conversation** with Phone MCP selected. Compare the exact 66 names against `tools.json`; do not execute every write action.
+4. Schema: nested `then` cases and `onUnexpected` on plan_start, read-only plan_list bound to the same app/session. Confirm the new persistence guidance and read/action annotations, not just the count.
+5. If only named schemas are stale, discover with `phone_catalog` and use the already-exposed `phone_read`/`phone_action` gateways. If those are absent too, refresh through the host; the server cannot add callable tools to an old chat by returning their names.
+
+This flow was checked against the [official Refresh metadata procedure](https://developers.openai.com/plugins/deploy/connect-chatgpt#refresh-metadata) on 25 October 2026. For custom connections, deploy/restart first, refresh metadata second, then use a new chat. Published plugins have continuous review for tool changes; submitted plugin information/imported skill changes still require their separate version/review/publication flow. A GitHub release does not update any unrelated Worker or client automatically.

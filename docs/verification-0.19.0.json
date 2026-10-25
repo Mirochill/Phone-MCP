@@ -1,0 +1,748 @@
+{
+  "release": "0.19.0",
+  "date": "2026-10-25",
+  "device": "Samsung Galaxy S24 Ultra SM-S928B, real device through MCP",
+  "apk": {
+    "versionCode": 69,
+    "sizeBytes": 3651555,
+    "sha256": "5be0cec79eab589aa1f9d2545659c860f37427505b0c57d532637c84b66cf06f",
+    "signerSha256": "a819c6ef90efe5809d48d41e02c741168b744d1705fa7ab53313e02e5295babe"
+  },
+  "limits": {
+    "levels": 6,
+    "totalCases": 32,
+    "siblings": 8,
+    "activePlansPerSession": 4,
+    "compiledCharacters": 12000,
+    "maxTimeoutMs": 180000
+  },
+  "chessTree": {
+    "planId": "test-scope-1",
+    "sessionId": "test-scope-2",
+    "kind": "chess",
+    "state": "completed",
+    "reason": "predicted_effect_verified",
+    "stage": 2,
+    "caseCount": 4,
+    "graphVersion": 2,
+    "active": false,
+    "actions": [
+      {
+        "rule": -1,
+        "op": "board_move",
+        "triggerSeenElapsedMs": 168,
+        "inputStartedElapsedMs": 215,
+        "inputCompletedElapsedMs": 408,
+        "reactionMs": 47,
+        "inputTransport": "accessible_squares",
+        "effectVerified": true,
+        "executedCount": 2,
+        "uci": "e2e4",
+        "verifiedElapsedMs": 504
+      },
+      {
+        "rule": 0,
+        "op": "board_move",
+        "triggerSeenElapsedMs": 8625,
+        "inputStartedElapsedMs": 8766,
+        "inputCompletedElapsedMs": 8885,
+        "reactionMs": 141,
+        "inputTransport": "accessible_squares",
+        "effectVerified": true,
+        "executedCount": 2,
+        "uci": "g1f3",
+        "verifiedElapsedMs": 8934
+      },
+      {
+        "rule": 1,
+        "op": "board_move",
+        "triggerSeenElapsedMs": 10459,
+        "inputStartedElapsedMs": 10709,
+        "inputCompletedElapsedMs": 10810,
+        "reactionMs": 250,
+        "inputTransport": "accessible_squares",
+        "effectVerified": true,
+        "executedCount": 2,
+        "uci": "f1b5",
+        "verifiedElapsedMs": 10864
+      },
+      {
+        "rule": 2,
+        "op": "board_move",
+        "triggerSeenElapsedMs": 12370,
+        "inputStartedElapsedMs": 12493,
+        "inputCompletedElapsedMs": 12648,
+        "reactionMs": 123,
+        "inputTransport": "accessible_squares",
+        "effectVerified": true,
+        "executedCount": 2,
+        "uci": "b5a4",
+        "verifiedElapsedMs": 12706
+      }
+    ],
+    "inputMayHaveOccurred": true,
+    "taskGoalStatus": "not_evaluated_by_runner",
+    "sessionEnded": false,
+    "observation": {
+      "sessionId": "test-scope-2",
+      "displayId": 292,
+      "sessionState": "active",
+      "board": {
+        "boardId": "350ede4a5966b4b111ff251e789784cfb5ca98d292e5cbed368977c9470b9689",
+        "piecePlacementFen": "r1bqkbnr/1ppp1ppp/p1n5/4p3/B3P3/5N2/PPPP1PPP/RNBQK2R",
+        "sideToMove": null,
+        "castlingRights": null,
+        "enPassant": null,
+        "orientation": "white_bottom",
+        "kind": "chess",
+        "instruction": "Observed pieces only, not a full FEN: side to move/castling/en passant are unknown. Choose a legal move yourself. Use phone_board_move with boardId and 4-character uci; it rechecks the current board before gestures. No chess engine."
+      },
+      "text": [
+        "Sonde locale de réponses préparées",
+        "Coup reçu b5a4 · entrées=8 · réaction=334 ms",
+        "PRÉPARER E7E5",
+        "PRÉPARER C7C5",
+        "PRÉPARER D7D5",
+        "PRÉPARER ARBRE",
+        "Rendu visible",
+        "MASQUER RENDU 12 SECONDES",
+        "RÉINITIALISER LA SONDE"
+      ]
+    }
+  },
+  "uiTreeFirstGuardRefusal": {
+    "planId": "test-scope-3",
+    "sessionId": "test-scope-2",
+    "kind": "ui",
+    "state": "needs_model",
+    "reason": "Cible exacte indisponible.",
+    "stage": 0,
+    "caseCount": 2,
+    "graphVersion": 2,
+    "active": false,
+    "actions": [],
+    "inputMayHaveOccurred": false,
+    "taskGoalStatus": "not_evaluated_by_runner",
+    "sessionEnded": false,
+    "observation": {
+      "sessionId": "test-scope-2",
+      "displayId": 292,
+      "sessionState": "active",
+      "text": [
+        "Étape A",
+        "Entrées reçues : 0",
+        "DÉCLENCHER A DANS 10 SECONDES",
+        "PASSER A"
+      ]
+    }
+  },
+  "uiTree": {
+    "planId": "test-scope-4",
+    "sessionId": "test-scope-2",
+    "kind": "ui",
+    "state": "completed",
+    "reason": "predicted_effect_verified",
+    "stage": 1,
+    "caseCount": 2,
+    "graphVersion": 2,
+    "active": false,
+    "actions": [
+      {
+        "rule": 0,
+        "op": "click",
+        "triggerSeenElapsedMs": 37,
+        "inputStartedElapsedMs": 350,
+        "inputCompletedElapsedMs": 435,
+        "reactionMs": 313,
+        "inputTransport": "native_target_uid",
+        "effectVerified": true,
+        "executedCount": 1,
+        "verifiedElapsedMs": 460
+      },
+      {
+        "rule": 1,
+        "op": "click",
+        "triggerSeenElapsedMs": 460,
+        "inputStartedElapsedMs": 635,
+        "inputCompletedElapsedMs": 722,
+        "reactionMs": 175,
+        "inputTransport": "native_target_uid",
+        "effectVerified": true,
+        "executedCount": 1,
+        "verifiedElapsedMs": 766
+      }
+    ],
+    "inputMayHaveOccurred": true,
+    "taskGoalStatus": "not_evaluated_by_runner",
+    "sessionEnded": false,
+    "observation": {
+      "sessionId": "test-scope-2",
+      "displayId": 292,
+      "sessionState": "active",
+      "text": [
+        "Objectif confirmé",
+        "Entrées reçues : 2",
+        "DÉCLENCHER A DANS 10 SECONDES"
+      ]
+    }
+  },
+  "multiplePlans": {
+    "activeBefore": 4,
+    "activeAfterCancel": 2,
+    "fifth": {
+      "isError": true,
+      "message": "Quatre plans simultanés maximum par session."
+    },
+    "cancelled": [
+      {
+        "planId": "test-scope-5",
+        "sessionId": "test-scope-2",
+        "kind": "ui",
+        "state": "cancelled",
+        "reason": "requested",
+        "stage": 0,
+        "caseCount": 1,
+        "graphVersion": 1,
+        "active": false,
+        "actions": [],
+        "inputMayHaveOccurred": false,
+        "taskGoalStatus": "not_evaluated_by_runner",
+        "sessionEnded": false
+      },
+      {
+        "planId": "test-scope-6",
+        "sessionId": "test-scope-2",
+        "kind": "ui",
+        "state": "cancelled",
+        "reason": "requested",
+        "stage": 0,
+        "caseCount": 1,
+        "graphVersion": 1,
+        "active": false,
+        "actions": [],
+        "inputMayHaveOccurred": false,
+        "taskGoalStatus": "not_evaluated_by_runner",
+        "sessionEnded": false
+      }
+    ],
+    "completed": [
+      {
+        "planId": "test-scope-7",
+        "sessionId": "test-scope-2",
+        "kind": "ui",
+        "state": "completed",
+        "reason": "predicted_effect_verified",
+        "stage": 0,
+        "caseCount": 1,
+        "graphVersion": 1,
+        "active": false,
+        "actions": [
+          {
+            "rule": 0,
+            "op": "click",
+            "triggerSeenElapsedMs": 8380,
+            "inputStartedElapsedMs": 8649,
+            "inputCompletedElapsedMs": 8736,
+            "reactionMs": 269,
+            "inputTransport": "native_target_uid",
+            "effectVerified": true,
+            "executedCount": 1,
+            "verifiedElapsedMs": 8781
+          }
+        ],
+        "inputMayHaveOccurred": true,
+        "taskGoalStatus": "not_evaluated_by_runner",
+        "sessionEnded": false,
+        "observation": {
+          "sessionId": "test-scope-2",
+          "displayId": 292,
+          "sessionState": "active",
+          "text": [
+            "Objectif confirmé",
+            "Entrées reçues : 2",
+            "DÉCLENCHER A DANS 10 SECONDES"
+          ]
+        }
+      },
+      {
+        "planId": "test-scope-8",
+        "sessionId": "test-scope-2",
+        "kind": "ui",
+        "state": "completed",
+        "reason": "predicted_effect_verified",
+        "stage": 0,
+        "caseCount": 1,
+        "graphVersion": 1,
+        "active": false,
+        "actions": [
+          {
+            "rule": 0,
+            "op": "click",
+            "triggerSeenElapsedMs": 7974,
+            "inputStartedElapsedMs": 8153,
+            "inputCompletedElapsedMs": 8240,
+            "reactionMs": 179,
+            "inputTransport": "native_target_uid",
+            "effectVerified": true,
+            "executedCount": 1,
+            "verifiedElapsedMs": 8280
+          }
+        ],
+        "inputMayHaveOccurred": true,
+        "taskGoalStatus": "not_evaluated_by_runner",
+        "sessionEnded": false,
+        "observation": {
+          "sessionId": "test-scope-2",
+          "displayId": 292,
+          "sessionState": "active",
+          "text": [
+            "Objectif confirmé",
+            "Entrées reçues : 2",
+            "DÉCLENCHER A DANS 10 SECONDES"
+          ]
+        }
+      }
+    ]
+  },
+  "conflict": {
+    "a": {
+      "planId": "test-scope-9",
+      "sessionId": "test-scope-2",
+      "kind": "ui",
+      "state": "needs_model",
+      "reason": "conflicting_ready_plans",
+      "stage": 0,
+      "caseCount": 1,
+      "graphVersion": 1,
+      "active": false,
+      "actions": [],
+      "inputMayHaveOccurred": false,
+      "taskGoalStatus": "not_evaluated_by_runner",
+      "sessionEnded": false,
+      "observation": {
+        "sessionId": "test-scope-2",
+        "displayId": 292,
+        "sessionState": "active",
+        "text": [
+          "Étape A",
+          "Entrées reçues : 0",
+          "DÉCLENCHER A DANS 10 SECONDES",
+          "PASSER A"
+        ]
+      }
+    },
+    "b": {
+      "planId": "test-scope-10",
+      "sessionId": "test-scope-2",
+      "kind": "ui",
+      "state": "needs_model",
+      "reason": "conflicting_ready_plans",
+      "stage": 0,
+      "caseCount": 1,
+      "graphVersion": 1,
+      "active": false,
+      "actions": [],
+      "inputMayHaveOccurred": false,
+      "taskGoalStatus": "not_evaluated_by_runner",
+      "sessionEnded": false
+    }
+  },
+  "concurrentSessions": {
+    "simultaneousActiveCounts": [
+      {
+        "sessionId": "test-scope-2",
+        "activeCount": 1
+      },
+      {
+        "sessionId": "test-scope-11",
+        "activeCount": 1
+      }
+    ],
+    "crossSessionRejected": {
+      "isError": true,
+      "message": "Plan inconnu pour cette session/application."
+    },
+    "results": [
+      {
+        "planId": "test-scope-12",
+        "sessionId": "test-scope-2",
+        "kind": "ui",
+        "state": "completed",
+        "reason": "predicted_effect_verified",
+        "stage": 1,
+        "caseCount": 2,
+        "graphVersion": 2,
+        "active": false,
+        "actions": [
+          {
+            "rule": 0,
+            "op": "click",
+            "triggerSeenElapsedMs": 6693,
+            "inputStartedElapsedMs": 6977,
+            "inputCompletedElapsedMs": 7065,
+            "reactionMs": 284,
+            "inputTransport": "native_target_uid",
+            "effectVerified": true,
+            "executedCount": 1,
+            "verifiedElapsedMs": 7091
+          },
+          {
+            "rule": 1,
+            "op": "click",
+            "triggerSeenElapsedMs": 7091,
+            "inputStartedElapsedMs": 7243,
+            "inputCompletedElapsedMs": 7323,
+            "reactionMs": 152,
+            "inputTransport": "native_target_uid",
+            "effectVerified": true,
+            "executedCount": 1,
+            "verifiedElapsedMs": 7342
+          }
+        ],
+        "inputMayHaveOccurred": true,
+        "taskGoalStatus": "not_evaluated_by_runner",
+        "sessionEnded": false,
+        "observation": {
+          "sessionId": "test-scope-2",
+          "displayId": 292,
+          "sessionState": "active",
+          "text": [
+            "Objectif confirmé",
+            "Entrées reçues : 2",
+            "DÉCLENCHER A DANS 10 SECONDES"
+          ]
+        }
+      },
+      {
+        "planId": "test-scope-13",
+        "sessionId": "test-scope-11",
+        "kind": "chess",
+        "state": "completed",
+        "reason": "predicted_effect_verified",
+        "stage": 2,
+        "caseCount": 3,
+        "graphVersion": 2,
+        "active": false,
+        "actions": [
+          {
+            "rule": -1,
+            "op": "board_move",
+            "triggerSeenElapsedMs": 199,
+            "inputStartedElapsedMs": 247,
+            "inputCompletedElapsedMs": 442,
+            "reactionMs": 48,
+            "inputTransport": "accessible_squares",
+            "effectVerified": true,
+            "executedCount": 2,
+            "uci": "e2e4",
+            "verifiedElapsedMs": 533
+          },
+          {
+            "rule": 0,
+            "op": "board_move",
+            "triggerSeenElapsedMs": 7979,
+            "inputStartedElapsedMs": 8122,
+            "inputCompletedElapsedMs": 8313,
+            "reactionMs": 143,
+            "inputTransport": "accessible_squares",
+            "effectVerified": true,
+            "executedCount": 2,
+            "uci": "g1f3",
+            "verifiedElapsedMs": 8401
+          },
+          {
+            "rule": 1,
+            "op": "board_move",
+            "triggerSeenElapsedMs": 9876,
+            "inputStartedElapsedMs": 10008,
+            "inputCompletedElapsedMs": 10114,
+            "reactionMs": 132,
+            "inputTransport": "accessible_squares",
+            "effectVerified": true,
+            "executedCount": 2,
+            "uci": "f1b5",
+            "verifiedElapsedMs": 10164
+          },
+          {
+            "rule": 2,
+            "op": "board_move",
+            "triggerSeenElapsedMs": 11719,
+            "inputStartedElapsedMs": 11855,
+            "inputCompletedElapsedMs": 12043,
+            "reactionMs": 136,
+            "inputTransport": "accessible_squares",
+            "effectVerified": true,
+            "executedCount": 2,
+            "uci": "b5a4",
+            "verifiedElapsedMs": 12120
+          }
+        ],
+        "inputMayHaveOccurred": true,
+        "taskGoalStatus": "not_evaluated_by_runner",
+        "sessionEnded": false,
+        "observation": {
+          "sessionId": "test-scope-11",
+          "displayId": 293,
+          "sessionState": "active",
+          "board": {
+            "boardId": "d17554d6f89e7df5c170d249eefc3625c50bd4164eb124456d7baac4437e0ac6",
+            "piecePlacementFen": "r1bqkbnr/1ppp1ppp/p1n5/4p3/B3P3/5N2/PPPP1PPP/RNBQK2R",
+            "sideToMove": null,
+            "castlingRights": null,
+            "enPassant": null,
+            "orientation": "white_bottom",
+            "kind": "chess",
+            "instruction": "Observed pieces only, not a full FEN: side to move/castling/en passant are unknown. Choose a legal move yourself. Use phone_board_move with boardId and 4-character uci; it rechecks the current board before gestures. No chess engine."
+          },
+          "text": [
+            "Sonde locale de réponses préparées",
+            "Coup reçu b5a4 · entrées=8 · réaction=427 ms",
+            "PRÉPARER E7E5",
+            "PRÉPARER C7C5",
+            "PRÉPARER D7D5",
+            "PRÉPARER ARBRE",
+            "Rendu visible",
+            "MASQUER RENDU 12 SECONDES",
+            "RÉINITIALISER LA SONDE"
+          ]
+        }
+      }
+    ]
+  },
+  "cancelTree": {
+    "before": {
+      "planId": "test-scope-14",
+      "sessionId": "test-scope-11",
+      "kind": "chess",
+      "state": "watching",
+      "reason": "waiting_for_predicted_case",
+      "stage": 0,
+      "caseCount": 2,
+      "graphVersion": 2,
+      "active": true,
+      "actions": [
+        {
+          "rule": -1,
+          "op": "board_move",
+          "triggerSeenElapsedMs": 158,
+          "inputStartedElapsedMs": 199,
+          "inputCompletedElapsedMs": 387,
+          "reactionMs": 41,
+          "inputTransport": "accessible_squares",
+          "effectVerified": true,
+          "executedCount": 2,
+          "uci": "e2e4",
+          "verifiedElapsedMs": 449
+        }
+      ],
+      "inputMayHaveOccurred": true,
+      "taskGoalStatus": "not_evaluated_by_runner",
+      "sessionEnded": false
+    },
+    "cancelled": {
+      "planId": "test-scope-14",
+      "sessionId": "test-scope-11",
+      "kind": "chess",
+      "state": "cancelled",
+      "reason": "requested",
+      "stage": 0,
+      "caseCount": 2,
+      "graphVersion": 2,
+      "active": false,
+      "actions": [
+        {
+          "rule": -1,
+          "op": "board_move",
+          "triggerSeenElapsedMs": 158,
+          "inputStartedElapsedMs": 199,
+          "inputCompletedElapsedMs": 387,
+          "reactionMs": 41,
+          "inputTransport": "accessible_squares",
+          "effectVerified": true,
+          "executedCount": 2,
+          "uci": "e2e4",
+          "verifiedElapsedMs": 449
+        }
+      ],
+      "inputMayHaveOccurred": true,
+      "taskGoalStatus": "not_evaluated_by_runner",
+      "sessionEnded": false
+    },
+    "sameIdReplay": {
+      "planId": "test-scope-14",
+      "sessionId": "test-scope-11",
+      "kind": "chess",
+      "state": "cancelled",
+      "reason": "requested",
+      "stage": 0,
+      "caseCount": 2,
+      "graphVersion": 2,
+      "active": false,
+      "actions": [
+        {
+          "rule": -1,
+          "op": "board_move",
+          "triggerSeenElapsedMs": 158,
+          "inputStartedElapsedMs": 199,
+          "inputCompletedElapsedMs": 387,
+          "reactionMs": 41,
+          "inputTransport": "accessible_squares",
+          "effectVerified": true,
+          "executedCount": 2,
+          "uci": "e2e4",
+          "verifiedElapsedMs": 449
+        }
+      ],
+      "inputMayHaveOccurred": true,
+      "taskGoalStatus": "not_evaluated_by_runner",
+      "sessionEnded": false
+    },
+    "afterOpponentTrigger": {
+      "planId": "test-scope-14",
+      "sessionId": "test-scope-11",
+      "kind": "chess",
+      "state": "cancelled",
+      "reason": "requested",
+      "stage": 0,
+      "caseCount": 2,
+      "graphVersion": 2,
+      "active": false,
+      "actions": [
+        {
+          "rule": -1,
+          "op": "board_move",
+          "triggerSeenElapsedMs": 158,
+          "inputStartedElapsedMs": 199,
+          "inputCompletedElapsedMs": 387,
+          "reactionMs": 41,
+          "inputTransport": "accessible_squares",
+          "effectVerified": true,
+          "executedCount": 2,
+          "uci": "e2e4",
+          "verifiedElapsedMs": 449
+        }
+      ],
+      "inputMayHaveOccurred": true,
+      "taskGoalStatus": "not_evaluated_by_runner",
+      "sessionEnded": false,
+      "observation": {
+        "sessionId": "test-scope-11",
+        "displayId": 293,
+        "sessionState": "active",
+        "board": {
+          "boardId": "1022d884715938222177159d12097147f126bb010ec7d9d55a79c5f93ae58198",
+          "piecePlacementFen": "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR",
+          "sideToMove": null,
+          "castlingRights": null,
+          "enPassant": null,
+          "orientation": "white_bottom",
+          "kind": "chess",
+          "instruction": "Observed pieces only, not a full FEN: side to move/castling/en passant are unknown. Choose a legal move yourself. Use phone_board_move with boardId and 4-character uci; it rechecks the current board before gestures. No chess engine."
+        },
+        "text": [
+          "Sonde locale de réponses préparées",
+          "Déclencheur e7e5 · t=276555031 · entrées=2",
+          "PRÉPARER E7E5",
+          "PRÉPARER C7C5",
+          "PRÉPARER D7D5",
+          "PRÉPARER ARBRE",
+          "Rendu visible",
+          "MASQUER RENDU 12 SECONDES",
+          "RÉINITIALISER LA SONDE"
+        ]
+      }
+    }
+  },
+  "timeout": {
+    "planId": "test-scope-15",
+    "sessionId": "test-scope-2",
+    "kind": "ui",
+    "state": "timed_out",
+    "reason": "prediction_wait_expired",
+    "stage": 0,
+    "caseCount": 1,
+    "graphVersion": 1,
+    "active": false,
+    "actions": [],
+    "inputMayHaveOccurred": false,
+    "taskGoalStatus": "not_evaluated_by_runner",
+    "sessionEnded": false,
+    "observation": {
+      "sessionId": "test-scope-2",
+      "displayId": 292,
+      "sessionState": "active",
+      "text": [
+        "Objectif confirmé",
+        "Entrées reçues : 2",
+        "DÉCLENCHER A DANS 10 SECONDES"
+      ]
+    }
+  },
+  "endIsolation": {
+    "firstEnded": true,
+    "otherSessionActivePlans": 1,
+    "firstEndedPlan": {
+      "planId": "test-scope-16",
+      "packageName": "fr.phonemcp.testfixture",
+      "kind": "ui",
+      "active": false,
+      "state": "cancelled",
+      "reason": "session_stopped",
+      "stage": 0,
+      "caseCount": 1,
+      "graphVersion": 1,
+      "onUnexpected": "wait",
+      "sessionEnded": false,
+      "taskGoalStatus": "not_evaluated_by_runner",
+      "elapsedMs": 1696,
+      "polls": 2,
+      "actions": [],
+      "requiresModel": false,
+      "replayed": false,
+      "inputMayHaveOccurred": false,
+      "activeCount": 0,
+      "plans": [],
+      "maxActivePlans": 4
+    },
+    "secondEnded": true
+  },
+  "chatgpt": {
+    "refreshCompleted": true,
+    "uniqueToolNames": 66,
+    "write": 44,
+    "read": 22,
+    "planListVisible": true,
+    "treeDescriptionVisible": true,
+    "goalPersistenceDescriptionVisible": true
+  },
+  "checks": {
+    "serverPassed": 143,
+    "cloudflarePassed": 19,
+    "androidPolicyFamilies": 32,
+    "releaseBuild": true,
+    "lintErrors": 0,
+    "lintExistingWarnings": 35,
+    "signature": true,
+    "alignment": true,
+    "docs": true
+  },
+  "finalState": {
+    "android": "0.19.0",
+    "server": "0.19.0-cloud",
+    "catalog": "9536208318cf0507",
+    "tools": 66,
+    "activeSessions": 0,
+    "displaysDraining": 0,
+    "planVersion": 2,
+    "maxPlans": 4,
+    "keepPhysicalScreenOn": false
+  },
+  "notEstablished": [
+    "Forced continuation of ChatGPT beyond host turn/token limits",
+    "Model preparation latency reduction or a new inclusive model benchmark",
+    "New online-human match or chess strength improvement",
+    "All branches for all possible application states",
+    "New advertisement or battery benchmark"
+  ],
+  "publicEvidenceNote": "Device scenarios were measured before publication; test identifiers are pseudonymized. No credential, private endpoint, recording or personal account data is included."
+}

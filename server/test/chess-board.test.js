@@ -31,3 +31,35 @@ test('board move keeps native partial results, final board and quality without c
  assert.equal(result.boardChanged,true);assert.equal(result.moveVerified,true);assert.equal(result.observation.board.piecePlacementFen,'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR');assert.equal(events.filter(e=>e.op==='action_sequence').length,1);assert.equal(events.at(-1).args.quality,95);
  const schema=operationDefinitions().find(d=>d.op==='board_move').schema;assert.equal(schema.safeParse({...selected,_ownerKey:undefined,boardId:chessBoard(f).boardId,uci:'e2e4'}).success,false);assert.equal(schema.safeParse({packageName,sessionId,boardId:chessBoard(f).boardId,uci:'a7a8q'}).success,false);
 });
+
+test('decision format verifies a real move from its complete server-derived position after square-node omission',async()=>{const f=frame(),after={...f,nodes:f.nodes.map(n=>n.description==='Blancs Pion en e2'?{...n,description:'e2, vide'}:n.description==='e4, vide'?{...n,description:'Blancs Pion en e4'}:n)};let reads=0;const result=await runOperation(async op=>op==='snapshot'?(++reads===1?f:after):op==='screenshot'?{sessionId,snapshotId,frameContent:'visible_pixels'}:{...selected,completed:true,executedCount:2},'board_move',{...selected,boardId:chessBoard(f).boardId,uci:'e2e4',detail:'decision'});assert.equal(result.moveVerified,true);assert.equal(result.observation.nodes.length,0);assert.equal(result.finalPiecePlacementFen,'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR');});
+
+test('board_move waits out a black transition, revalidates the complete position and sends only one move',async()=>{
+ const f=frame(),after={...f,nodes:f.nodes.map(n=>n.description==='Blancs Pion en e2'?{...n,description:'e2, vide'}:n.description==='e4, vide'?{...n,description:'Blancs Pion en e4'}:n)};let reads=0,captures=0;const events=[];
+ const result=await runOperation(async(op,a)=>{events.push({op,args:a});if(op==='snapshot')return ++reads<=2?f:after;if(op==='screenshot')return {packageName,sessionId,snapshotId,displayId:40,frameContent:++captures===1?'black_or_empty':'visible_pixels'};return {...selected,completed:true,executedCount:2};},'board_move',{...selected,boardId:chessBoard(f).boardId,uci:'e2e4'});
+ assert.equal(result.moveVerified,true);assert.deepEqual(events.slice(0,6).map(e=>e.op),['snapshot','screenshot','screenshot','snapshot','screenshot','action_sequence']);assert.equal(events.filter(e=>e.op==='action_sequence').length,1);
+});
+test('no move is sent if the position changes while a black capture is recovering',async()=>{
+ const f=frame(),changed={...f,nodes:f.nodes.map(n=>n.description==='Blancs Pion en d2'?{...n,description:'d2, vide'}:n.description==='d4, vide'?{...n,description:'Blancs Pion en d4'}:n)};let reads=0,captures=0;const ops=[];
+ await assert.rejects(runOperation(async op=>{ops.push(op);if(op==='snapshot')return ++reads===1?f:changed;if(op==='screenshot')return {packageName,sessionId,snapshotId,displayId:40,frameContent:++captures===1?'black_or_empty':'visible_pixels'};throw Error('Unexpected input');},'board_move',{...selected,boardId:chessBoard(f).boardId,uci:'e2e4'}),/changed during capture recovery/);assert.equal(ops.includes('action_sequence'),false);
+});
+const accessible=f=>({...f,nodes:f.nodes.map(n=>({...n,clickable:true}))});
+test('semantic board move tolerates selection affordance changes and needs no raster capture',async()=>{
+ const f=accessible(frame()),selectedFrame={...f,snapshotId:'selection',nodes:f.nodes.map(n=>({...n,nodeId:'new.'+n.nodeId,longClickable:true,selected:n.description==='Blancs Pion en e2'}))},events=[];let reads=0;
+ const r=await boardMove(async(op,a)=>{events.push({op,args:a});if(op==='snapshot')return ++reads===1?f:selectedFrame;if(op==='click')return {sessionId,performed:true};throw Error('A semantic move must not ask for coordinates or pixels');},{...selected,boardId:chessBoard(f).boardId,uci:'e2e4'});
+ assert.equal(r.completed,true);assert.equal(r.executedCount,2);assert.equal(r.inputTransport,'accessible_squares');assert.deepEqual(events.map(e=>e.op),['snapshot','click','snapshot','click']);assert.equal(events[3].args.nodeId,'new.0.36');assert.equal(events[3].args.snapshotId,'selection');
+});
+test('semantic source errors are never retried or followed by coordinate input',async()=>{
+ const f=accessible(frame()),ops=[];const r=await boardMove(async op=>{ops.push(op);if(op==='snapshot')return f;throw Error('Delivery uncertain');},{...selected,boardId:chessBoard(f).boardId,uci:'e2e4'});
+ assert.deepEqual(ops,['snapshot','click']);assert.equal(r.completed,false);assert.equal(r.executedCount,0);assert.equal(r.inputMayHaveOccurred,true);assert.equal(r.replayed,false);
+});
+test('semantic selection stops if pieces, geometry or session change; no destination replay',async()=>{
+ const f=accessible(frame());for(const patch of [{sessionId:'other'},{displayId:99},{windowId:99},{nodes:f.nodes.map(n=>n.description==='Blancs Pion en d2'?{...n,description:'d2, vide'}:n.description==='d4, vide'?{...n,description:'Blancs Pion en d4'}:n)},{nodes:f.nodes.map(n=>n.description==='e4, vide'?{...n,clickable:false}:n)}]){
+  const ops=[];let reads=0;const r=await boardMove(async op=>{ops.push(op);return op==='snapshot'?(++reads===1?f:{...f,...patch}):{sessionId,performed:true};},{...selected,boardId:chessBoard(f).boardId,uci:'e2e4'});
+  assert.equal(r.completed,false);assert.equal(r.executedCount,1);assert.deepEqual(ops,['snapshot','click','snapshot']);assert.equal(r.inputMayHaveOccurred,true);
+ }
+});
+test('a destination refusal remains a partial semantic move; no fallback or extra source click',async()=>{
+ const f=accessible(frame());let clicks=0;const ops=[];const r=await boardMove(async op=>{ops.push(op);if(op==='snapshot')return f;if(++clicks===1)return {sessionId,performed:true};throw Error('Session stopped');},{...selected,boardId:chessBoard(f).boardId,uci:'e2e4'});
+ assert.equal(r.completed,false);assert.equal(r.executedCount,1);assert.equal(r.failedStep,1);assert.equal(r.inputMayHaveOccurred,true);assert.deepEqual(ops,['snapshot','click','snapshot','click']);
+});

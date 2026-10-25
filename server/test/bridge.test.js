@@ -149,7 +149,7 @@ test('refresh rotates and revocation invalidates the whole token grant',async t 
 });
 test('official MCP client discovers tools and refuses calls when the phone is offline',async t => {
   const f = await fixture(t), tokens = await grant(f), client = await connectClient(t,f,tokens.access_token);
-  const {tools} = await client.listTools(); assert.equal(tools.length,62);
+  const {tools} = await client.listTools(); assert.equal(tools.length,66);
   assert.equal(tools.find(t => t.name === 'phone_click').annotations.destructiveHint,true);
   const connection=await client.callTool({name:'phone_connection',arguments:{}}),data=JSON.parse(connection.content[0].text);
   assert.equal(data.connected,false);assert.deepEqual(connection.structuredContent,data);

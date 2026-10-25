@@ -61,7 +61,10 @@ Do not pretend that you can operate a browser if your tools cannot.
    and codex mcp login with DCR. Preserve unrelated client configuration.
    Complete the server consent using my local admin secret without exposing it.
 
-8. Discover all 62 current tools using phone_catalog and call phone_connection and phone_status. Use phone_read/phone_action for operations absent from a cached host schema.
+8. Discover the 66 unique tools / 62 operations (0.19.0, API 1, catalog
+   9536208318cf0507) using phone_catalog, phone_connection and phone_status.
+   Update the relay, companion and ChatGPT metadata separately. After metadata
+   changes use Manage -> Refresh tools, wait for completion and start a new chat. Use phone_read/phone_action for operations absent from a cached host schema.
    Verify the Android version, active mode, permissions and actual display
    readiness. If I authorize a demonstration, use a harmless calculator task
    on the chosen display, creating one owned app session per agent, retaining sessionId and reusing action observations. Check visible effects and end finished sessions. Never change physical-screen-on policy remotely; it belongs only to Android settings. For requested ad jobs use observed return targets, bounded ad_start/status/cancel and respect timers; completion is not reward confirmation.
@@ -74,6 +77,13 @@ Do not pretend that you can operate a browser if your tools cannot.
    internal model reasoning or faster moves without a full-path measurement.
    Send no messages, make no purchases and delete nothing during setup.
 
+   For requested repeated tasks use plan_start then trees (six levels, 32 cases),
+   plan_list/status/cancel and up to four independently armed plans per session
+   on APK 0.19.0. Start independent plans before waiting; preserve an unfinished
+   objective and session. A finished plan is not proof the user goal is complete.
+   Clean after verified completion or obey explicit stop/takeover; report hard
+   blockers honestly and respect host limits.
+
 9. Give me the endpoint, installed version/checksum, where my private setup
    files are stored, how to start/stop/revoke access, how to update, what was
    actually tested, and every remaining limitation. Distinguish server health,
@@ -83,3 +93,8 @@ Do not pretend that you can operate a browser if your tools cannot.
 ```
 
 The agent cannot grant itself Android system permissions, remove your keyguard, or expand its own host's tool capabilities through this prompt. If its client cannot use Streamable HTTP and OAuth, choose a compatible client or configure a separate, reviewed adapter.
+
+For repeated interactions, prepare a small set of explicit conditional cases with phone_plan_start (Android 0.18+). Use the complete observed board for chess opponent/reply branches, not guessed coordinates. Prepare while the other side is busy; a recognized case can run locally without another model turn. Unknown/ambiguous states require a new decision. Never replay uncertain inputs. Report model preparation plus local reaction separately. See [conditional plans](conditional-plans.md).
+
+
+Continue until the final authorized user objective is verified, not just one move or a completed plan. Preserve unfinished sessions and renew legitimate thinking leases. After `needs_model`, inspect evidence and decide a new plan; never replay uncertain inputs. Use `then` trees (six levels / 32 cases), up to four independent plans/session on APK 0.19+, `plan_list` and bounded status waits. Start independent plans before waiting. Use separate app sessions for independent navigation. Clean after verified completion or obey explicit user stop/takeover. If blocked, identify the unmet objective and exact blocker; do not claim success or loop blindly. A plugin cannot override ChatGPT turn limits.

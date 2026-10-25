@@ -1,6 +1,8 @@
 # Speed workflows and measurements
 
-Relay 0.17.0 is a server-only update compatible with the existing Android 0.16.2 APK. It exposes 62 tools / 58 operations. No Android reinstall is needed. Deploy your relay, refresh the custom ChatGPT connection and check a fresh chat as described in [updating](updating.md).
+The current 0.19.0 release pairs Android code 69 and relay 0.19.0, exposing 66 tools / 62 operations. Trees and multiple armed plans require the matching companion. Update/deploy the relay, install the companion, refresh ChatGPT and start a new chat as described in [updating](updating.md).
+
+The 0.17.0 measurements below are historical server-only results with Android 0.16.2; they are not new 0.19.0 benchmarks.
 
 ## Reduce repeated model turns
 
@@ -42,7 +44,7 @@ When all 64 visible squares have recognized French/English accessible descriptio
 
 Choose the move in the model, then use `phone_board_move` with the real app/session, the observed `boardId` and four-character `uci` such as `e2e4`. This removes repeated coordinate calculations and lets the model spend its time deciding a move. The relay rereads the current 64 squares, refuses changed position/window/geometry, captures the fresh source and emits one guarded two-tap sequence. A thinking pause does not require a second **model** turn merely to refresh a now-old image if the actual position is unchanged. The relay still refreshes its native evidence before the input.
 
-The final observation/image is unchanged in quality; `moveVerified` means the source is observed empty and the same piece at the destination. It does not prove full game legality, a win or move strength. No engine, opening book or prediction of an opponent is added. Promotion choice is a separate observed action. Unsupported or black boards are refused before input. Keep the same security and stop rules as any other gesture; never replay a partial move.
+The final observation/image is unchanged in quality; `moveVerified` means the source is observed empty and the same piece at the destination. It does not prove full game legality, a win or move strength. No engine, opening book or prediction of an opponent is added. Promotion choice is a separate observed action. Unsupported boards are refused before input. Since 0.18.3, a complete accessible board with clickable squares uses semantic source/destination actions and a full position/geometry reread between them, without requiring a raster image. Coordinate fallback still refuses black source images. Keep the same security and stop rules as any other gesture; never replay a partial move.
 
 ## Measure the complete path
 
@@ -99,3 +101,26 @@ The client displayed 19 seconds for that turn, but the desktop reader supplied a
 A following black reply reused the already returned observation with one `board_move`: **e7-e5** was independently verified. It took approximately **10,434 ms until the move response**, including **2,231 ms in the relay**; the complete client turn was **14,137 ms**. This demonstrates a working short path, not subsecond internal reasoning. No unsupported assertion about faster full games or unchanged playing strength follows from two opening moves.
 
 Finally, the direct MCP client tried a stale board ID: it was refused before input. Using the current observed ID, **g1-f3** was delivered once and `moveVerified:true` matched the resulting position. Host time was **2,308 ms**, relay **1,563 ms**, with a 720x1280 final source image at the requested quality 95 / maxDimension 1920. All own test sessions were then ended.
+
+## 0.18.1: count preparation, then local reaction
+
+Prepared cases move the next decision before the event. They do not remove model preparation. Three ChatGPT trials at unchanged Moyen effort required 27.554, 27.262 and 26.092 seconds until the plan response. Fresh-chat preparation spent 2.742 seconds in Phone MCP calls and 23.350 seconds outside those calls (model/host/orchestration, not separately observable pure reasoning). App receipt after the predicted event was 439, 797 and 453 ms. UI thought indicators were 36, 37 and 31 seconds and include waits. The completion API timestamp was invalid (equal to start); it was not treated as zero. The final assistant text did not render. These are individual trials, not a controlled model comparison or chess-strength evaluation.
+
+On native 0.18.1 a UI plan started after 29.938 seconds idle, completed its effect and returned a visible final image in one host call (2.252 seconds including read/capture). A separate predicted board response reached the fixture in 687 ms. A real offline Chess.com catch-up test on 0.18.0 had input completion at 1.370 seconds, effect confirmation at 2.146 seconds and full call plus image at 3.753 seconds. No online/rated opponent was involved.
+
+Decision view reduced the fixture from 83 to 7 nodes while preserving the complete 64-square position and board ID. This reduced the payload but did not establish a material preparation speedup in these trials. Unknown states, cancellation, duplicate requests and timeout paths were verified without extra reply inputs. See [conditional plans](conditional-plans.md) and [evidence](performance-verification-0.18.1.json).
+
+### 0.18.2: avoid a model turn for a transient black capture
+
+The relay retries only black screenshot reads within the same call, retaining its scoped app/session/display/snapshot. No strategic reasoning or input is repeated. The tested 900 ms black transition on the real S24 returned a visible image in 1.659 seconds total after the patch, instead of a black result in 0.813 seconds before it. This extra bounded wait replaces an otherwise necessary model/tool round trip; it is not a faster renderer or faster model. Healthy direct capture required one native command (419 ms in this trial). See [the verification scope and limits](verification.md#0182-relay--black-transition-capture-recovery).
+
+### 0.18.3: named chess squares instead of fragile coordinate selection
+
+When every square exposes a real clickable accessibility control, `board_move` uses its exact observed source node, rereads all 64 squares, and uses the fresh destination node. Piece placement, window, session and geometry must remain unchanged between selection and destination. Normal selection/highlight/action-flag changes do not invalidate a named square; a changed position or uncertain click stops the partial move without replay or coordinate fallback. Ordinary graphical gestures retain their existing capture/target checks. Native prepared chess responses use the same approach starting with Android 0.18.3.
+
+Real S24 regression witness: the previous coordinate route executed only the source and refused step 2 with the exact reported layout error. The corrected semantic route received exactly two inputs, verified e2-e4 and returned its final image in 1.069 seconds relay time. A real Chess.com bot board also accepted e2-e4 through named squares and independently showed the pawn on e4 (2.642 seconds including final observation/image). A native prepared e5-to-Nf3 reply on Android 0.18.3 reached the fixture in 698 ms; the native action records confirm accessible-square transport for both initial e4 and Nf3. These are relay/local execution figures, not faster model reasoning or an online-human game benchmark.
+
+
+### 0.19.0: several future steps without a model turn at each step
+
+Nested `then` trees compile finite prepared decisions to native stages; a child can run only after its parent's effect is verified. Four plans may wait independently per session; simultaneous ready conflicts yield without input. Separate app sessions run on their own displays. The real S24 chess witness received initial e4 and three descendant replies, eight inputs total. For those three replies, recognition-confirmation-to-input measurements were 141, 250 and 123 ms. End-to-end local receipt also includes detection, dispatch and application handling; the final reply witness measured 334 ms from its simulated opponent trigger. These exclude initial model preparation, do not assert faster model thinking, and do not establish competitive chess quality. [Exact scenario record](verification-0.19.0.json).

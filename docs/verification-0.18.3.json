@@ -1,0 +1,183 @@
+{
+  "date": "2026-10-25",
+  "device": "Galaxy S24 Ultra, Android 16",
+  "android": "0.18.3",
+  "server": "0.18.3-cloud",
+  "catalogVersion": "40871dde948fa44e",
+  "tools": 65,
+  "apk": {
+    "versionCode": 68,
+    "bytes": 3646263,
+    "sha256": "636eaf1080eec88360a833c9e7e0b4dec668eb31a66d48021a2c2007ffdc2e2a"
+  },
+  "reportedErrors": [
+    "Fresh source capture unavailable for board move; no input sent.",
+    "La disposition de la cible ou du trajet a changé. Relisez avant le geste."
+  ],
+  "selectionRegression": {
+    "before": {
+      "completed": false,
+      "executedCount": 1,
+      "failedStep": 1,
+      "error": "La disposition de la cible ou du trajet a changé. Relisez avant le geste.",
+      "moveVerified": false,
+      "finalPiecePlacementFen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
+      "relayTiming": {
+        "totalMs": 1479,
+        "deviceMs": 1479,
+        "deviceCommands": 5,
+        "queueMs": 0,
+        "modelTimeIncluded": false
+      },
+      "witness": [
+        "Source e2 · entrées=1"
+      ]
+    },
+    "after": {
+      "completed": true,
+      "executedCount": 2,
+      "failedStep": null,
+      "inputTransport": "accessible_squares",
+      "moveVerified": true,
+      "finalPiecePlacementFen": "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR",
+      "relayTiming": {
+        "totalMs": 1069,
+        "deviceMs": 1069,
+        "deviceCommands": 6,
+        "queueMs": 0,
+        "modelTimeIncluded": false
+      },
+      "witness": [
+        "Coup reçu e2e4 · entrées=2 · réaction=-1 ms"
+      ]
+    }
+  },
+  "realChessBotMove": {
+    "completed": true,
+    "executedCount": 2,
+    "failedStep": null,
+    "inputTransport": "accessible_squares",
+    "moveVerified": true,
+    "finalPiecePlacementFen": "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR",
+    "relayTiming": {
+      "totalMs": 2642,
+      "deviceMs": 2642,
+      "deviceCommands": 6,
+      "queueMs": 0,
+      "modelTimeIncluded": false
+    },
+    "witness": []
+  },
+  "nativePlan": {
+    "state": "completed",
+    "actions": [
+      {
+        "rule": -1,
+        "op": "board_move",
+        "triggerSeenElapsedMs": 251,
+        "inputStartedElapsedMs": 315,
+        "inputCompletedElapsedMs": 604,
+        "reactionMs": 64,
+        "inputTransport": "accessible_squares",
+        "effectVerified": true,
+        "executedCount": 2,
+        "uci": "e2e4",
+        "verifiedElapsedMs": 797
+      },
+      {
+        "rule": 0,
+        "op": "board_move",
+        "triggerSeenElapsedMs": 5609,
+        "inputStartedElapsedMs": 5804,
+        "inputCompletedElapsedMs": 6037,
+        "reactionMs": 195,
+        "inputTransport": "accessible_squares",
+        "effectVerified": true,
+        "executedCount": 2,
+        "uci": "g1f3",
+        "verifiedElapsedMs": 6184
+      }
+    ],
+    "witness": [
+      "Coup reçu g1f3 · entrées=4 · réaction=698 ms"
+    ]
+  },
+  "blackRenderingPlan": {
+    "sourceCapture": {
+      "frameContent": "black_or_empty",
+      "captureRecovery": {
+        "state": "still_black",
+        "attempts": 4,
+        "blackFrames": 4,
+        "elapsedMs": 2119,
+        "recoveredFromBlack": false
+      }
+    },
+    "state": "completed",
+    "reason": "predicted_effect_verified",
+    "actions": [
+      {
+        "rule": -1,
+        "op": "board_move",
+        "triggerSeenElapsedMs": 247,
+        "inputStartedElapsedMs": 295,
+        "inputCompletedElapsedMs": 489,
+        "reactionMs": 48,
+        "inputTransport": "accessible_squares",
+        "effectVerified": true,
+        "executedCount": 2,
+        "uci": "e2e4",
+        "verifiedElapsedMs": 568
+      },
+      {
+        "rule": 0,
+        "op": "board_move",
+        "triggerSeenElapsedMs": 4696,
+        "inputStartedElapsedMs": 4844,
+        "inputCompletedElapsedMs": 4963,
+        "reactionMs": 148,
+        "inputTransport": "accessible_squares",
+        "effectVerified": true,
+        "executedCount": 2,
+        "uci": "g1f3",
+        "verifiedElapsedMs": 5023
+      }
+    ],
+    "witness": [
+      "Coup reçu g1f3 · entrées=4 · réaction=338 ms",
+      "Rendu masqué jusqu'à 226806513"
+    ],
+    "finalFen": "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R",
+    "restoredCapture": "visible_pixels"
+  },
+  "tests": {
+    "server": 139,
+    "cloudflare": 19,
+    "androidPolicyFamilies": 31,
+    "lintErrors": 0,
+    "lintWarnings": 35
+  },
+  "limits": [
+    "No new online-human match was started; the real-app test used a Chess.com bot.",
+    "Logical accessible-square controls are verified; universal removal of black renderer output is not established.",
+    "Timings cover relay/local execution; model thinking latency was not benchmarked again.",
+    "No battery consumption comparison was performed."
+  ],
+  "finalState": {
+    "android": "0.18.3",
+    "server": "0.18.3-cloud",
+    "catalog": "40871dde948fa44e",
+    "tools": 65,
+    "activeSessions": 0,
+    "displaysDraining": 0,
+    "keepPhysicalScreenOn": false
+  },
+  "chatgptCatalog": {
+    "refreshed": true,
+    "uniqueTools": 65,
+    "write": 44,
+    "read": 21,
+    "semanticBoardDescriptionLoaded": true
+  },
+  "publicEvidenceNote": "Device scenarios were measured before publication; test identifiers are pseudonymized. No credential, private endpoint, recording or personal account data is included."
+}

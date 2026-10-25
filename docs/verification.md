@@ -1,5 +1,52 @@
 # Verification and remaining limits
 
+## 0.19.0 — Branching trees and independent plans
+
+[Sanitized real-device evidence](verification-0.19.0.json) records the installed S24 and deployed relay, tool-cache refresh, exact plan IDs, action counters, reaction records and final cleanup. No online human match or paid action was started.
+
+- Native chess tree: initial e4 plus three successive prepared replies Nf3/Bb5/Ba4, all effects verified, final witness eight delivered clicks. Local trigger-confirmation-to-input times for the replies: 141/250/123 ms. These exclude model preparation and the rest of app-input/effect latency.
+- General UI tree: A → B → final confirmed page, two inputs, both effects verified. A first test used a nonmatching button capitalization; it was refused with zero inputs and the session remained active. Fresh exact observed selectors completed the task without session recreation.
+- Four independently armed plans in one session, fifth refused by capacity. Two plans cancelled without stopping the other two; each remaining plan executed exactly one intended action, total two inputs.
+- Two same-session plans recognizing the same state both yielded `needs_model/conflicting_ready_plans` before input; witness zero inputs.
+- UI tree and chess tree active concurrently on distinct owned displays (292 and 293), then independently completed with two and eight inputs respectively. Reading a plan ID through the other session was refused.
+- Cancelling a chess tree after its verified e4 prevented later Nf3 when the e5 trigger appeared. Reusing its request ID returned the cancelled result; it did not restart. Two-input witness stayed unchanged.
+- A one-second standby plan expired without input and preserved the app session. Ending one test session cancelled its pending plan while a different session's plan stayed active. All test sessions were then ended: zero active sessions and zero draining displays. The physical keep-on preference remained false.
+- ChatGPT actual Refresh completed; the application detail view lists 66 unique tools, Write 44 / Read 22, including `phone_plan_list` and the new tree/persistence descriptions. Other users must update their own relay and client cache; existing conversations may retain older schemas.
+- Checks: 143 server tests, 19 Cloudflare tests, 32 Android policy families; release assemble/lint (zero errors, 35 existing warnings), same signing certificate, alignment, local documentation links and generated tools passed.
+
+Goal-persistence is guidance at initialization, tool descriptions and per-result instructions. The runtime does not decide that an arbitrary user goal is complete and cannot force a host model past its own turn/token limits. Prepared branches run only known decisions; no claim of reduced model reasoning time, improved chess strength, exhaustive application coverage, new ad-network validation or battery gain is made. The release package and source provenance are checked separately in [publication checks](../releases/0.19.0/Publication-checks.json).
+
+
+## 0.18.3 — semantic chess controls, installed and tested
+
+The two user-reported errors were `Fresh source capture unavailable for board move; no input sent.` and `La disposition de la cible ou du trajet a changé. Relisez avant le geste.` The second was reproduced exactly on the real S24 with an offline selection-affordance witness: the old path executed the source, then refused step 2 while all pieces and coordinates stayed fixed. The corrected route received exactly two clicks, verified e2-e4, and returned its final observation/image in 1.069 seconds relay time.
+
+The real Chess.com app accepted e2-e4 against a bot with `inputTransport=accessible_squares`; the resulting pawn position was independently read and captured (2.642 seconds including final observation/image). No new online-human opponent was engaged. An online-human match is not claimed as verified by this test.
+
+Android 0.18.3 then passed native prepared-response tests, physical screen off with local keep-on disabled: initial e2-e4 and a predicted e7-e5 -> g1-f3 response both used named square actions and verified their effects. The fixture received four total clicks; the prepared reply reached the app in 698 ms.
+
+A second native trial deliberately rendered its whole window black for 12 seconds while retaining a complete accessible board. The pre-trial screenshot was confirmed `black_or_empty` after four capture attempts. The native plan still executed and verified initial e4 and prepared Nf3 through exact square controls: four total inputs and 338 ms app receipt for the reply. The final observation still indicated the masked-render interval. After that interval, the visible capture showed the matching final position. This proves semantic control without raster evidence in this bounded fixture; it does not prove universal removal of black rendering in Chess.com or other apps.
+
+The guard remains strict for incomplete/inconsistent boards, changed app/session/window/geometry/pieces, revoked controls and uncertain/partial input. No input-path fallback occurs after a semantic click. Coordinate-only boards still require valid fresh visual evidence. Model thinking was not rebenchmarked in this bug-fix run; quoted figures are relay/local execution only. No battery comparison was made. All 139 server tests, 19 Cloudflare tests and 31 policy families passed; release build/lint/signature/alignment passed, 0 lint errors and 35 existing warnings. [Sanitized evidence](verification-0.18.3.json).
+
+## 0.18.2 relay — black transition capture recovery
+
+The user reported another black frame in an online Chess.com game and clarified that the physical phone subsequently displayed the board while the agent stopped on its earlier black capture. The ended session retained a `lastCapture.blank=true` diagnostic. The original online match was not reproduced and no new online opponent was engaged.
+
+A deterministic full-black transition lasting 900 ms was then exercised on the real S24 Ultra, using an offline fixture with an independently counted input witness. Before the relay change, the action returned a black image after 813 ms. After deployment, the identical action returned a visible image in 1,659 ms total: the capture portion took 1,285 ms, with two black frames followed by a visible third capture. Exactly one action was sent in each trial, and the app input count advanced once per intentional test. This tests the late-render mechanism, not Chess.com's entire online renderer.
+
+A five-second black transition exhausted the bounded recapture budget after 1,989 ms of capture (2,410 ms whole action); it remained explicitly black and its session stayed active. A subsequent healthy direct capture used one native command, 419 ms, without recovery. The deployed live connector was read back as `0.18.2-cloud`, 65 tools; Android remains `0.18.1`. Test sessions ended and displays drained to zero; the local physical-screen keep-on option remained disabled.
+
+All 135 server tests and 19 Cloudflare tests passed. New tests cover success, no extra healthy read, persistent black, scope changes, stop/disconnect/grant loss, legacy session pinning, no write replay, a single chess move after recovery, and refusal when its position changes during recovery. Native plan/ad internal captures are unchanged by this server-only patch. No universal fix for persistent, protected or partially black content is claimed. [Sanitized evidence](verification-0.18.2-relay.json).
+
+
+## 0.18.1 targeted real-device record
+
+The installed Android 0.18.1 passed screen-off startup after a 29.9-second pause, native UI action/effect/capture, zero-input timeout and a prepared chess response (687 ms observed app receipt). Earlier 0.18.0 tests covered two predicted branches (448/508 ms), unknown-state yield, cancel, no duplicate input, concurrent WeWard/fixture work and a real offline Chess.com response. Model preparation still measured 26.1–27.6 seconds; the UI's 31–37 seconds includes tool/app waiting and is not pure reasoning time. Final ChatGPT response text failed to render in the test chats, although native effects and relay timing records were verified.
+
+The last real WeWard ad was completed and its one-card reward verified, but the first skip required the corrected Java policy running in a desktop test harness. The remaining native closures returned to the roulette in 5.892 seconds. A complete native 0.18.1 real-ad replay remains pending quota availability. Do not infer universal ad success or battery savings. [Raw sanitized timings and limits](performance-verification-0.18.1.json).
+
+
 Evidence is scoped to the version and scenario actually tested. Successful builds, accepted tool calls, visible app effects and battery improvements are distinct claims.
 
 ## 0.17.0 relay performance update

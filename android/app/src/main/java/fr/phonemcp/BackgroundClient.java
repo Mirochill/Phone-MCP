@@ -218,7 +218,7 @@ final class BackgroundClient {
         final int wire=transportRevision;final int expected=generation;final IBackgroundControl service=remote;
         try{
             if(!BridgeService.active()||!BridgeService.parallelEnabled()||!ready()||!permitted())throw new IllegalStateException(lastError.isEmpty()?"Mode parallèle non prêt. Consultez phone_status puis relancez la session avec Shizuku.":lastError);
-            if(!Arrays.asList("open_app","open_url","snapshot","screenshot","click","long_press","set_text","scroll","back","tap","swipe","double_tap","pinch","edit_text","press_key","scroll_to_node","node_details","session_create","session_list","session_keepalive","session_end","session_cancel","session_cleanup","session_resume_local","session_handoff_local","session_wake","action_sequence","wait_and_click","ad_start","ad_status","ad_cancel").contains(op))throw new IllegalArgumentException("Commande parallèle inconnue.");
+            if(!Arrays.asList("open_app","open_url","snapshot","screenshot","click","long_press","set_text","scroll","back","tap","swipe","double_tap","pinch","edit_text","press_key","scroll_to_node","node_details","session_create","session_list","session_keepalive","session_end","session_cancel","session_cleanup","session_resume_local","session_handoff_local","session_wake","action_sequence","wait_and_click","ad_start","ad_status","ad_cancel","plan_start","plan_status","plan_list","plan_cancel").contains(op))throw new IllegalArgumentException("Commande parallèle inconnue.");
             args.put("_transportRevision",wire);
             if(op.startsWith("session_")){
                 if("session_create".equals(op)||"session_cleanup".equals(op)||"session_wake".equals(op)){String target=args.getString("packageName");Settings caps=new Settings(context);if(!caps.allowed(target,"read")||!caps.allowed(target,"write"))throw new SecurityException("Application not authorized for agent control.");}
@@ -226,13 +226,14 @@ final class BackgroundClient {
                 executor.execute(()->{try{if(expected!=generation||wire!=transportRevision||!BridgeService.active())throw new SecurityException("Control stopped.");JSONObject result=unwrap(service.execute(op,payload));main.post(()->{if(expected==generation){acceptSession(result);reply.done(result,null);}});}catch(Exception e){main.post(()->reply.done(null,message(e)));}});return;
             }
             String pkg=args.getString("packageName");Settings settings=new Settings(context);
-            String permission="screenshot".equals(op)?"capture":("snapshot".equals(op)||"node_details".equals(op)||"ad_status".equals(op))?"read":"write";
+            String permission="screenshot".equals(op)?"capture":("snapshot".equals(op)||"node_details".equals(op)||"ad_status".equals(op)||"plan_status".equals(op)||"plan_list".equals(op)||"plan_cancel".equals(op))?"read":"write";
             if(!settings.allowed(pkg,"read")||!settings.allowed(pkg,permission)||(args.optBoolean("includeScreenshot")&&!settings.allowed(pkg,"capture")))throw new SecurityException("Application ou capacité non autorisée.");
             JSONObject forwarded=new JSONObject(args.toString());
+            if("plan_start".equals(op)){if(!settings.allowed(pkg,"capture"))throw new SecurityException("Les plans conditionnels nécessitent la capture autorisée.");forwarded.put("_planCaptureGranted",true).put("capturePackages",new JSONArray().put(pkg));}
             if("ad_start".equals(op)){if(args.optBoolean("visual")&&!settings.allowed(pkg,"capture"))throw new SecurityException("Capture non autorisée pour cet autopilote visuel.");forwarded.put("_adVisualCaptureGranted",settings.allowed(pkg,"capture")).put("capturePackages",captureGrants());}
             if("screenshot".equals(op)||args.optBoolean("includeScreenshot"))forwarded.put("capturePackages",captureGrants());
             final String payload=forwarded.toString();
-            ("ad_cancel".equals(op)?control:calls).execute(()->{
+            (("ad_cancel".equals(op)||"plan_cancel".equals(op))?control:calls).execute(()->{
                 try{if(expected!=generation||wire!=transportRevision||!BridgeService.active()||!permitted())throw new IllegalStateException("Session ou autorisation arrêtée avant envoi.");JSONObject result=unwrap(service.execute(op,payload));main.post(()->{if(expected==generation){acceptSession(result);if(("open_app".equals(op)||"open_url".equals(op))&&!pkg.equals(context.getPackageName())){controlledPackages.add(pkg);latestPackage=pkg;}reply.done(result,null);}});}
                 catch(Exception e){main.post(()->{if(expected==generation)reply.done(null,message(e));});}
             });

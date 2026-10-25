@@ -1,4 +1,8 @@
 <div align="center">
+
+**0.19.0:** branching conditional trees (six levels / 32 cases), four independently armed plans per session, `phone_plan_list`, and goal-persistence guidance. A finished plan is not a finished user task. [Contract, examples and limits](docs/conditional-plans.md).
+
+Android and relay **0.19.0** use named accessible chess squares when available, rereading the complete board after selection. This avoids black-raster preconditions and false layout failures caused by legal-move highlights; coordinate fallback stays guarded. The catalog contains **66 tools / 62 operations**. See [verified behavior and limits](docs/verification.md).
 <h1><img src="docs/images/readme-banner.png" alt="Phone MCP — Your agent. Your Android." width="100%" /></h1>
 
 **Give your AI a real Android phone to work with.**
@@ -6,18 +10,18 @@
 Independent app sessions for agents. Keep using your phone. Read, tap, type and swipe.
 Transfer local files, manage notifications, and capture only the AI app from its preview.
 
-[**Download Android 0.16.2**](https://github.com/Mirochill/Phone-MCP/releases/download/v0.16.2/Phone-MCP-0.16.2.apk) · [**Installation**](docs/installation.md) · [**All 62 tools**](docs/tools-reference.md) · [**Agent setup prompt**](docs/agent-setup-prompt.md)
+[**Download Android 0.19.0**](https://github.com/Mirochill/Phone-MCP/releases/download/v0.19.0/Phone-MCP-0.19.0.apk) · [**Installation**](docs/installation.md) · [**All 66 tools**](docs/tools-reference.md) · [**Agent setup prompt**](docs/agent-setup-prompt.md)
 
 ![Android 11+](https://img.shields.io/badge/Android-11%2B-82E4D0?style=flat-square&labelColor=101820)
 ![MCP Streamable HTTP](https://img.shields.io/badge/MCP-Streamable_HTTP-82E4D0?style=flat-square&labelColor=101820)
-![Android preview 0.16.2](https://img.shields.io/badge/Android_preview-0.16.2-82E4D0?style=flat-square&labelColor=101820)
-![62 MCP tools](https://img.shields.io/badge/MCP_tools-62-82E4D0?style=flat-square&labelColor=101820)
+![Android preview 0.19.0](https://img.shields.io/badge/Android_preview-0.19.0-82E4D0?style=flat-square&labelColor=101820)
+![66 MCP tools](https://img.shields.io/badge/MCP_tools-66-82E4D0?style=flat-square&labelColor=101820)
 ![MIT License](https://img.shields.io/badge/license-MIT-82E4D0?style=flat-square&labelColor=101820)
 </div>
 
 Phone MCP connects an Android companion to an AI client over authenticated [MCP](https://modelcontextprotocol.io/). Your personal relay exposes HTTPS tools; the phone connects outbound over WebSocket. Cloudflare hosting works while your PC is off. The AI runs in your chosen client; Phone MCP does not supply a model or keep a conversation running by itself.
 
-This repository contains the current **editable Android source**, both relay implementations, locked dependencies, setup helpers, tests and the verified developer-signed APK. Relay **0.17.0**, compatible with the unchanged Android **0.16.2**, package `fr.phonemcp`, version code **65**. [Release notes](CHANGELOG.md) · [Source provenance](docs/source-provenance.md) · [Verification and limits](docs/verification.md).
+This repository contains the current **editable Android source**, both relay implementations, locked dependencies, setup helpers, tests and the verified developer-signed APK. Relay and Android **0.19.0**, package `fr.phonemcp`, version code **69**. [Prepared conditional responses](docs/conditional-plans.md). [Release notes](CHANGELOG.md) · [Source provenance](docs/source-provenance.md) · [Verification and limits](docs/verification.md).
 
 ## What is new since the first public release
 
@@ -25,18 +29,21 @@ This repository contains the current **editable Android source**, both relay imp
 - **Your phone stays usable:** optional read-only previews, per-session Stop and **Take control of this page**, transferring the existing task to your physical display. Ending a session removes its AI tasks and preview. A successful handoff ends the old session and allows a fresh AI session.
 - **Local screen preference:** Keep the physical screen on is disabled by default and can only be enabled in Android settings. An agent cannot select a lit-screen fallback. Physical-panel-off gestures and normal side-button recovery were verified on the S24 Ultra; universal app/device behavior is not promised.
 - **Capture inside the preview:** save a source-only PNG or record a silent MP4 of the AI app, without preview buttons or your physical screen. Recording continues when you close the viewer; files appear in the Gallery's PhoneMCP album. FR, EN, ES and DE interface text is included.
+- **Branching prepared plans:** six levels, 32 cases and eight alternatives per stage; four independently armed plans per session. `phone_plan_list` lists them. Children become eligible only after the parent effect is verified; simultaneous same-session conflicts yield before input. The agent is instructed to preserve unfinished objectives and clean up after verified completion. [Examples and limits](docs/conditional-plans.md).
 - **Fewer model round trips:** `phone_start_app` creates/opens/observes in one call; `phone_ui_flow` runs up to eight planned exact semantic steps with one final image. Accessible chess boards expose structured piece placement and algebraic moves with fresh position checks. Gesture sequences and a 20-second ad status wait avoid extra turns. See [speed workflows and measured limits](docs/performance.md); this cannot control the host model's internal reasoning.
 - **Bounded ad closing:** local jobs handle available Skip/Close controls, successive ad pages, countdown waits and supported hidden controls. Status/cancel tools report progress. Completion means return to an observed app target, **not proof of a reward**; imposed timers are not bypassed.
 - **Files without public hosting:** send a host-bound chat attachment or stream a local file through the paired relay. Existing HTTPS downloads, guarded APK installation, selected-folder access and Android Share inbox remain available.
-- **62 discoverable tools:** one operation registry powers named tools and the stable `phone_catalog`, `phone_read`, `phone_action` gateways. [Complete schemas](docs/tools.json) are generated from actual MCP discovery.
+- **66 discoverable tools:** one operation registry powers named tools and the stable `phone_catalog`, `phone_read`, `phone_action` gateways. [Complete schemas](docs/tools.json) are generated from actual MCP discovery.
 
 ## Install in five steps
 
 1. **Deploy your own relay** using the [Cloudflare guide](docs/installation.md#option-a-cloudflare-workers-recommended), or the included local Node relay with an HTTPS tunnel.
-2. **Install the APK** from [v0.16.2](https://github.com/Mirochill/Phone-MCP/releases/tag/v0.16.2). Verify [the APK checksum](releases/0.16.2/SHA256SUMS.txt). It is a developer-signed preview outside Google Play; Android enforces signing-certificate continuity.
+2. **Install the APK** from [v0.19.0](https://github.com/Mirochill/Phone-MCP/releases/tag/v0.19.0). Verify [the APK checksum](releases/0.19.0/SHA256SUMS.txt). It is a developer-signed preview outside Google Play; Android enforces signing-certificate continuity.
 3. **Pair your phone** with your relay's private one-use link/QR. Android uses the HTTPS origin; your AI client uses that origin plus `/mcp`. No maintainer endpoint or secret is included.
 4. **Enable the capabilities you need:** Shizuku for separate-display control and transfer/install features, Accessibility for physical-screen control, notification access for notifications, and explicit folder grants for selected-folder tools. This preview defaults to making installed apps eligible: review and revoke apps/capabilities before starting.
 5. **Start a session locally**, initially unlocked. Connect the client using OAuth, call `phone_connection` and `phone_status`, then create one app session per agent and keep its `sessionId` on every request. End finished app sessions with `phone_session_end`.
+
+**Updating does not update everyone automatically.** Self-hosted users must update/deploy their own relay, install the matching APK, then use ChatGPT **Phone MCP → Manage / Gérer → Refresh tools / Actualiser les outils** and start a **new chat**. Expected inventory: **66 unique names (44 action + 22 read)**, catalog `9536208318cf0507`. Compare schemas too, especially nested `plan_start.cases[].then` and `phone_plan_list`. Workspace/store-managed plugins follow their owner’s update flow.
 
 **Already installed?** [Update all layers and fix missing/stale ChatGPT tools](docs/updating.md) · [Copy-ready update instructions for your agent](docs/agent-update-prompt.md). Updating the APK or this repository does not deploy your relay or refresh an existing chat.
 
@@ -63,16 +70,19 @@ Use **See app** or its **AI preview** Recents card to view a session. **Close pr
 | Discovery and diagnostics | `phone_connection`, `phone_catalog`, `phone_read`, `phone_action`, `phone_status`, `phone_diagnostics`, `phone_diagnostic_probe` |
 | Independent sessions | `phone_session_create`, `phone_session_list`, `phone_session_keepalive`, `phone_session_end`, `phone_session_cancel`, `phone_session_wake`, `phone_session_cleanup` |
 | App interaction and images | `phone_start_app`, `phone_ui_flow`, `phone_board_move`, snapshot, screenshot, find/wait, node details, open app/URL, click/tap/swipe/pinch, text editing, back, action sequence |
+| Prepared decision trees | `phone_plan_start`, `phone_plan_list`, `phone_plan_status`, `phone_plan_cancel` |
 | Automatic ad closing | `phone_ad_start`, `phone_ad_status`, `phone_ad_cancel` |
 | Notifications | read, inline reply, dismiss, snooze |
 | Transfers and installation | `phone_send_file`, upload begin/commit, HTTPS download, files/jobs, guarded APK installation |
 | Selected folders and Share inbox | list/read/write/delete in explicitly selected folders; read deliberately shared content |
 
-[Every one of the 62 names and parameters](docs/tools-reference.md) · [Machine-readable schemas](docs/tools.json) · [Usage and error handling](docs/tools.md).
+[Every one of the 66 names and parameters](docs/tools-reference.md) · [Machine-readable schemas](docs/tools.json) · [Usage and error handling](docs/tools.md).
 
 An older ChatGPT conversation may cache named-tool schemas. The stable gateways expose the current server registry; rediscover/refresh the connector for new host-native tool definitions, especially chat-file binding. The repository cannot force an existing conversation's tool cache to change. Preview PNG/video controls are **local Android UI features**, not additional remote tools.
 
 ## Verification and compatibility
+
+0.19.0 on the real S24: a three-reply chess tree, a two-step UI tree, four independently armed plans, conflict detection without input, per-plan cancellation/no replay, and two separate displays completed the documented scenarios. Server: 143 tests; Cloudflare: 19; Android: 32 policy families. [Release publication checks](releases/0.19.0/Publication-checks.json) · [Real-device evidence](docs/verification-0.19.0.json). These tests use a controlled offline app; they do not establish online chess strength, universal black-render recovery or reduced model preparation time.
 
 The release APK, signature, alignment and build metadata were checked. On the S24 Ultra, source-only PNG and animated silent MP4 were verified, including recording the AI app while the user used the physical home screen. Prior device checks verified separate-session routing, retained calculator state, local handoff, dark-panel gestures and normal side-button recovery. Evidence is release-specific: see [verification](docs/verification.md).
 

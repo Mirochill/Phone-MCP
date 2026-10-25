@@ -7,9 +7,9 @@ export class CommandChannel {
   send(ws,op,args,signal){
     if(!ws||ws.readyState!==1)return Promise.reject(Error('Téléphone hors ligne. Démarrez une session dans Phone MCP.'));
     if(signal?.aborted)return Promise.reject(Error('Commande annulée avant envoi.'));
-    if(this.pending.size>=(['session_cancel','session_end','stop','ad_cancel'].includes(op)?20:16))return Promise.reject(Error('Limite de commandes simultanées atteinte.'));
+    if(this.pending.size>=(['session_cancel','session_end','stop','ad_cancel','plan_cancel'].includes(op)?20:16))return Promise.reject(Error('Limite de commandes simultanées atteinte.'));
     return new Promise((resolve,reject)=>{
-      const budget=op==='ad_status'?Math.max(this.timeoutMs,Math.min(9000,Math.max(0,Number(args.waitMs)||0)+1000)):this.timeoutMs;
+      const budget=(op==='ad_status'||op==='plan_status')?Math.max(this.timeoutMs,Math.min(9000,Math.max(0,Number(args.waitMs)||0)+1000)):this.timeoutMs;
       const id=randomUUID(),expiresAt=Date.now()+budget;
       const finish=(error,value)=>{
         if(!this.pending.delete(id))return;
@@ -59,7 +59,7 @@ export class OperationScheduler {
     if(args.sessionId&&this.ended.has(key))return Promise.reject(Error('Session arrêtée. Créez une nouvelle session autorisée.'));
     // Long-poll reads and cancellation must stay responsive even while a native wait
     // occupies this session's command lane. Cancelling an ad never ends the session.
-    if(op==='ad_status'||op==='ad_cancel'){
+    if(op==='ad_status'||op==='ad_cancel'||op==='plan_status'||op==='plan_list'||op==='plan_cancel'){
       const transport=this.transportRevision;
       const guard=command=>{
         if(transport!==this.transportRevision)throw Error('Transport déconnecté ; commande annulée.');

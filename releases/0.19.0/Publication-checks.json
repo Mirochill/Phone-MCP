@@ -1,0 +1,72 @@
+{
+  "version": "0.19.0",
+  "checkedDate": "2026-10-25",
+  "status": "passed",
+  "androidSource": {
+    "files": 116,
+    "matchesMaintainedProject": true,
+    "lineEndingsNormalized": true,
+    "scope": "Runtime source and build configuration; public policy test sources are additional release checks"
+  },
+  "apk": {
+    "packageName": "fr.phonemcp",
+    "versionName": "0.19.0",
+    "versionCode": 69,
+    "sha256": "5be0cec79eab589aa1f9d2545659c860f37427505b0c57d532637c84b66cf06f",
+    "sizeBytes": 3651555,
+    "signature": "pass",
+    "zipAlignment16K": "pass",
+    "certificateSha256": "a819c6ef90efe5809d48d41e02c741168b744d1705fa7ab53313e02e5295babe",
+    "publicRebuild": "assembleRelease and lintRelease passed",
+    "matchingNonSignatureZipEntries": 16,
+    "fullSignedRebuildIdentityClaimed": false
+  },
+  "tests": {
+    "server": 143,
+    "cloudRuntimeAndUpdate": 19,
+    "javaPolicyFamilies": 32,
+    "androidDoubles": {
+      "previewFrames": 22,
+      "previewRouting": 16,
+      "screenChoice": 27,
+      "captureMirror": 26,
+      "pendingMedia": 16
+    }
+  },
+  "mcp": {
+    "tools": 66,
+    "operations": 62,
+    "read": 22,
+    "action": 44,
+    "apiVersion": 1,
+    "catalogVersion": "9536208318cf0507",
+    "schemasGeneratedFrom": "actual MCP tools/list via official SDK in-memory transport"
+  },
+  "docs": {
+    "localLinks": "pass",
+    "generatedSchemasFreshness": "pass",
+    "englishAndFrenchAgentPrompts": "current release and separate update layers",
+    "officialRefreshProcedureCheckedOn": "2026-10-25",
+    "officialRefreshProcedure": "https://developers.openai.com/plugins/deploy/connect-chatgpt#refresh-metadata"
+  },
+  "privacy": {
+    "exactKnownSecrets": "pass",
+    "privatePathsAndDeploymentIdentifiers": "pass",
+    "nestedApkAndZipContents": "pass",
+    "scannedFilesAndArchiveEntries": 419,
+    "publicFiles": 305,
+    "note": "Known-secret/credential/private-identifier scan of the intended public files and their nested archives, not an exhaustive security audit. Release assets are checked again before publication."
+  },
+  "publicationAdaptations": [
+    "Preserved public native-loopback OAuth and consent CSP.",
+    "Preserved portable cloudflared lookup and private example configuration separation.",
+    "Preserved all pinned dependencies; this is not dependency advisory remediation."
+  ],
+  "limits": [
+    "Hardware evidence is the dated 0.19.0 S24 scenario record, not a new publication-time phone test.",
+    "No model reasoning acceleration, chess-strength, universal ads or battery gain claim.",
+    "Full APK replacement interrupts sessions; no silently resumed former sessions.",
+    "GitHub publication does not deploy other users relays or refresh their ChatGPT caches.",
+    "Known-secret/private-path/archive scans are not an exhaustive security audit."
+  ]
+}

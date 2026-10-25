@@ -1,0 +1,154 @@
+{
+  "version": "0.18.1",
+  "date": "2026-10-24",
+  "status": "Android 0.18.1 installed and targeted checks passed. Native start-to-finish replay of the corrected real-ad flow awaits a new available ad.",
+  "environment": {
+    "phone": "Samsung Galaxy S24 Ultra, Android 16",
+    "testedNativeApk": "0.18.0 and 0.18.1",
+    "relays": [
+      "0.18.0-cloud",
+      "0.18.1-cloud"
+    ],
+    "screenPolicy": "physical panel off; keep-on disabled",
+    "modelSetting": "ChatGPT UI effort Moyen; exact Sol/Luna variant not independently exposed"
+  },
+  "tests": {
+    "preparedE5": {
+      "appReceiptMs": 448,
+      "nativeReactionMs": 176,
+      "effectVerified": true
+    },
+    "preparedC5": {
+      "appReceiptMs": 508,
+      "nativeReactionMs": 190,
+      "effectVerified": true
+    },
+    "unexpectedD5": {
+      "state": "needs_model",
+      "replyInputs": 0,
+      "initialMoveInputs": 2
+    },
+    "cancelBeforeC5": {
+      "state": "cancelled",
+      "replyInputs": 0,
+      "initialMoveInputs": 2
+    },
+    "repeatRequest": {
+      "extraInputs": 0
+    },
+    "timeout": {
+      "state": "timed_out",
+      "inputs": 0
+    },
+    "uiCase": {
+      "state": "completed",
+      "inputs": 1,
+      "counterAfter": 1
+    },
+    "realChessOfflineCatchup": {
+      "state": "completed",
+      "inputStartedMs": 1099,
+      "inputCompletedMs": 1370,
+      "effectConfirmedMs": 2146,
+      "nativeReactionMs": 623,
+      "relayWithFinalCaptureMs": 3753,
+      "capture": "visible_pixels",
+      "ratedOrOnlineOpponent": false
+    },
+    "native0181": {
+      "coldUiAfterIdleMs": 29938,
+      "coldUiEffectVerified": true,
+      "coldUiCapture": "visible_pixels",
+      "coldUiRelayMs": 2252,
+      "timeoutState": "timed_out",
+      "timeoutReason": "prediction_wait_expired",
+      "timeoutInputs": 0,
+      "predictedAppReceiptMs": 687,
+      "predictedEffectVerified": true,
+      "predictedFinalCapture": "visible_pixels"
+    }
+  },
+  "modelTrials": [
+    {
+      "context": "existing benchmark chat; full initial board tree",
+      "preparationUntilPlanReadyMs": 27554,
+      "appReceiptAfterTriggerMs": 439,
+      "uiDisplayedThoughtSeconds": 36,
+      "waitForSyntheticOpponentIncludedInUiDuration": true,
+      "completionApiTimestampInvalid": true
+    },
+    {
+      "context": "same chat; decision view; different opponent cases",
+      "preparationUntilPlanReadyMs": 27262,
+      "appReceiptAfterTriggerMs": 797,
+      "uiDisplayedThoughtSeconds": 37,
+      "completionApiTimestampInvalid": true,
+      "controlledAB": false
+    },
+    {
+      "context": "fresh chat; decision view; short prompt",
+      "preparationUntilPlanReadyMs": 26092,
+      "preparationToolTimeMs": 2742,
+      "preparationOutsideToolCallsMs": 23350,
+      "appReceiptAfterTriggerMs": 453,
+      "uiDisplayedThoughtSeconds": 31,
+      "completionApiTimestampInvalid": true
+    }
+  ],
+  "reading": {
+    "fullNodes": 83,
+    "decisionNodes": 7,
+    "all64SquaresRetainedInFen": true,
+    "noChessEngine": true
+  },
+  "realAd": {
+    "app": "WeWard",
+    "creative": "OOC: The Playable Anime",
+    "native0180State": "timed_out",
+    "native0180ElapsedMs": 120502,
+    "native0180Actions": 0,
+    "correction": "SDK corner container plus positive double-triangle/bar pixels; two identical fresh frame matches",
+    "correctedFirstSkipExecutedVia": "desktop test harness using the patched Java policy and guarded MCP tap",
+    "firstSkipTestIsNotFullNative0181AutopilotValidation": true,
+    "nativeRemainingClosures": [
+      {
+        "kind": "visual_store_close",
+        "elapsedMs": 1033
+      },
+      {
+        "kind": "visual_close",
+        "elapsedMs": 4127
+      }
+    ],
+    "nativeReturnConfirmedMs": 5892,
+    "appReward": "1 card pack confirmed and opened",
+    "fullVideoDurationNotIsolated": true,
+    "fullNative0181AdSequencePending": true
+  },
+  "limitations": [
+    "Preparation still costs about 26-28 seconds in these trials; no faster internal model reasoning established.",
+    "No complete fast-game strength or universal ad success claim.",
+    "ChatGPT final-text rendering reported Impossible de charger cette reponse in these test chats despite verified phone actions.",
+    "Macadam had 0/4 availability; WeWard substituted with user authorization.",
+    "No battery comparison requested or performed."
+  ],
+  "validation": {
+    "serverTests": 126,
+    "cloudflareTests": 19,
+    "androidPolicyFamilies": 31,
+    "androidBuild": "success",
+    "lintErrors": 0,
+    "lintWarnings": 35,
+    "sameSigningCertificateVerified": true,
+    "zipAlignmentVerified": true,
+    "cleanup": {
+      "activeSessions": 0,
+      "displaysDraining": 0,
+      "keepScreenWakeLockHeld": false,
+      "physicalPanelOff": true,
+      "keepPhysicalScreenOnSelected": false,
+      "audioPolicy": "Previously controlled app stays muted while panel is off, then restores on user screen-on."
+    }
+  },
+  "publicEvidenceNote": "Device scenarios were measured before publication; test identifiers are pseudonymized. No credential, private endpoint, recording or personal account data is included."
+}

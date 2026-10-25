@@ -129,7 +129,7 @@ Do not expose an unencrypted HTTP server to the Internet. `ALLOW_LOCAL_HTTP` is 
 
 ## Android setup
 
-1. Download `Phone-MCP-0.16.2.apk` and `SHA256SUMS.txt` from [Releases](https://github.com/Mirochill/Phone-MCP/releases/latest). Check the file hash before installation. On Windows: `Get-FileHash .\Phone-MCP-0.16.2.apk -Algorithm SHA256`.
+1. Download `Phone-MCP-0.19.0.apk` and `SHA256SUMS.txt` from [release v0.19.0](https://github.com/Mirochill/Phone-MCP/releases/tag/v0.19.0). The [tracked manifest](../releases/0.19.0/Release-0.19.0.json) records package `fr.phonemcp`, version code 69 and the exact release hash. Check the file hash before installation. On Windows: `Get-FileHash .\Phone-MCP-0.19.0.apk -Algorithm SHA256`.
 2. Allow installation from the browser/file manager you intentionally use, install the developer-signed preview and open **Phone MCP**. Android still enforces certificate continuity for updates.
 3. Pair using your private link/QR. In **Réglages** (Settings), the server address is the HTTPS origin without `/mcp`. The pairing token is stored encrypted by Android Keystore.
 4. Review **Toutes les apps** and the per-app **Lecture / Actions / Images / Notifications** capabilities. The current preview defaults to allowing installed apps. Disable sensitive apps or start with explicit grants. Disabling read also disables the other capabilities for that app. Changing the all-app default clears per-app overrides.

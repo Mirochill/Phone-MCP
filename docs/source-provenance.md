@@ -1,41 +1,38 @@
 # Source, binary provenance and signing
 
-## Current source
+## Current source and APK: 0.19.0
 
-The repository contains the maintained original Android 0.16.2 Java/AIDL/resources and build configuration, shared MCP operation registry, local relay and Cloudflare relay. Public deployment helpers, native desktop OAuth redirect support, portable tunnel lookup and public documentation are retained. Private working copies, device transcripts, tokens, QR codes, account/deployment identifiers and signing keys are excluded.
-
-Android source correspondence is checked by hashes against the maintained release snapshot. The public relay retains its prior native-loopback OAuth adaptation, separate from the Android APK. Tests and complete MCP tool schemas are generated/run against the actual public source. Publishing this tree does not deploy a user's relay or change an installed client's cache.
-
-Relay 0.17.0 adds server-side fast workflows, structured board evidence and algebraic moves; Android source and the distributed APK remain 0.16.2. The [performance record](performance.md) separates relay, client-turn and hardware evidence.
-
-## Distributed APK 0.16.2
+The maintained editable Android Java/AIDL/resources, shared MCP registry and Node/Cloudflare relay source in tag `v0.19.0` correspond to this release. Public native-loopback OAuth support, consent CSP, portable tunnel lookup, example configuration and CI runners are retained. Private secrets, endpoint/account configuration, pairing links, runtime state, raw device transcripts and signing keys are excluded.
 
 | Field | Value |
 |---|---|
 | Package | `fr.phonemcp` |
-| Version / code | `0.16.2` / `65` |
-| Bytes | `3620683` |
-| SHA-256 | `fe751fb2aba57c2e6ecd627a82c1674ea779935f674da2fe3ad314bf769d3233` |
-| Original source | `android/` at tag `v0.16.2` |
-| Checks | Release build/lint, APK signature, zip alignment and manifest metadata |
+| Version / code | `0.19.0` / `69` |
+| APK bytes | `3651555` |
+| APK SHA-256 | `5be0cec79eab589aa1f9d2545659c860f37427505b0c57d532637c84b66cf06f` |
+| Signing certificate SHA-256 | `a819c6ef90efe5809d48d41e02c741168b744d1705fa7ab53313e02e5295babe` |
+| MCP inventory | 66 unique tools / 62 operations, API 1 |
+| Catalog | `9536208318cf0507` |
 
-The APK is the same verified developer-signed build installed during the S24 capture validation. It is not a Play Store release. [Manifest](../releases/0.16.2/Release-0.16.2.json) · [Checksums](../releases/0.16.2/SHA256SUMS.txt).
+This is the same developer-signed APK installed during the 0.19.0 S24 validation. It is a preview outside Google Play. The certificate is unchanged from the previous distributed companion. [Release manifest](../releases/0.19.0/Release-0.19.0.json) · [Checksums](../releases/0.19.0/SHA256SUMS.txt) · [Publication checks](../releases/0.19.0/Publication-checks.json) · [Scenario-specific real-device evidence](verification-0.19.0.json).
+
+Publication checks compare Android source against the maintained build project, inspect the APK's package/version/signature/alignment, and compare its non-signature ZIP contents with the public-source rebuild. This does not promise an identical signed rebuild on another machine. No pinned dependency or physical-screen/audio choice was changed for 0.19.0. The relay's public OAuth/tunnel adaptations are deliberately retained rather than replaced with private deployment code.
 
 ## Rebuild
 
-JDK 17, Android SDK Platform 36, Build Tools 36.0.0, AGP 8.10.1 and Gradle 8.13 are pinned. Set `ANDROID_HOME` or an untracked `android/local.properties` to your SDK. Run:
+Use Node.js 22+, JDK 17, Android SDK Platform 36 and Build Tools 36.0.0. AGP 8.10.1 and Gradle 8.13 remain pinned. Install locked relay dependencies with `npm ci --prefix server` and `npm ci --prefix cloudflare`. Set `ANDROID_HOME` or an ignored `android/local.properties` to your SDK.
 
 ```sh
 cd android
 ./gradlew --no-daemon assembleRelease lintRelease
 ```
 
-On Windows use `.\gradlew.bat`. The Windows `scripts/Build-Release.ps1` additionally verifies signature, alignment and manifest metadata. `-SkipUpdateAssets` leaves paired publication assets untouched. Install locked Node dependencies with `npm ci --prefix server` and `npm ci --prefix cloudflare`.
+On Windows use `.\gradlew.bat`. `scripts/Build-Release.ps1` also verifies signature, alignment and manifest metadata; `-SkipUpdateAssets` leaves paired publication assets untouched. The preview build configuration uses your machine's local debug signer, which normally differs from the distributed certificate. Keep your own signing key backed up privately. Do not uninstall an existing companion or erase its data merely to work around a certificate mismatch.
 
-The preview build configuration uses your machine's local debug signer. It normally differs from the distributed key; a different certificate cannot update an existing app in place. Maintain a private backed-up signing key for your own distribution. Never commit keys or passwords. A successful rebuild does not promise an identical signed file hash. See publication checks for non-signature ZIP-entry comparison if available.
+For your own deployment, `node scripts/prepare-update-assets.mjs` verifies/copies the release APK and manifest into ignored Worker assets. Preserve your private config, existing secrets, OAuth state, migrations and bindings. A public GitHub release does not deploy your Worker or refresh ChatGPT; follow [the update guide](updating.md).
 
-## Historical assets
+## Historical artifacts and evidence
 
-The old 0.8.2 APK, compiled Worker and JADX inspection archive under `releases/` and [v0.8.2](https://github.com/Mirochill/Phone-MCP/releases/tag/v0.8.2) are historical. The decompiled archive is approximate JADX output with documented errors; it is not current source or a buildable replacement. Current `android/` is the editable original source of truth.
+0.16.2 introduced the validated preview recording; [its manifest](../releases/0.16.2/Release-0.16.2.json) and [publication checks](../releases/0.16.2/Publication-checks.json) remain specific to that version. 0.17.0 was a relay-only release. 0.18.1 introduced the conditional runner; 0.18.2 added bounded relay recapture and 0.18.3 accessible-square actions. Their dated verification records are kept in [verification](verification.md); they do not represent additional 0.19.0 hardware tests.
 
-The MIT license applies to project software; dependency licenses and [media provenance](media/credits.md) remain applicable. No fresh decompiled archive is needed to build the current source.
+The old 0.8.2 APK, compiled Worker and approximate JADX inspection archive under `releases/` are historical, not the current buildable source. No new decompiled archive is needed: the editable original source is included. MIT covers the project software; dependency licenses, [third-party notices](../THIRD_PARTY_NOTICES.md) and [media provenance](media/credits.md) remain applicable.

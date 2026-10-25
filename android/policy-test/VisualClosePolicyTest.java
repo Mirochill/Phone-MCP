@@ -25,7 +25,9 @@ public final class VisualClosePolicyTest {
         int[] odd=blank();icon(odd,315,45,28,14,true,true);expect(VisualClosePolicy.find(odd,W,H)!=null,"Odd-pixel glyph center is supported");
         int[] small=blank();icon(small,330,30,16,8,true,true);expect(VisualClosePolicy.find(small,W,H)!=null,"Small SDK close button is supported");
         int[] plain=blank();icon(plain,316,44,28,14,true,false);expect(VisualClosePolicy.find(plain,W,H)==null,"Plain text X without enclosing control is insufficient");
+        expect(VisualClosePolicy.storeClose(plain,W,H)!=null,"Positively identified embedded store permits an actual bare X");
         int[] plus=blank();icon(plus,316,44,28,14,false,true);expect(VisualClosePolicy.find(plus,W,H)==null,"A plus is not a cross");
+        expect(VisualClosePolicy.storeClose(plus,W,H)==null,"Store context still refuses a plus");
         int[] middle=blank();icon(middle,180,320,28,14,true,true);expect(VisualClosePolicy.find(middle,W,H)==null,"Never infer a center-of-ad X");
         int[] bottom=blank();icon(bottom,316,550,28,14,true,true);expect(VisualClosePolicy.find(bottom,W,H)==null,"Never infer a bottom creative X");
         int[] ambiguous=blank();icon(ambiguous,316,44,28,14,true,true);icon(ambiguous,44,44,28,14,true,true);expect(VisualClosePolicy.find(ambiguous,W,H)==null,"Two separate X controls are ambiguous");
